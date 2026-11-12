@@ -2,6 +2,7 @@
   "title": "Chiang Mai Enduro Riders Tracks",
   "subtitle": "Beginner-friendly enduro GPX routes around Chiang Mai",
   "restricted": "Please ride these community tracks instead of Doi Suthep or Hang Dong, which are restricted areas.",
+  "noRide": "Red striped area on the map: Doi Suthep-Pui National Park. No off-road riding there.",
   "contribute": "Found a change on a track? Open the track and use \"Send it to us\".",
   "owners": [
     "Pavel",

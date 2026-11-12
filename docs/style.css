@@ -205,4 +205,6 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 
 /* map: restricted-area key */
 .areakey { background: rgba(0,0,0,.75); color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
-.areakey i { display: inline-block; width: 14px; height: 10px; border: 2px solid #ff2a2a; background: rgba(255,42,42,.15); margin-right: 6px; vertical-align: -1px; }
+.areakey i, .noride i { display: inline-block; width: 16px; height: 12px; border: 2px solid #ff2a2a; margin-right: 6px; vertical-align: -2px;
+  background: repeating-linear-gradient(0deg, rgba(255,42,42,.7) 0 1px, rgba(255,42,42,.08) 1px 4px); }
+.noride { color: #ff6b6b; font-weight: 600; margin: 6px 0 0; }
