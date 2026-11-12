@@ -38,6 +38,16 @@
 
   // ---------- map ----------
   const map = baseMap("map");
+  const RESTRICTED = "#ff2a2a";
+  // Restricted areas: red outlines in their own pane under the tracks, so a track over one stays clickable.
+  map.createPane("areas").style.zIndex = 350;
+  fetch("areas/doi-suthep-pui.geojson").then(r => r.json()).then(area => {
+    L.geoJSON(area, { pane: "areas", renderer: L.svg({ pane: "areas" }), interactive: false,
+      style: { color: RESTRICTED, weight: 2.5, opacity: 0.9, fillColor: RESTRICTED, fillOpacity: 0.12 } }).addTo(map);
+    const key = L.control({ position: "bottomleft" });
+    key.onAdd = () => L.DomUtil.create("div", "areakey");
+    key.addTo(map).getContainer().innerHTML = `<i></i>Doi Suthep-Pui National Park (restricted)`;
+  }).catch(() => {});
   const layers = {};
   const all = L.featureGroup().addTo(map);
   tracks.forEach((t, i) => {
