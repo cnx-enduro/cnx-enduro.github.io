@@ -15,6 +15,7 @@
   $("cmpTrack").innerHTML = tracks.map(t => `<option value="${t.id}">${t.id} · ${esc(t.name)}</option>`).join("");
 
   const map = baseMap("cmpMap");
+  addNoRideZones(map);
   let group = L.featureGroup().addTo(map);
   let rec = null;
 

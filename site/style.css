@@ -208,3 +208,6 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 .areakey i, .noride i { display: inline-block; width: 16px; height: 12px; border: 2px solid #ff2a2a; margin-right: 6px; vertical-align: -2px;
   background: repeating-linear-gradient(0deg, rgba(255,42,42,.7) 0 1px, rgba(255,42,42,.08) 1px 4px); }
 .noride { color: #ff6b6b; font-weight: 600; margin: 6px 0 0; }
+.leaflet-tooltip.zonetip { background: #b3121b; color: #fff; border: 0; font-weight: 700; text-align: center; }
+.leaflet-tooltip.zonetip span { font-weight: 400; font-size: 11px; }
+.leaflet-tooltip-top.zonetip::before { border-top-color: #b3121b; }

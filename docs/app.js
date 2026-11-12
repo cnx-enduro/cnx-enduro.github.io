@@ -39,25 +39,7 @@
 
   // ---------- map ----------
   const map = baseMap("map");
-  const RESTRICTED = "#ff2a2a";
-  // Restricted areas: red outlines in their own pane under the tracks, so a track over one stays clickable.
-  map.createPane("areas").style.zIndex = 350;
-  fetch("areas/doi-suthep-pui.geojson").then(r => r.json()).then(area => {
-    // Filled with thin red stripes (an SVG pattern in the areas renderer) so it reads as "no riding", not just a border.
-    const renderer = L.svg({ pane: "areas" });
-    L.geoJSON(area, { pane: "areas", renderer, interactive: false,
-      style: { color: RESTRICTED, weight: 3, opacity: 1, fillColor: "url(#noride)", fillOpacity: 1 } }).addTo(map);
-    const svg = renderer._container, ns = "http://www.w3.org/2000/svg";
-    const pat = document.createElementNS(ns, "pattern");
-    Object.entries({ id: "noride", width: 8, height: 8, patternUnits: "userSpaceOnUse" }).forEach(([k, v]) => pat.setAttribute(k, v));
-    pat.innerHTML = `<rect width="8" height="8" fill="${RESTRICTED}" fill-opacity="0.08"/><path d="M0 4H8" stroke="${RESTRICTED}" stroke-width="1.2" stroke-opacity="0.7"/>`;
-    const defs = document.createElementNS(ns, "defs");
-    defs.appendChild(pat);
-    svg.insertBefore(defs, svg.firstChild);
-    const key = L.control({ position: "bottomleft" });
-    key.onAdd = () => L.DomUtil.create("div", "areakey");
-    key.addTo(map).getContainer().innerHTML = `<i></i>Doi Suthep-Pui National Park: no off-road riding`;
-  }).catch(() => {});
+  addNoRideZones(map, { key: true });
   const layers = {};
   const all = L.featureGroup().addTo(map);
   tracks.forEach((t, i) => {
@@ -397,6 +379,7 @@
       if (!$("sendbox").open) return;
       if (spotMap) { spotMap.invalidateSize(); return; }
       spotMap = baseMap("spotMap", { layersControl: false });
+      addNoRideZones(spotMap);
       L.polyline(t.line, { color: "#000", weight: 7, opacity: 0.5 }).addTo(spotMap);
       L.polyline(t.line, { color: t.color, weight: 4 }).addTo(spotMap);
       spotMap.fitBounds(L.latLngBounds(t.line), { padding: [16, 16] });
