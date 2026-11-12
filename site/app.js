@@ -187,8 +187,39 @@
   ];
   const LATERITE = "#7a1408";
   const surfaceColor = Object.fromEntries(SURFACES.map(([k, , c]) => [k, c]));
+  const surfaceLabel = Object.fromEntries(SURFACES.map(([k, label]) => [k, label]));
+  // Point on the track → km along it (the display line is simplified, so scale to the GPX's real length).
+  const kmAlong = t => {
+    const cum = [0];
+    for (let i = 1; i < t.line.length; i++) cum.push(cum[i - 1] + L.latLng(t.line[i - 1]).distanceTo(t.line[i]));
+    const kmScale = t.km / (cum[cum.length - 1] / 1000 || 1);
+    return n => ((cum[n.i] + n.f * (cum[n.i + 1] - cum[n.i])) / 1000) * kmScale;
+  };
+  // Track page hover: what the ground is like under the cursor, instead of the track's name. It listens on the
+  // coloured pieces themselves (full detail), not the simplified track line, which drifts a few pixels off them.
+  let surfaceTip = null;
+  const surfaceHover = (t, pieces) => {
+    const kmOf = kmAlong(t), line = layers[t.id].line;
+    line.unbindTooltip();
+    pieces.bindTooltip("", { sticky: true });
+    pieces.on("mousemove", e => {
+      const pt = [e.latlng.lat, e.latlng.lng];
+      let best = { dist: Infinity, cls: "unknown" };
+      for (const p of t.surface.pieces) {
+        const n = nearestOnLine(p.line, pt);
+        if (n.dist < best.dist) best = { dist: n.dist, cls: p.cls };
+      }
+      const laterite = (t.surface.laterite || []).some(l => nearestOnLine(l, pt).dist <= best.dist + 10);
+      pieces.setTooltipContent(`km ${kmOf(nearestOnLine(t.line, pt)).toFixed(1)} · ${surfaceLabel[best.cls]}` +
+        (laterite ? `<br>Laterite, slippery when wet` : ""));
+    });
+    surfaceTip = () => { line.bindTooltip(`${t.id} · ${esc(t.name)}`, { sticky: true }); surfaceTip = null; };
+  };
   let surfaceLayer = null;
-  const clearSurface = () => { if (surfaceLayer) { surfaceLayer.remove(); surfaceLayer = null; } };
+  const clearSurface = () => {
+    if (surfaceLayer) { surfaceLayer.remove(); surfaceLayer = null; }
+    if (surfaceTip) surfaceTip();
+  };
   const surfaceKey = t => {
     const sh = t.surface.shares;
     const used = SURFACES.filter(([k]) => sh[k] > 0);
@@ -234,14 +265,18 @@
     clearSurface();
     if (t.surface) {
       layers[t.id].line.setStyle({ opacity: 0 });
-      surfaceLayer = L.featureGroup(t.surface.pieces.flatMap(p => [
-        L.polyline(p.line, { color: "#000", weight: 8, opacity: 0.75, interactive: false }),
-        L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, interactive: false,
-                             dashArray: p.cls === "unknown" ? "6 6" : null }),
-      ]).concat((t.surface.laterite || []).map(line =>  // laterite: dashes over the surface colour
-        L.polyline(line, { color: LATERITE, weight: 5, opacity: 1, interactive: false, dashArray: "4 8", lineCap: "butt" })
-      ))).addTo(map);
+      const casings = L.featureGroup(t.surface.pieces.map(p =>
+        L.polyline(p.line, { color: "#000", weight: 8, opacity: 0.75, interactive: false })));
+      const pieces = L.featureGroup(t.surface.pieces.map(p =>
+        L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, dashArray: p.cls === "unknown" ? "6 6" : null })));
+      const laterite = L.featureGroup((t.surface.laterite || []).map(line =>  // laterite: dashes over the surface colour
+        L.polyline(line, { color: LATERITE, weight: 5, opacity: 1, interactive: false, dashArray: "4 8", lineCap: "butt" })));
+      surfaceLayer = L.featureGroup([casings, pieces, laterite]).addTo(map);
+      // a nested group doesn't keep its drawing order, so stack them explicitly: outline, colour, laterite, start
+      pieces.bringToFront();
+      laterite.bringToFront();
       layers[t.id].start.bringToFront();
+      surfaceHover(t, pieces);
     }
 
     const h = latest(t);
@@ -346,14 +381,11 @@
   function setupSendForm(t) {
     const form = $("sendForm");
     let spot = null, spotMap = null, pin = null;
-    // km along the simplified display line, scaled to the GPX's real length
-    const cum = [0];
-    for (let i = 1; i < t.line.length; i++) cum.push(cum[i - 1] + L.latLng(t.line[i - 1]).distanceTo(t.line[i]));
-    const kmScale = t.km / (cum[cum.length - 1] / 1000 || 1);
+    const kmOf = kmAlong(t);
 
     function setSpot(latlng) {
       const n = nearestOnLine(t.line, [latlng.lat, latlng.lng]);
-      const km = ((cum[n.i] + n.f * (cum[n.i + 1] - cum[n.i])) / 1000) * kmScale;
+      const km = kmOf(n);
       spot = { lat: +n.lat.toFixed(6), lon: +n.lon.toFixed(6), km: +km.toFixed(1), off: Math.round(n.dist) };
       if (!pin) pin = L.marker([n.lat, n.lon]).addTo(spotMap);
       else pin.setLatLng([n.lat, n.lon]);
