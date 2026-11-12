@@ -192,8 +192,10 @@
         if (n.dist < best.dist) best = { dist: n.dist, cls: p.cls };
       }
       const laterite = (t.surface.laterite || []).some(l => nearestOnLine(l, pt).dist <= best.dist + 10);
-      pieces.setTooltipContent(`km ${kmOf(nearestOnLine(t.line, pt)).toFixed(1)} · ${surfaceLabel[best.cls]}` +
-        (laterite ? `<br>Laterite, slippery when wet` : ""));
+      const km = kmOf(nearestOnLine(t.line, pt));
+      const labels = t.labels.filter(l => km >= l.from && km <= l.to).map(l => `<br><b>${esc(l.text)}</b>`).join("");
+      pieces.setTooltipContent(`km ${km.toFixed(1)} · ${surfaceLabel[best.cls]}` +
+        (laterite ? `<br>Laterite, slippery when wet` : "") + labels);
     });
     surfaceTip = () => { line.bindTooltip(`${t.id} · ${esc(t.name)}`, { sticky: true }); surfaceTip = null; };
   };

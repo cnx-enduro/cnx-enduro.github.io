@@ -220,6 +220,19 @@ LABELS = {  # tidy label names so similar fields read the same on every track
 }
 
 
+def map_labels(text, fn):
+    """NOTES.txt 'Map labels: km 21-30: 40+ river crossings; km 45-47: steep rocks' → [{from, to, text}],
+    shown when the mouse is over that stretch of the track."""
+    out = []
+    for part in filter(None, (p.strip() for p in text.split(";"))):
+        m = re.match(r"km\s*([\d.]+)\s*-\s*([\d.]+)\s*:\s*(.+)$", part, re.I)
+        if m:
+            out.append({"from": float(m.group(1)), "to": float(m.group(2)), "text": m.group(3).strip().rstrip(".")})
+        else:
+            warn(f"{fn}: can't read map label '{part}' (use 'km 21-30: what it is')")
+    return out
+
+
 def parse_body(body):
     fields = []
     for line in body.strip().splitlines():
@@ -430,7 +443,8 @@ def main():
             "file": fn,
             "name": track_name(fn),
             "difficulty": diff,
-            "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category")],
+            "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category", "map labels")],
+            "labels": map_labels(fd.get("map labels", ""), fn),
             "flags": flags(fields),
             "pois": read_pois(os.path.join(TRACKS, fn), pts),
             "history": history,
