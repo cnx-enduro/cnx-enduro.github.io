@@ -202,7 +202,8 @@
   let surfaceLayer = null;
   // Points of interest saved in the GPX (parking, viewpoints, temples): pins on the track page only.
   let poiLayer = null;
-  const poiIcon = p => L.divIcon({ className: `poi ${p.kind}`, html: p.kind === "parking" ? "P" : "★", iconSize: [22, 22] });
+  const POI_GLYPH = { parking: "P", water: "≈" };
+  const poiIcon = p => L.divIcon({ className: `poi ${p.kind}`, html: POI_GLYPH[p.kind] || "★", iconSize: [22, 22] });
   const clearSurface = () => {
     if (poiLayer) { poiLayer.remove(); poiLayer = null; }
     if (surfaceLayer) { surfaceLayer.remove(); surfaceLayer = null; }
@@ -268,7 +269,7 @@
     }
     if (t.pois.length) {
       poiLayer = L.featureGroup(t.pois.map(p => L.marker([p.lat, p.lon], { icon: poiIcon(p), zIndexOffset: 500 })
-        .bindTooltip(`${esc(p.name)} · km ${p.km}`, { direction: "top", offset: [0, -10] }))).addTo(map);
+        .bindTooltip(`${esc(p.name)} · km ${p.km}${p.kmTo != null ? "–" + p.kmTo : ""}`, { direction: "top", offset: [0, -10] }))).addTo(map);
       // a label opened from the Stops list stays up until its own pin is left; close it when another pin is hovered
       poiLayer.on("mouseover", e => poiLayer.eachLayer(l => { if (l !== e.layer) l.closeTooltip(); }));
     }
@@ -295,7 +296,7 @@
         <div class="fact"><span>Route</span><b>${t.loop ? "Loop" : "One way"}</b></div>
       </div>
       ${t.pois.length ? `<h2 class="section">Stops</h2><ul class="pois">${t.pois.map((p, i) => `
-        <li><button class="poirow" data-i="${i}"><i class="poi ${p.kind}">${p.kind === "parking" ? "P" : "★"}</i>${esc(p.name)} <span class="muted">km ${p.km}</span></button></li>`).join("")}</ul>` : ""}
+        <li><button class="poirow" data-i="${i}"><i class="poi ${p.kind}">${POI_GLYPH[p.kind] || "★"}</i>${esc(p.name)} <span class="muted">km ${p.km}${p.kmTo != null ? "–" + p.kmTo : ""}</span></button></li>`).join("")}</ul>` : ""}
       <dl class="desc">${t.fields.map((f, i) => `<dt>${esc(f[0])}</dt><dd class="${i === legalIdx ? "legal" : ""}">${esc(f[1])}</dd>`).join("")}</dl>
       ${t.surface ? surfaceKey(t) : ""}
       <h2 class="section">Version history</h2>

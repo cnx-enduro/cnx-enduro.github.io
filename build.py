@@ -233,6 +233,22 @@ def map_labels(text, fn):
     return out
 
 
+def label_stops(pts, labels):
+    """Each map label also gets a pin halfway along its stretch (e.g. '40+ river crossings', km 21-30): water
+    symbol for rivers and streams, a star for anything else."""
+    cum = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        cum.append(cum[-1] + haversine(a, b))
+    stops = []
+    for l in labels:
+        mid = (l["from"] + l["to"]) / 2 * 1000
+        i = min(range(len(pts)), key=lambda j: abs(cum[j] - mid))
+        kind = "water" if re.search(r"river|stream|water|ford", l["text"], re.I) else "stop"
+        stops.append({"name": l["text"], "kind": kind, "lat": round(pts[i][0], 6), "lon": round(pts[i][1], 6),
+                      "km": l["from"], "kmTo": l["to"]})
+    return stops
+
+
 def parse_body(body):
     fields = []
     for line in body.strip().splitlines():
@@ -427,6 +443,7 @@ def main():
         elif filled:
             print(f"note: {fn} has no heights; filled from terrain data", file=sys.stderr)
 
+        labels = map_labels(fd.get("map labels", ""), fn)
         history = seed.get(tid, []) + commits(f"tracks/{tid}-*")
         for i, h in enumerate(history):
             h["version"] = i + 1
@@ -444,9 +461,9 @@ def main():
             "name": track_name(fn),
             "difficulty": diff,
             "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category", "map labels")],
-            "labels": map_labels(fd.get("map labels", ""), fn),
+            "labels": labels,
             "flags": flags(fields),
-            "pois": read_pois(os.path.join(TRACKS, fn), pts),
+            "pois": sorted(read_pois(os.path.join(TRACKS, fn), pts) + label_stops(pts, labels), key=lambda p: p["km"]),
             "history": history,
             # notes changes are shown without a name: the notes are Pavel and Jul's, whoever typed the edit
             "notesUpdated": {k: v for k, v in (notes_hist[-1] if notes_hist else (seed.get("notes") or [{}])[-1] or {}).items() if k != "by"} or None,

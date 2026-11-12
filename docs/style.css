@@ -216,6 +216,7 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 .poi { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%;
   background: #f5a524; color: #111; border: 2px solid #000; font: 700 12px/1 system-ui, sans-serif; box-sizing: border-box; }
 .poi.parking { background: #2f7cf6; color: #fff; border-radius: 5px; }
+.poi.water { background: #1e9bd7; color: #fff; font-size: 17px; }
 .pois { list-style: none; padding: 0; margin: 0 0 8px; }
 .poirow { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; color: inherit; font: inherit;
   padding: 5px 0; cursor: pointer; text-align: left; }
