@@ -18,7 +18,7 @@
 
 const NOTIFY_TO = "PUT-REVIEWER-EMAIL-HERE";  // who reviews rider updates (Pavel)
 const TEST_TO = "PUT-SETUP-EMAIL-HERE";       // test submissions go here instead, never to the reviewer
-const SITE = "https://chiang-mai-enduro-riders-tracks.github.io/";
+const SITE = "https://cnx-enduro.github.io/";
 const MAX_GPX = 10 * 1024 * 1024;
 const MAX_PHOTO = 8 * 1024 * 1024;
 

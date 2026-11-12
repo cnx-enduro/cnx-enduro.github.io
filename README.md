@@ -31,7 +31,8 @@ Build warnings (name mismatches, km differences, missing elevation) print to the
 
 ## One-time GitHub setup
 
-1. Organisation: `Chiang-Mai-Enduro-Riders-Tracks` (site repo `chiang-mai-enduro-riders-tracks.github.io`). Invite editors as **Owners**.
+1. Organisation: `cnx-enduro` (site repo `cnx-enduro.github.io`, live at https://cnx-enduro.github.io/). Invite editors as **Owners**.
+   The old address (chiang-mai-enduro-riders-tracks.github.io) forwards here from a small repo left in the old `Chiang-Mai-Enduro-Riders-Tracks` organisation.
 2. Create a **public** repo in it (Pages on free plans needs public) and push this folder.
 3. Repo → Settings → Pages → Deploy from a branch → `main` / `/docs`.
 4. Repo → Settings → Actions → General → Workflow permissions → **Read and write**.
