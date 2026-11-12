@@ -222,3 +222,7 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
   padding: 5px 0; cursor: pointer; text-align: left; }
 .poirow:hover { color: var(--accent, #f5a524); }
 .poirow .poi { flex: none; }
+
+/* footer: who maintains the site, where comments go */
+.sitefoot { border-top: 1px solid var(--line); margin-top: 20px; padding: 12px 0 4px; font-size: 13px; color: var(--muted); }
+.sitefoot a { color: var(--accent); }

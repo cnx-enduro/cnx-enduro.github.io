@@ -13,6 +13,14 @@
   $("restricted").textContent = site.restricted;
   if (site.noRide) $("noRide").querySelector("span").textContent = site.noRide; else $("noRide").hidden = true;
   $("contribute").textContent = site.contribute;
+  // Footer on every page: who looks after the site and where comments go. The address is put together here,
+  // not written in the page, so it's a little harder for spam robots to pick up.
+  if (site.footer) {
+    const [user, domain] = (site.contact || "").split("@");
+    const mail = domain ? `<a href="mailto:${esc(user)}&#64;${esc(domain)}">${esc(user)}&#64;${esc(domain)}</a>` : "";
+    $("siteFoot").innerHTML = esc(site.footer).replace("{email}", mail);
+    $("siteFoot").hidden = false;
+  }
 
   // Sections come from site.json; each track's Category line in NOTES.txt picks one. The first section is
   // the main page (#); every other section is its own page (#adventure) with its own map, list and rules.
