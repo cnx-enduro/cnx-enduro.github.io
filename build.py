@@ -278,8 +278,6 @@ def commits(pathspec):
             elif not re.match(r"^[\w-]+:\s", line) or not lines:
                 lines.append(line)
         note = lines[0].strip() if lines else "Updated"
-        if by != author:
-            by = f"{by} (uploaded by {author})"
         if not skip:
             result.append({"date": date[:10], "when": date, "by": by, "note": note, "sha": sha[:7]})
     return result
