@@ -222,6 +222,7 @@
 
   function showTrack(t) {
     current = t;
+    if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }  // left over from the previous track's profile
     setSection(t.category);
     for (const [id, l] of Object.entries(layers)) {
       const on = id === t.id;
@@ -403,7 +404,8 @@
       };
       // text/plain keeps this a "simple" request, so the browser skips the CORS preflight Apps Script can't answer
       const r = await fetch(site.submitUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      const out = await r.json();
+      // a sign-in or error page from Google comes back as HTML; say so plainly instead of "Unexpected token <"
+      const out = await r.json().catch(() => ({ ok: false, error: "the server didn't answer properly" }));
       if (!out.ok) throw new Error(out.error || "Failed");
       form.reset();
       onSent();

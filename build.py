@@ -354,10 +354,9 @@ def main():
         surface = None
         try:
             runs = surfaces.surfaces_for(pts, surface_cache)["runs"]
-            sh = surfaces.shares(runs)
-            surface = {"pieces": surface_pieces(pts, runs),
-                       "shares": {"single": sh["single"], "double": sh["double"],
-                                  "paved": sh["tarmac"] + sh["concrete"], "unknown": sh["unknown"]}}
+            sh = surfaces.shares(runs, {"single": ["single"], "double": ["double"],
+                                        "paved": ["tarmac", "concrete"], "unknown": ["unknown"]})
+            surface = {"pieces": surface_pieces(pts, runs), "shares": sh}
             # laterite is drawn on top of the surface colours, and only where the map knows it
             lat = surfaces.laterite_share(runs)
             if lat:

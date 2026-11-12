@@ -151,9 +151,16 @@ def laterite_share(runs):
     return round(100 * sum(r["to"] - r["from"] for r in runs if r["laterite"]) / total)
 
 
-def shares(runs):
+def shares(runs, groups=None):
+    """Whole percentages per group of classes ({name: [classes]}, default one per class), always adding up to 100:
+    round down, then hand the leftover points to the largest remainders."""
+    groups = groups or {c: [c] for c in CLASSES}
     total = sum(r["to"] - r["from"] for r in runs) or 1
-    return {c: round(100 * sum(r["to"] - r["from"] for r in runs if r["cls"] == c) / total) for c in CLASSES}
+    exact = {g: 100 * sum(r["to"] - r["from"] for r in runs if r["cls"] in cs) / total for g, cs in groups.items()}
+    out = {g: int(v) for g, v in exact.items()}
+    for g in sorted(exact, key=lambda g: out[g] - exact[g])[:100 - sum(out.values())]:
+        out[g] += 1
+    return out
 
 
 def surfaces_for(pts, cache, key_extra=""):
