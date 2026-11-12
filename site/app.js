@@ -198,7 +198,11 @@
     surfaceTip = () => { line.bindTooltip(`${t.id} · ${esc(t.name)}`, { sticky: true }); surfaceTip = null; };
   };
   let surfaceLayer = null;
+  // Points of interest saved in the GPX (parking, viewpoints, temples): pins on the track page only.
+  let poiLayer = null;
+  const poiIcon = p => L.divIcon({ className: `poi ${p.kind}`, html: p.kind === "parking" ? "P" : "★", iconSize: [22, 22] });
   const clearSurface = () => {
+    if (poiLayer) { poiLayer.remove(); poiLayer = null; }
     if (surfaceLayer) { surfaceLayer.remove(); surfaceLayer = null; }
     if (surfaceTip) surfaceTip();
   };
@@ -260,6 +264,10 @@
       layers[t.id].start.bringToFront();
       surfaceHover(t, pieces);
     }
+    if (t.pois.length) {
+      poiLayer = L.featureGroup(t.pois.map(p => L.marker([p.lat, p.lon], { icon: poiIcon(p), zIndexOffset: 500 })
+        .bindTooltip(`${esc(p.name)} · km ${p.km}`, { direction: "top", offset: [0, -10] }))).addTo(map);
+    }
 
     const h = latest(t);
     const legalIdx = t.fields.findIndex(f => f[0].toLowerCase() === "legal");
@@ -282,6 +290,8 @@
         <div class="fact"><span>Highest</span><b>${t.maxEle != null ? t.maxEle + " m" : "—"}</b></div>
         <div class="fact"><span>Route</span><b>${t.loop ? "Loop" : "One way"}</b></div>
       </div>
+      ${t.pois.length ? `<h2 class="section">Stops</h2><ul class="pois">${t.pois.map((p, i) => `
+        <li><button class="poirow" data-i="${i}"><i class="poi ${p.kind}">${p.kind === "parking" ? "P" : "★"}</i>${esc(p.name)} <span class="muted">km ${p.km}</span></button></li>`).join("")}</ul>` : ""}
       <dl class="desc">${t.fields.map((f, i) => `<dt>${esc(f[0])}</dt><dd class="${i === legalIdx ? "legal" : ""}">${esc(f[1])}</dd>`).join("")}</dl>
       ${t.surface ? surfaceKey(t) : ""}
       <h2 class="section">Version history</h2>
@@ -327,6 +337,12 @@
       catch { $("copy").textContent = "Copy failed"; }
     };
     if ($("sendForm")) setupSendForm(t);
+    document.querySelectorAll(".poirow").forEach(b => b.onclick = () => {  // a stop in the list → show it on the map
+      const m = poiLayer.getLayers()[+b.dataset.i];
+      map.setView(m.getLatLng(), Math.max(map.getZoom(), 14));
+      m.openTooltip();
+      if (window.innerWidth <= 820) window.scrollTo({ top: 0, behavior: "smooth" });
+    });
     document.querySelector(".panel").scrollTop = 0;
     if (window.innerWidth <= 820) window.scrollTo({ top: 0 });
 

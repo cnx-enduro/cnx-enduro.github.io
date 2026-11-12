@@ -47,6 +47,27 @@ def read_gpx(path):
     return pts
 
 
+def read_pois(path, pts):
+    """Waypoints saved in the GPX (parking, viewpoints, temples) → [{name, kind, lat, lon, km}], km = nearest point on the track."""
+    cum = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        cum.append(cum[-1] + haversine(a, b))
+    pois = []
+    for el in ET.parse(path).getroot().iter():
+        if el.tag.rsplit("}", 1)[-1] != "wpt":
+            continue
+        tags = {c.tag.rsplit("}", 1)[-1]: (c.text or "").strip() for c in el}
+        lat, lon = float(el.get("lat")), float(el.get("lon"))
+        d = [haversine(q, (lat, lon)) for q in pts]
+        i = next(j for j, x in enumerate(d) if x <= min(d) + 30)  # first pass: on a loop, the start rather than the finish
+        name = tags.get("name") or "Point of interest"
+        kind = "parking" if "parking" in tags.get("sym", "").lower() else "stop"
+        if kind == "parking" and re.fullmatch(r"(start|end|start\s*/\s*end)", name, re.I):
+            name = "Parking (start and finish)"
+        pois.append({"name": name, "kind": kind, "lat": round(lat, 6), "lon": round(lon, 6), "km": round(cum[i] / 1000, 1)})
+    return sorted(pois, key=lambda p: p["km"])
+
+
 def haversine(a, b):
     r = 6371000.0
     p1, p2 = math.radians(a[0]), math.radians(b[0])
@@ -411,6 +432,7 @@ def main():
             "difficulty": diff,
             "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category")],
             "flags": flags(fields),
+            "pois": read_pois(os.path.join(TRACKS, fn), pts),
             "history": history,
             # notes changes are shown without a name: the notes are Pavel and Jul's, whoever typed the edit
             "notesUpdated": {k: v for k, v in (notes_hist[-1] if notes_hist else (seed.get("notes") or [{}])[-1] or {}).items() if k != "by"} or None,
