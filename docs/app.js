@@ -267,6 +267,8 @@
     if (t.pois.length) {
       poiLayer = L.featureGroup(t.pois.map(p => L.marker([p.lat, p.lon], { icon: poiIcon(p), zIndexOffset: 500 })
         .bindTooltip(`${esc(p.name)} · km ${p.km}`, { direction: "top", offset: [0, -10] }))).addTo(map);
+      // a label opened from the Stops list stays up until its own pin is left; close it when another pin is hovered
+      poiLayer.on("mouseover", e => poiLayer.eachLayer(l => { if (l !== e.layer) l.closeTooltip(); }));
     }
 
     const h = latest(t);
@@ -339,6 +341,7 @@
     if ($("sendForm")) setupSendForm(t);
     document.querySelectorAll(".poirow").forEach(b => b.onclick = () => {  // a stop in the list → show it on the map
       const m = poiLayer.getLayers()[+b.dataset.i];
+      poiLayer.eachLayer(l => l.closeTooltip());  // one label at a time, not a pile of every stop clicked
       map.setView(m.getLatLng(), Math.max(map.getZoom(), 14));
       m.openTooltip();
       if (window.innerWidth <= 820) window.scrollTo({ top: 0, behavior: "smooth" });
