@@ -13,6 +13,14 @@
   $("restricted").textContent = site.restricted;
   if (site.noRide) $("noRide").querySelector("span").textContent = site.noRide; else $("noRide").hidden = true;
   $("contribute").textContent = site.contribute;
+  // Tip for groups: share live location in an app the riders already have (site.json groupTip).
+  if (site.groupTip) {
+    const g = $("groupTip");
+    g.querySelector("summary").textContent = site.groupTip.title;
+    g.querySelector("div").innerHTML = `<ul>${site.groupTip.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` +
+      (site.groupTip.note ? `<p class="muted">${esc(site.groupTip.note)}</p>` : "");
+    g.hidden = false;
+  }
   // Footer on every page: who looks after the site and where comments go. The address is put together here,
   // not written in the page, so it's a little harder for spam robots to pick up.
   if (site.footer) {
@@ -46,7 +54,13 @@
   }).join("");
 
   // ---------- map ----------
-  const map = baseMap("map");
+  // Blue-dot label on a track page: how far along this track the rider is (or how far off it).
+  const map = baseMap("map", { satelliteKey: site.satelliteKey, whereText: ll => {
+    if (!current) return "";
+    const n = nearestOnLine(current.line, [ll.lat, ll.lng]);
+    const km = kmAlong(current)(n).toFixed(1);
+    return n.dist <= 200 ? `km ${km} of this track` : `${n.dist >= 1000 ? (n.dist / 1000).toFixed(1) + " km" : Math.round(n.dist) + " m"} from the track (nearest: km ${km})`;
+  } });
   addNoRideZones(map, { key: true });
   const layers = {};
   const all = L.featureGroup().addTo(map);
@@ -232,6 +246,7 @@
 
   function showOverview(id) {
     current = null;
+    map.fire("whererefresh");
     const changed = section !== id;
     setSection(id);
     if (changed && window.innerWidth <= 820) window.scrollTo({ top: 0 });
@@ -250,6 +265,7 @@
 
   function showTrack(t) {
     current = t;
+    map.fire("whererefresh");
     if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }  // left over from the previous track's profile
     setSection(t.category);
     for (const [id, l] of Object.entries(layers)) {
@@ -408,7 +424,7 @@
     $("sendbox").addEventListener("toggle", () => {
       if (!$("sendbox").open) return;
       if (spotMap) { spotMap.invalidateSize(); return; }
-      spotMap = baseMap("spotMap", { layersControl: false });
+      spotMap = baseMap("spotMap", { layersControl: false, locate: false });
       addNoRideZones(spotMap);
       L.polyline(t.line, { color: "#000", weight: 7, opacity: 0.5 }).addTo(spotMap);
       L.polyline(t.line, { color: t.color, weight: 4 }).addTo(spotMap);

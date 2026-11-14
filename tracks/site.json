@@ -4,7 +4,16 @@
   "restricted": "Please ride these community tracks instead of Doi Suthep or Hang Dong, which are restricted areas.",
   "noRide": "Red striped area on the map: Doi Suthep-Pui National Park. No off-road riding there.",
   "contribute": "Found a change on a track? Open the track and use \"Send it to us\".",
-  "footer": "Site maintained by Chu. Comments and ideas: {email}",
+  "groupTip": {
+    "title": "Riding as a group? Share your live location",
+    "items": [
+      "WhatsApp: in the group chat, Location → Share live location → 8 hours.",
+      "Google Maps: Location sharing → pick the riders → Until you turn this off.",
+      "Messenger: in the group chat, Location → Share live location. It stops after about 1 hour, so share again."
+    ],
+    "note": "Sharing uses your phone's battery and data. Turn it off when you get home."
+  },
+  "footer": "Built and maintained by Chu. Comments and ideas: {email}",
   "contact": "njpiccachu@gmail.com",
   "owners": [
     "Pavel",
@@ -20,5 +29,7 @@
       "subtitle": "Beginner-friendly enduro GPX routes around Chiang Mai",
       "rulesSummary": "Read before riding: gear, difficulty scale, wet rule"
     }
-  ]
+  ],
+  "satelliteKey": "AAPTaxFJ8VQI4luJA2aglHR7sjQ..0MFIW6EavKBBEVEFIsK1eSCWOI7FLVSXxmtpv6OCzhdcDAt5dJq7t8lBNkbJUz5HgA6BUeC17Lh3JEbDdZu5SQtC4xCB56KMtn331DXaFY2Ff7hi4-AisyCPm3Cu2ZdRgl1RVgNeGOhuPHYEMubFmkAAc3AadM4AxsRDQFmp3oUgUiw7n6gbng-gRmG4jiH4pXSbUQMKY2WhMZdUslTcsJejb--CmNYVYVcmt_dshvZs1ra6rmqEAok.AT1_ugCaKr9I",
+  "satelliteKeyExpires": "2027-11-13"
 }

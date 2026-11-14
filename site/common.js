@@ -30,9 +30,72 @@ function baseMap(el, opts = {}) {
   });
   const map = L.map(el, { layers: [osm], zoomControl: true, preferCanvas: true }).setView([18.85, 98.98], 9);
   map.attributionControl.setPrefix(false);  // drop the "Leaflet" + flag credit; the map data credits stay
-  if (opts.layersControl !== false) L.control.layers({ "Streets": osm, "Topo": topo }, null, { position: "topright" }).addTo(map);
+  // Satellite (Esri World Imagery, key locked to the site's address in Chu's Esri account, expires 2027-11-13).
+  // Tiles download only after someone picks Satellite, so it costs nothing for everyone else.
+  const bases = { "Streets": osm, "Topo": topo };
+  if (opts.satelliteKey) bases["Satellite"] = L.tileLayer(
+    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token=" + encodeURIComponent(opts.satelliteKey), {
+      maxZoom: 19, attribution: 'Powered by <a href="https://www.esri.com">Esri</a> | Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    });
+  if (opts.layersControl !== false) L.control.layers(bases, null, { position: "topright" }).addTo(map);
   L.control.scale({ imperial: false }).addTo(map);
+  if (opts.locate !== false) addLocate(map, opts.whereText);
   return map;
+}
+
+// "Where am I" button under the zoom: the phone asks permission first (its own pop-up), then a blue dot follows
+// the rider while the page is open. Nothing is sent anywhere; the position stays on the phone.
+// whereText(latlng) → extra line for the dot's label (the track page uses it for "km X of this track").
+function addLocate(map, whereText) {
+  if (!("geolocation" in navigator)) return;
+  let watch = null, dot = null, ring = null, first = true, last = null;
+  const label = () => {
+    const extra = whereText && last ? whereText(last) : "";
+    return `You are here${extra ? "<br>" + extra : ""}`;
+  };
+  // The page calls this when the rider opens another track or goes back to the list, so the label
+  // ("km X of this track") follows straight away instead of waiting for the next GPS fix.
+  map.on("whererefresh", () => { if (dot) dot.setTooltipContent(label()); });
+  const ctl = L.control({ position: "bottomright" });
+  ctl.onAdd = () => {
+    const box = L.DomUtil.create("div", "leaflet-bar locate");
+    box.innerHTML = `<a href="#" role="button" title="Show where I am" aria-label="Show where I am"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M21 3 3 10.5l7.5 3 3 7.5L21 3z" fill="currentColor"/></svg></a><span class="locmsg" hidden></span>`;
+    L.DomEvent.disableClickPropagation(box);
+    const btn = box.querySelector("a"), msg = box.querySelector(".locmsg");
+    const say = text => { msg.textContent = text; msg.hidden = !text; };
+    const stop = () => {
+      if (watch !== null) navigator.geolocation.clearWatch(watch);
+      watch = null; last = null;
+      if (dot) { map.removeLayer(dot); map.removeLayer(ring); dot = ring = null; }
+      btn.classList.remove("on"); say("");
+    };
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      if (watch !== null) return stop();
+      btn.classList.add("on"); say("Finding you…"); first = true;
+      // No timeout: in the hills the GPS can drop for a while; the watch keeps going and the dot
+      // comes back by itself. Only a "blocked" answer stops it.
+      watch = navigator.geolocation.watchPosition(pos => {
+        last = L.latLng(pos.coords.latitude, pos.coords.longitude);
+        const acc = pos.coords.accuracy;
+        if (!dot) {
+          ring = L.circle(last, { radius: acc, color: "#2f7cf6", weight: 1, fillOpacity: 0.12, interactive: false }).addTo(map);
+          dot = L.circleMarker(last, { radius: 8, color: "#fff", weight: 3, fillColor: "#2f7cf6", fillOpacity: 1 })
+            .bindTooltip(label(), { direction: "top", offset: [0, -8] }).addTo(map);
+        } else {
+          dot.setLatLng(last); ring.setLatLng(last).setRadius(acc);
+          dot.setTooltipContent(label());  // update the text without closing an open label
+        }
+        say("");
+        if (first) { map.setView(last, Math.max(map.getZoom(), 14)); dot.openTooltip(); first = false; }
+      }, err => {
+        if (err.code === 1) { stop(); say("Location is blocked. Allow it for this site in your phone's settings."); }
+        else if (!dot) say("Looking for GPS signal…");
+      }, { enableHighAccuracy: true, maximumAge: 5000 });
+    });
+    return box;
+  };
+  ctl.addTo(map);
 }
 
 // No-ride zones, on every map: Doi Suthep-Pui National Park striped red under the tracks, and a "No-ride zone"
