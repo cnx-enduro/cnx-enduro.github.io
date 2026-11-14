@@ -27,6 +27,7 @@ Length: 70km (6 hours).
 Wet conditions: might get slippery on some dirt sections, but no major difficulties.
 Up/downhills: mostly flat (only 1 short hilly section).
 Shaded: 30% shaded.
+Map labels: km 14-15: Rice paddy view; km 38.5: Stream crossing; km 65-70: Rice paddies
 
 
 ----------------------------------------------------
@@ -40,6 +41,7 @@ Terrain: 40% paved (twisty mountain), 30% double (easy, dirt), 30% single (easy-
 Wet conditions: decent traction, some dirt, but no pig skin (laterite).
 Up/downhills: mostly flat, only one uphill/downhill section on paved.
 Shaded: 50% shaded.
+Map labels: km 18: Reservoir; km 25: Reservoir; km 41.4: Viewpoint
 
 
 ----------------------------------------------------
@@ -55,7 +57,7 @@ Up/downhills: mostly flat, with a couple of gentle up/downhills.
 Shaded: 40% shaded.
 
 Legal: river section (from km 20 to km 30) is closed during smoke season, so you might be stopped by rangers.
-Map labels: km 21-30: 40+ river crossings
+Map labels: km 14.4: Hmong valley; km 21-30: 40+ river crossings
 
 
 ----------------------------------------------------
@@ -70,6 +72,7 @@ Length: 64km (5-6 hours).
 Wet conditions: good traction, mostly gravel or earth, no pig skin (laterite).
 Up/downhills: mostly flat, with a few small up/downhills.
 Shaded: 50% shaded.
+Map labels: km 39-41: Rocky technical single track
 
 
 ----------------------------------------------------
@@ -83,6 +86,7 @@ Terrain: 10% paved (concrete), 60% double (easy dirt), 30% single (easy gravel).
 Wet conditions: potentially problematic, some pig skin (laterite).
 Up/downhills: mostly flat.
 Shaded: 90% shaded.
+Map labels: km 14.3: Watch tower; km 38.5: Sticky Waterfall turn-off (700 m off track, touristy); km 46.8-51.5: 3 stream crossings; km 52.7: Pan-Din-Vid Viewpoint (end)
 
 
 ----------------------------------------------------
@@ -96,6 +100,7 @@ Length: 53 km (5-6 hours)
 Wet conditions: Medium, laterite territory. The river section is fairly flat and fun when wet, but the single track and the long double track to the temple get slippery.
 Climbs/descents: The first half is flat; the rest has some steep sections but mostly gentle gradients.
 Shade: 70% shaded.
+Map labels: km 3.6-7.6: Stream crossings; km 30.4: Wat Phra Putthabat Si Roi temple; km 46.4-50.4: Stream crossings
 
 
 ----------------------------------------------------
@@ -109,6 +114,7 @@ Length: 135km (9 hours).
 Wet conditions: problematic because the short technical section can get slippery and difficult. Also, towards the end there is a river crossing, which might be difficult if the river swells with rain. Don't ride this track alone.
 Up/downhills: one intermediate technical up/downhill section with ruts.
 Shaded: 20% shaded.
+Map labels: km 65.4: River crossing; km 126.4: Pai River crossing (hard after rain)
 
 
 ----------------------------------------------------
@@ -133,5 +139,6 @@ Terrain: 84% paved (tarmac and concrete), 16% double (dirt).
 Length: 73km (4-5 hours).
 Wet conditions: mostly paved, but slippery on the short laterite (pig skin) bit at km 50-52 and on the steep concrete at km 56.
 Up/downhills: hilly, about 1,900 m of climbing. Steep climb at km 44-46.
+Map labels: km 39.1: Wat Yang Moen temple; km 46: Highest point, Ban Khun Om Long (about 1,220 m)
 
 

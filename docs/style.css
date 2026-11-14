@@ -226,3 +226,17 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 /* footer: who maintains the site, where comments go */
 .sitefoot { border-top: 1px solid var(--line); margin-top: 20px; padding: 12px 0 4px; font-size: 13px; color: var(--muted); }
 .sitefoot a { color: var(--accent); }
+
+/* "Where am I" button, bottom right (thumb reach on a phone) */
+.locate { position: relative; border: 0 !important; box-shadow: 0 1px 6px rgba(0,0,0,0.6) !important; }
+.leaflet-bar.locate a { display: flex !important; align-items: center; justify-content: center; width: 44px; height: 44px;
+  border-radius: 50% !important; color: #2f7cf6; border: 2px solid #2f7cf6; text-decoration: none; }
+.leaflet-bar.locate { border-radius: 50%; }
+.leaflet-bar.locate a.on { background: #2f7cf6; color: #fff; }
+.locate .locmsg { position: absolute; right: 52px; bottom: 8px; width: max-content; max-width: 220px; padding: 5px 8px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font-size: 12px; }
+
+/* Phones: keep the map credits (Esri's is long) small and clear of the scale bar on the left */
+@media (max-width: 600px) {
+  .leaflet-control-attribution { font-size: 10px; max-width: calc(100vw - 110px); line-height: 1.3; }
+}
