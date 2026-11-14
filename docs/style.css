@@ -232,11 +232,14 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 .leaflet-bar.locate a { display: flex !important; align-items: center; justify-content: center; width: 44px; height: 44px;
   border-radius: 50% !important; color: #2f7cf6; border: 2px solid #2f7cf6; text-decoration: none; }
 .leaflet-bar.locate { border-radius: 50%; }
-.leaflet-bar.locate a.on { background: #2f7cf6; color: #fff; }
-.locate .locmsg { position: absolute; right: 52px; bottom: 8px; width: max-content; max-width: 220px; padding: 5px 8px;
+.leaflet-bar.locate a.on { background: #2f7cf6; color: #fff; }  /* following you */
+.locate .locmsg { position: absolute; right: 0; bottom: 74px; width: max-content; max-width: 220px; padding: 5px 8px;
   background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font-size: 12px; }
 
 /* Phones: keep the map credits (Esri's is long) small and clear of the scale bar on the left */
 @media (max-width: 600px) {
   .leaflet-control-attribution { font-size: 10px; max-width: calc(100vw - 110px); line-height: 1.3; }
 }
+.locate .locsign { position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%); padding: 1px 6px;
+  border-radius: 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; background: rgba(0,0,0,0.65); color: #bbb; }
+.locate .locsign.on { background: #2f7cf6; color: #fff; }

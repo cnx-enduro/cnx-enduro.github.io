@@ -43,36 +43,53 @@ function baseMap(el, opts = {}) {
   return map;
 }
 
-// "Where am I" button under the zoom: the phone asks permission first (its own pop-up), then a blue dot follows
-// the rider while the page is open. Nothing is sent anywhere; the position stays on the phone.
+// "Where am I" button, bottom right: one tap = location ON, next tap = OFF (a small ON/OFF sign shows which).
+// While ON the phone's position shows as a blue dot and the map keeps it in the middle as the rider moves.
+// Dragging the map (or opening another track) pauses that so the rider can look around; after 5 s without
+// touching the map it centres on the rider again by itself.
+// The phone asks permission the first time (its own pop-up). Nothing is sent anywhere.
 // whereText(latlng) → extra line for the dot's label (the track page uses it for "km X of this track").
+const LOCATE_RESUME_MS = 5000;
 function addLocate(map, whereText) {
   if (!("geolocation" in navigator)) return;
-  let watch = null, dot = null, ring = null, first = true, last = null;
+  let watch = null, dot = null, ring = null, last = null, follow = false, resume = null, btn = null, msg = null, sign = null;
   const label = () => {
     const extra = whereText && last ? whereText(last) : "";
     return `You are here${extra ? "<br>" + extra : ""}`;
   };
-  // The page calls this when the rider opens another track or goes back to the list, so the label
-  // ("km X of this track") follows straight away instead of waiting for the next GPS fix.
-  map.on("whererefresh", () => { if (dot) dot.setTooltipContent(label()); });
+  const say = text => { if (msg) { msg.textContent = text; msg.hidden = !text; } };
+  const pause = () => {
+    if (watch === null) return;
+    follow = false;
+    clearTimeout(resume);
+    resume = setTimeout(() => { if (watch !== null && last) { follow = true; map.panTo(last, { animate: true }); } }, LOCATE_RESUME_MS);
+  };
+  // Another track opened / back to the list: new label text, and let the map show that track for a moment.
+  map.on("whererefresh", () => { if (dot) { dot.setTooltipContent(label()); pause(); } });
+  map.on("dragstart zoomstart", e => { if (e.type === "dragstart" || !follow) pause(); });
+  map.on("dragend", pause);  // restart the 5 s from when the finger lifts
   const ctl = L.control({ position: "bottomright" });
   ctl.onAdd = () => {
     const box = L.DomUtil.create("div", "leaflet-bar locate");
-    box.innerHTML = `<a href="#" role="button" title="Show where I am" aria-label="Show where I am"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M21 3 3 10.5l7.5 3 3 7.5L21 3z" fill="currentColor"/></svg></a><span class="locmsg" hidden></span>`;
+    box.innerHTML = `<span class="locsign">OFF</span><a href="#" role="button" title="Location off. Tap to show where I am" aria-label="Location off. Tap to show where I am" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M21 3 3 10.5l7.5 3 3 7.5L21 3z" fill="currentColor"/></svg></a><span class="locmsg" hidden></span>`;
     L.DomEvent.disableClickPropagation(box);
-    const btn = box.querySelector("a"), msg = box.querySelector(".locmsg");
-    const say = text => { msg.textContent = text; msg.hidden = !text; };
+    btn = box.querySelector("a"); msg = box.querySelector(".locmsg"); sign = box.querySelector(".locsign");
+    const show = on => {
+      btn.classList.toggle("on", on); sign.classList.toggle("on", on); sign.textContent = on ? "ON" : "OFF";
+      const t = on ? "Location on. Tap to turn it off" : "Location off. Tap to show where I am";
+      btn.title = t; btn.setAttribute("aria-label", t); btn.setAttribute("aria-pressed", String(on));
+    };
     const stop = () => {
       if (watch !== null) navigator.geolocation.clearWatch(watch);
-      watch = null; last = null;
+      watch = null; last = null; follow = false; clearTimeout(resume);
       if (dot) { map.removeLayer(dot); map.removeLayer(ring); dot = ring = null; }
-      btn.classList.remove("on"); say("");
+      show(false); say("");
     };
     btn.addEventListener("click", e => {
       e.preventDefault();
       if (watch !== null) return stop();
-      btn.classList.add("on"); say("Finding you…"); first = true;
+      show(true); follow = true; say("Finding you…");
+      let first = true;
       // No timeout: in the hills the GPS can drop for a while; the watch keeps going and the dot
       // comes back by itself. Only a "blocked" answer stops it.
       watch = navigator.geolocation.watchPosition(pos => {
@@ -88,6 +105,7 @@ function addLocate(map, whereText) {
         }
         say("");
         if (first) { map.setView(last, Math.max(map.getZoom(), 14)); dot.openTooltip(); first = false; }
+        else if (follow) map.panTo(last, { animate: true });
       }, err => {
         if (err.code === 1) { stop(); say("Location is blocked. Allow it for this site in your phone's settings."); }
         else if (!dot) say("Looking for GPS signal…");
