@@ -47,12 +47,21 @@ function baseMap(el, opts = {}) {
 // While ON the phone's position shows as a blue dot and the map keeps it in the middle as the rider moves.
 // Dragging the map (or opening another track) pauses that so the rider can look around; after 5 s without
 // touching the map it centres on the rider again by itself.
-// The phone asks permission the first time (its own pop-up). Nothing is sent anywhere.
+// The screen stays awake while it's ON. The phone asks permission the first time (its own pop-up). Nothing is sent anywhere.
 // whereText(latlng) → extra line for the dot's label (the track page uses it for "km X of this track").
 const LOCATE_RESUME_MS = 5000;
 function addLocate(map, whereText) {
   if (!("geolocation" in navigator)) return;
   let watch = null, dot = null, ring = null, last = null, follow = false, resume = null, btn = null, msg = null, sign = null;
+  // Keep the screen on while location is ON, so the phone doesn't lock mid-ride and freeze the dot.
+  // The phone drops this hold whenever the page is hidden, so take it again when the rider comes back.
+  let wake = null;
+  const holdScreen = async () => {
+    if (!("wakeLock" in navigator) || watch === null || wake) return;
+    try { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } catch (e) { wake = null; }
+  };
+  const freeScreen = () => { if (wake) { wake.release().catch(() => {}); wake = null; } };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
   const label = () => {
     const extra = whereText && last ? whereText(last) : "";
     return `You are here${extra ? "<br>" + extra : ""}`;
@@ -83,7 +92,7 @@ function addLocate(map, whereText) {
       if (watch !== null) navigator.geolocation.clearWatch(watch);
       watch = null; last = null; follow = false; clearTimeout(resume);
       if (dot) { map.removeLayer(dot); map.removeLayer(ring); dot = ring = null; }
-      show(false); say("");
+      freeScreen(); show(false); say("");
     };
     btn.addEventListener("click", e => {
       e.preventDefault();
@@ -110,6 +119,7 @@ function addLocate(map, whereText) {
         if (err.code === 1) { stop(); say("Location is blocked. Allow it for this site in your phone's settings."); }
         else if (!dot) say("Looking for GPS signal…");
       }, { enableHighAccuracy: true, maximumAge: 5000 });
+      holdScreen();
     });
     return box;
   };
