@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
@@ -221,15 +222,16 @@ LABELS = {  # tidy label names so similar fields read the same on every track
 
 
 def map_labels(text, fn):
-    """NOTES.txt 'Map labels: km 21-30: 40+ river crossings; km 45-47: steep rocks' → [{from, to, text}],
-    shown when the mouse is over that stretch of the track."""
+    """NOTES.txt 'Map labels: km 21-30: 40+ river crossings; km 18: Reservoir' → [{from, to, text}],
+    shown when the mouse is over that stretch of the track. A single km is one spot (from = to)."""
     out = []
     for part in filter(None, (p.strip() for p in text.split(";"))):
-        m = re.match(r"km\s*([\d.]+)\s*-\s*([\d.]+)\s*:\s*(.+)$", part, re.I)
+        m = re.match(r"km\s*([\d.]+)\s*(?:-\s*([\d.]+)\s*)?:\s*(.+)$", part, re.I)
         if m:
-            out.append({"from": float(m.group(1)), "to": float(m.group(2)), "text": m.group(3).strip().rstrip(".")})
+            a = float(m.group(1))
+            out.append({"from": a, "to": float(m.group(2) or a), "text": m.group(3).strip().rstrip(".")})
         else:
-            warn(f"{fn}: can't read map label '{part}' (use 'km 21-30: what it is')")
+            warn(f"{fn}: can't read map label '{part}' (use 'km 21-30: what it is' or 'km 18: what it is')")
     return out
 
 
@@ -243,9 +245,11 @@ def label_stops(pts, labels):
     for l in labels:
         mid = (l["from"] + l["to"]) / 2 * 1000
         i = min(range(len(pts)), key=lambda j: abs(cum[j] - mid))
-        kind = "water" if re.search(r"river|stream|water|ford", l["text"], re.I) else "stop"
-        stops.append({"name": l["text"], "kind": kind, "lat": round(pts[i][0], 6), "lon": round(pts[i][1], 6),
-                      "km": l["from"], "kmTo": l["to"]})
+        kind = "water" if re.search(r"crossing|ford", l["text"], re.I) else "stop"  # ≈ = riding through water
+        stop = {"name": l["text"], "kind": kind, "lat": round(pts[i][0], 6), "lon": round(pts[i][1], 6), "km": l["from"]}
+        if l["to"] != l["from"]:
+            stop["kmTo"] = l["to"]
+        stops.append(stop)
     return stops
 
 
@@ -380,6 +384,9 @@ def surface_pieces(pts, runs, cls_of=lambda r: PAVED.get(r["cls"], r["cls"])):
 def main():
     with open(os.path.join(TRACKS, "site.json")) as f:
         site = json.load(f)
+    exp = site.get("satelliteKeyExpires")
+    if exp and time.strftime("%Y-%m-%d", time.localtime(time.time() + 30 * 86400)) >= exp:
+        warn(f"Satellite key expires {exp}: make a new one in the Esri account (item 'CNX Enduro satellite') and replace satelliteKey in site.json")
     with open(os.path.join(TRACKS, "history-seed.json")) as f:
         seed = json.load(f)
     notes_path = os.path.join(TRACKS, "NOTES.txt")
