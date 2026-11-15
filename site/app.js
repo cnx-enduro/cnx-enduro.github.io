@@ -27,7 +27,7 @@
   if (site.footer) {
     const [user, domain] = (site.contact || "").split("@");
     const mail = domain ? `<a href="mailto:${esc(user)}&#64;${esc(domain)}">${esc(user)}&#64;${esc(domain)}</a>` : "";
-    $("siteFoot").innerHTML = esc(site.footer).replace("{email}", mail) + (site.copyright ? `<br>${esc(site.copyright)}` : "");
+    $("siteFoot").innerHTML = esc(site.footer).replace("{email}", mail) + (site.footNote ? `<br>${esc(site.footNote)}` : "");
     $("siteFoot").hidden = false;
   }
 
