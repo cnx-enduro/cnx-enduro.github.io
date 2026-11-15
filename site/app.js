@@ -12,6 +12,7 @@
   $("title").textContent = site.title;
   $("restricted").textContent = site.restricted;
   if (site.noRide) $("noRide").querySelector("span").textContent = site.noRide; else $("noRide").hidden = true;
+  for (const k of ["shareNotice", "riskNotice"]) if (site[k]) { $(k).textContent = site[k]; $(k).hidden = false; }
   $("contribute").textContent = site.contribute;
   // Tip for groups: share live location in an app the riders already have (site.json groupTip).
   if (site.groupTip) {
@@ -26,7 +27,7 @@
   if (site.footer) {
     const [user, domain] = (site.contact || "").split("@");
     const mail = domain ? `<a href="mailto:${esc(user)}&#64;${esc(domain)}">${esc(user)}&#64;${esc(domain)}</a>` : "";
-    $("siteFoot").innerHTML = esc(site.footer).replace("{email}", mail);
+    $("siteFoot").innerHTML = esc(site.footer).replace("{email}", mail) + (site.copyright ? `<br>${esc(site.copyright)}` : "");
     $("siteFoot").hidden = false;
   }
 
@@ -313,6 +314,7 @@
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
         <button class="btn" id="copy">Copy link</button>
       </div>
+      ${site.shareNotice ? `<p class="share small">${esc(site.shareNotice)}</p>` : ""}
       <div class="facts">
         <div class="fact"><span>Distance</span><b>${t.km} km</b></div>
         <div class="fact"><span>Climbing (est.)</span><b>${t.climb != null ? "≈" + t.climb + " m" : "—"}</b></div>
