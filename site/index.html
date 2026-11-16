@@ -16,6 +16,7 @@
     <h1 id="title">Chiang Mai Enduro Riders Tracks</h1>
     <p id="subtitle" class="muted"></p>
   </div>
+  <button class="btn small qrbtn" id="qrBtn" type="button" title="Show a QR code to open this page on a phone">QR code</button>
   <nav class="secnav" id="secNav" aria-label="Sections" hidden>
     <div class="seg" id="secTabs"></div>
     <select id="secPick" aria-label="Choose a section"></select>
@@ -46,16 +47,27 @@
         <summary></summary>
         <div></div>
       </details>
+      <details class="rules guide" id="shareGuide" hidden>
+        <summary></summary>
+        <div></div>
+      </details>
       <h2 class="section" id="listHead">Tracks</h2>
       <ol id="list" class="list"></ol>
-      <h2 class="section" id="changesHead">Recent updates</h2>
-      <ul id="changes" class="changes"></ul>
+      <details class="updates" id="changesHead"><summary class="section">Recent updates</summary>
+        <ul id="changes" class="changes"></ul>
+      </details>
       <p id="contribute" class="muted small"></p>
     </div>
     <article id="detail" hidden></article>
     <footer class="sitefoot" id="siteFoot" hidden></footer>
   </aside>
 </main>
+<dialog class="qrbox" id="qrBox" aria-labelledby="qrTitle">
+  <h2 id="qrTitle">Scan to open on a phone</h2>
+  <div class="qrimg" id="qrImg"></div>
+  <p class="muted small" id="qrUrl"></p>
+  <button class="btn" id="qrClose" type="button">Close</button>
+</dialog>
 
 <script src="vendor/leaflet.min.js"></script>
 <script src="common.js"></script>

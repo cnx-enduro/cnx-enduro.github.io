@@ -22,6 +22,15 @@
       (site.groupTip.note ? `<p class="muted">${esc(site.groupTip.note)}</p>` : "");
     g.hidden = false;
   }
+  // "How to share GPX responsibly": a rider's own post, word for word, with its photo (site.json shareGuide).
+  if (site.shareGuide) {
+    const sg = site.shareGuide, g = $("shareGuide"), ps = a => (a || []).map(x => `<p>${esc(x)}</p>`).join("");
+    g.querySelector("summary").textContent = sg.title;
+    g.querySelector("div").innerHTML = (sg.byline ? `<p class="muted small">${esc(sg.byline)}</p>` : "") + ps(sg.intro) +
+      (sg.rules ? `<ol>${sg.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ol>` : "") + ps(sg.outro) +
+      (sg.photo ? `<img src="${esc(sg.photo)}" alt="${esc(sg.photoAlt || "")}" loading="lazy">` : "");
+    g.hidden = false;
+  }
   // Footer on every page: who looks after the site and where comments go. The address is put together here,
   // not written in the page, so it's a little harder for spam robots to pick up.
   if (site.footer) {
@@ -30,6 +39,56 @@
     $("siteFoot").innerHTML = esc(site.footer).replace("{email}", mail) + (site.footNote ? `<br>${esc(site.footNote)}` : "");
     $("siteFoot").hidden = false;
   }
+
+  // Visitor number at the very end of the footer, kept quiet: tiny grey text that only appears once the free
+  // counting service (abacus.jasoncameron.dev, no sign-up) answers; if it's slow or down, nothing shows.
+  // A visit counts once per browser session and only on the real site, so reloads and test copies don't add.
+  // No cookies, nothing personal: the service just keeps one number.
+  if (site.footer) (async () => {
+    const live = location.hostname === "cnx-enduro.github.io";
+    let first = false;
+    try { first = live && !sessionStorage.getItem("counted"); if (first) sessionStorage.setItem("counted", "1"); } catch (e) {}
+    const stop = new AbortController(); setTimeout(() => stop.abort(), 20000);
+    try {
+      const r = await fetch(`https://abacus.jasoncameron.dev/${first ? "hit" : "get"}/cnx-enduro-github-io/visits`, { signal: stop.signal });
+      const v = (await r.json()).value;
+      if (Number.isFinite(v)) {
+        const s = document.createElement("span");
+        s.className = "visits"; s.textContent = `${v.toLocaleString("en-US")} visits`;
+        $("siteFoot").append(document.createElement("br"), s);
+      }
+    } catch (e) {}
+  })();
+
+  // "QR code" in the header: a code for the page that's open (the list or one track), so a rider looking at
+  // the site on a computer, or on a friend's phone, can scan it and open the same page on their own phone.
+  // The QR maker is only downloaded the first time someone taps the button.
+  let qrLib = null;
+  const loadQr = () => qrLib || (qrLib = new Promise((ok, fail) => {
+    const s = document.createElement("script");
+    s.src = "vendor/qrcode.js"; s.onload = ok; s.onerror = () => { qrLib = null; s.remove(); fail(); };
+    document.head.appendChild(s);
+  }));
+  $("qrBtn").onclick = async () => {
+    // Always the public address (a test copy on a computer would otherwise give a link phones can't open).
+    const url = (site.siteUrl || location.origin + location.pathname) + location.hash;
+    try {
+      await loadQr();
+      const q = qrcode(0, "M"); q.addData(url); q.make();
+      $("qrImg").innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+      $("qrImg").hidden = false;
+      $("qrUrl").textContent = url.replace(/^https?:\/\//, "");
+    } catch (e) {
+      $("qrImg").hidden = true;
+      $("qrUrl").textContent = "Couldn't load the QR code. Check your internet and try again.";
+    }
+    $("qrBox").showModal();
+  };
+  $("qrClose").onclick = () => $("qrBox").close();
+  $("qrBox").addEventListener("click", e => {  // a tap outside the box closes it (a tap on its own edge doesn't)
+    const b = $("qrBox").getBoundingClientRect();
+    if (e.target === $("qrBox") && (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom)) $("qrBox").close();
+  });
 
   // Sections come from site.json; each track's Category line in NOTES.txt picks one. The first section is
   // the main page (#); every other section is its own page (#adventure) with its own map, list and rules.
@@ -168,8 +227,9 @@
     });
 
     const changes = data.changes.filter(c => !c.track || tracks.find(t => t.id === c.track)?.category === id);
-    $("changesHead").hidden = $("changes").hidden = !changes.length;
-    $("changes").innerHTML = changes.slice(0, 12).map(c => `
+    // "Recent updates" stays folded: one line until someone taps it, then the whole list.
+    $("changesHead").hidden = !changes.length;
+    $("changes").innerHTML = changes.slice(0, 40).map(c => `
       <li><time>${fmtDate(c.date)}</time>
       <span>${c.track ? `<a href="#${c.track}">${esc(c.what)}</a>` : `<b>${esc(c.what)}</b>`}
       — ${esc(c.note)}</span></li>`).join("");
@@ -247,6 +307,7 @@
 
   function showOverview(id) {
     current = null;
+    $("map").classList.remove("ontrack");  // park banner back on the overview map
     map.fire("whererefresh");
     const changed = section !== id;
     setSection(id);
@@ -266,6 +327,7 @@
 
   function showTrack(t) {
     current = t;
+    $("map").classList.add("ontrack");  // one track open: hide the park banner (the red stripes stay)
     map.fire("whererefresh");
     if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }  // left over from the previous track's profile
     setSection(t.category);

@@ -246,3 +246,18 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 /* "Please don't reshare the GPX" line: main notice box + under each track's Download button */
 .share { color: var(--muted); }
 .actions + .share { margin: -6px 0 14px; }
+/* QR code: header button + pop-up. The code itself stays black on white so every phone camera reads it. */
+.qrbtn { flex: none; }
+.qrbox { border: 1px solid var(--line, #333); border-radius: 14px; background: var(--surface, #16181b); color: var(--text, #eee); padding: 20px; max-width: min(92vw, 340px); text-align: center; }
+.qrbox::backdrop { background: rgba(0,0,0,.7); }
+.qrbox h2 { font-size: 17px; margin: 0 0 12px; }
+.qrimg { background: #fff; border-radius: 10px; padding: 10px; width: 240px; max-width: 100%; margin: 0 auto; }
+.qrimg svg { display: block; width: 100%; height: auto; }
+.qrbox p { word-break: break-all; margin: 10px 0 14px; }
+.updates summary { cursor: pointer; }
+.updates summary::marker { color: var(--accent); }
+#map.ontrack .areakey { display: none; }
+.guide ol { margin: 6px 0; padding-left: 22px; }
+.guide li { margin: 6px 0; }
+.guide img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 10px 0 2px; }
+.visits { font-size: 11px; color: var(--muted); opacity: .8; }

@@ -15,6 +15,28 @@
     ],
     "note": "Sharing uses your phone's battery and data. Turn it off when you get home."
   },
+  "shareGuide": {
+    "title": "How to share GPX responsibly 🗺️",
+    "photo": "img/share-gpx-responsibly.jpg",
+    "photoAlt": "A rider lifting a red dirt bike stuck in mud on a forest trail",
+    "intro": [
+      "GPX files spread fast, and they end up with people who aren't ready for them. Plenty of riders post adventure routes on concrete back roads and double track between villages, and that's great. If something goes wrong there, people pass by and a village is never far. This is about the risky bits.",
+      "My mistake was sharing everything. People messaged me because they'd followed my tracks and got stuck. Most of my traces are exploration, not curated routes. They go from easy roads straight into a hard section, sometimes into a dead end. Trails also change all the time, but a GPX doesn't, so people follow it blindly into trouble.",
+      "And it's not only their problem. Someone has to go and get them out, trails get closed and the whole community looks bad.",
+      "My own rules for sharing GPX 👇"
+    ],
+    "rules": [
+      "No single track online, and that includes a route with even one single track section in it. Even close to a village, a pickup can't get in to recover you or the bike. The one exception is a few easy routes we've ridden and checked for the local community.",
+      "Before sharing, I picture someone unprepared following it alone, on the wrong rental bike or new to slick laterite. Could they get lost or stuck? Drown the engine in a river? Is it too long and tiring? Would anyone pass by to help? If that worries me, it stays private.",
+      "Remote double track, protected areas, village-maintained trails and harder routes stay offline. I only share those with friends I trust."
+    ],
+    "outro": [
+      "This isn't about hiding trails. For the harder trails, join a local group and ride with people who know them. If you're only visiting, a local guide is the quickest way in.",
+      "Share the easy stuff, keep the rest off the internet 🤙"
+    ],
+    "byline": "By Jul"
+  },
+  "siteUrl": "https://cnx-enduro.github.io/",
   "footer": "Built and maintained by Chu. Comments and ideas: {email}",
   "footNote": "These tracks are provided for the personal use of the local riding community. Redistribution, republication or sale on other websites is not permitted.",
   "contact": "njpiccachu@gmail.com",
