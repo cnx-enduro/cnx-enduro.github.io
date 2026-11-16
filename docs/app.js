@@ -119,7 +119,7 @@
     if (!current) return "";
     const n = nearestOnLine(current.line, [ll.lat, ll.lng]);
     const km = kmAlong(current)(n).toFixed(1);
-    return n.dist <= 200 ? `km ${km} of this track` : `${n.dist >= 1000 ? (n.dist / 1000).toFixed(1) + " km" : Math.round(n.dist) + " m"} from the track (nearest: km ${km})`;
+    return n.dist <= 200 ? `${km} km` : `${n.dist >= 1000 ? (n.dist / 1000).toFixed(1) + " km" : Math.round(n.dist) + " m"} off track`;
   } });
   addNoRideZones(map, { key: true });
   const layers = {};

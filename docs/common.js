@@ -62,9 +62,15 @@ function addLocate(map, whereText) {
   };
   const freeScreen = () => { if (wake) { wake.release().catch(() => {}); wake = null; } };
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
-  const label = () => {
-    const extra = whereText && last ? whereText(last) : "";
-    return `You are here${extra ? "<br>" + extra : ""}`;
+  // A small tag beside the dot with the km on the open track (e.g. "19.8 km"), small so it doesn't hide the map.
+  // On the track list there's nothing to say, so the dot stands alone.
+  const label = () => (whereText && last ? whereText(last) : "");
+  const setLabel = () => {
+    if (!dot) return;
+    const text = label();
+    if (!text) { if (dot.getTooltip()) dot.unbindTooltip(); return; }
+    if (dot.getTooltip()) dot.setTooltipContent(text);
+    else dot.bindTooltip(text, { permanent: true, direction: "right", offset: [10, 0], className: "youkm" });
   };
   const say = text => { if (msg) { msg.textContent = text; msg.hidden = !text; } };
   const pause = () => {
@@ -74,7 +80,7 @@ function addLocate(map, whereText) {
     resume = setTimeout(() => { if (watch !== null && last) { follow = true; map.panTo(last, { animate: true }); } }, LOCATE_RESUME_MS);
   };
   // Another track opened / back to the list: new label text, and let the map show that track for a moment.
-  map.on("whererefresh", () => { if (dot) { dot.setTooltipContent(label()); pause(); } });
+  map.on("whererefresh", () => { if (dot) { setLabel(); pause(); } });
   map.on("dragstart zoomstart", e => { if (e.type === "dragstart" || !follow) pause(); });
   map.on("dragend", pause);  // restart the 5 s from when the finger lifts
   const ctl = L.control({ position: "bottomright" });
@@ -108,14 +114,14 @@ function addLocate(map, whereText) {
         if (!dot) {
           ring = L.circle(last, { radius: acc, color: "#2f7cf6", weight: 1, fillOpacity: 0.12, interactive: false }).addTo(map);
           dot = L.circleMarker(last, { radius: 8, color: "#fff", weight: 3, fillColor: "#2f7cf6", fillOpacity: 1 })
-            .bindTooltip(label(), { direction: "top", offset: [0, -8] }).addTo(map);
+            .addTo(map);
         } else {
           dot.setLatLng(last); ring.setLatLng(last).setRadius(acc);
-          dot.setTooltipContent(label());  // update the text without closing an open label
         }
         say("");
         map.fire("whereupdate", { latlng: last });  // the page can mark the rider elsewhere too (the height chart)
-        if (first) { map.setView(last, Math.max(map.getZoom(), 14)); dot.openTooltip(); first = false; }
+        setLabel();
+        if (first) { map.setView(last, Math.max(map.getZoom(), 14)); first = false; }
         else if (follow) map.panTo(last, { animate: true });
       }, err => {
         if (err.code === 1) { stop(); say("Location is blocked. Allow it for this site in your phone's settings."); }
