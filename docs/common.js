@@ -93,6 +93,7 @@ function addLocate(map, whereText) {
       watch = null; last = null; follow = false; clearTimeout(resume);
       if (dot) { map.removeLayer(dot); map.removeLayer(ring); dot = ring = null; }
       freeScreen(); show(false); say("");
+      map.fire("whereupdate", { latlng: null });  // location off: the page clears its own "you are here" marks
     };
     btn.addEventListener("click", e => {
       e.preventDefault();
@@ -113,6 +114,7 @@ function addLocate(map, whereText) {
           dot.setTooltipContent(label());  // update the text without closing an open label
         }
         say("");
+        map.fire("whereupdate", { latlng: last });  // the page can mark the rider elsewhere too (the height chart)
         if (first) { map.setView(last, Math.max(map.getZoom(), 14)); dot.openTooltip(); first = false; }
         else if (follow) map.panTo(last, { animate: true });
       }, err => {

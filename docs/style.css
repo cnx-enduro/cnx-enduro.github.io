@@ -176,6 +176,7 @@ a.back { display: inline-block; text-decoration: none; }
   #profile { height: 96px; flex: none; }
   .mapwrap:has(#profile:not([hidden])) { height: 56vh; }
   .mapwrap { transition: height .2s ease; }
+  body.trackpage .top { display: none; }
   .mapwrap.tall:has(#profile:not([hidden])) { height: calc(100vh - var(--tallgap, 210px)); height: calc(100svh - var(--tallgap, 210px)); }
   .panel { width: auto; border-right: 0; order: 0; overflow: visible; }
   .facts { grid-template-columns: repeat(2, 1fr); }
@@ -250,6 +251,8 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 .actions + .share { margin: -6px 0 14px; }
 /* QR code: header button + pop-up. The code itself stays black on white so every phone camera reads it. */
 .qrbtn { flex: none; }
+.phoneonly { display: none; }
+@media (max-width: 820px) { .phoneonly { display: inline-flex; } }
 .qrbox { border: 1px solid var(--line, #333); border-radius: 14px; background: var(--surface, #16181b); color: var(--text, #eee); padding: 20px; max-width: min(92vw, 340px); text-align: center; }
 .qrbox::backdrop { background: rgba(0,0,0,.7); }
 .qrbox h2 { font-size: 17px; margin: 0 0 12px; }
@@ -263,3 +266,4 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 .guide li { margin: 6px 0; }
 .guide img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 10px 0 2px; }
 .visits { font-size: 11px; color: var(--muted); opacity: .8; }
+#profile .pyou { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 3px solid #fff; border-radius: 50%; background: #2f7cf6; pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.4); }

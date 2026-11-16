@@ -265,6 +265,14 @@
   // ---------- detail ----------
   let current = null;
   let hoverMarker = null;
+  // Location ON: a blue dot on the height chart at the rider's km, when they're within 200 m of the open track.
+  let youAt = null, youMark = () => {};  // youMark(km or null) is set by drawProfile
+  const updateYou = () => {
+    if (!current || !youAt) return youMark(null);
+    const n = nearestOnLine(current.line, [youAt.lat, youAt.lng]);
+    youMark(n.dist <= 200 ? kmAlong(current)(n) : null);
+  };
+  map.on("whereupdate", e => { youAt = e.latlng; updateYou(); });
   // Track page: the open track drawn in surface colours (from OpenStreetMap, see surfaces.py).
   const SURFACES = [
     ["single", "Single track", "#e5397a"],
@@ -330,6 +338,7 @@
   function showOverview(id) {
     current = null;
     $("map").classList.remove("ontrack");  // park banner back on the overview map
+    document.body.classList.remove("trackpage");  // site title and QR button back (phones hide them on a track page)
     setTall(false);
     map.fire("whererefresh");
     const changed = section !== id;
@@ -351,6 +360,7 @@
   function showTrack(t) {
     current = t;
     $("map").classList.add("ontrack");  // one track open: hide the park banner (the red stripes stay)
+    document.body.classList.add("trackpage");  // phones: no site title bar on a track page, more room for the map
     map.fire("whererefresh");
     if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }  // left over from the previous track's profile
     setSection(t.category);
@@ -398,6 +408,7 @@
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
         <button class="btn" id="copy">Copy link</button>
+        <button class="btn phoneonly" id="qrTrack" type="button">QR code</button>
       </div>
       ${site.shareNotice ? `<p class="share small">${esc(site.shareNotice)}</p>` : ""}
       <div class="facts">
@@ -448,6 +459,7 @@
     $("overview").hidden = true;
     $("detail").hidden = false;
     $("back").onclick = () => go(sectionHash(t.category));
+    $("qrTrack").onclick = () => $("qrBtn").click();  // phones: the header (with its QR button) is hidden here
     $("copy").onclick = async () => {
       try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; }
       catch { $("copy").textContent = "Copy failed"; }
@@ -578,6 +590,7 @@
     const box = $("profile");
     box.hidden = false;
     const p = t.profile;
+    youMark = () => {};
     if (!p.length) {
       box.innerHTML = `<div class="none">No elevation data in this GPX file.</div>`;
       return;
@@ -607,7 +620,7 @@
       </svg>
       ${ticks.map(k => `<span class="axis" style="bottom:0;left:calc(${GUT}px + (100% - ${GUT}px) * ${k / maxKm});transform:translateX(-50%)">${k} km</span>`).join("")}
       ${yTicks.map(v => `<span class="axis" style="right:calc(100% - ${GUT - 6}px);top:${(y(v) / H) * 100}%;transform:translateY(-50%)">${v} m</span>`).join("")}
-      <div class="tip" hidden></div>`;
+      <div class="tip" hidden></div><div class="pyou" hidden title="You are here"></div>`;
     const svg = box.querySelector("svg"), cur = box.querySelector("#cursor"), tip = box.querySelector(".tip");
     const move = ev => {
       const r = svg.getBoundingClientRect();
@@ -628,6 +641,17 @@
       tip.hidden = true;
       if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }
     };
+    const you = box.querySelector(".pyou");
+    youMark = km => {
+      if (km == null) { you.hidden = true; return; }
+      let q = p[0];
+      for (const s of p) { if (s[0] > km) break; q = s; }
+      const r = svg.getBoundingClientRect(), b = box.getBoundingClientRect();
+      you.style.left = (r.left - b.left + (q[0] / maxKm) * r.width) + "px";
+      you.style.top = (r.top - b.top + (y(q[1]) / H) * r.height) + "px";
+      you.hidden = false;
+    };
+    updateYou();
     svg.addEventListener("pointermove", move);
     svg.addEventListener("pointerdown", move);
     svg.addEventListener("pointerleave", leave);
