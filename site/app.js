@@ -54,7 +54,7 @@
       const v = (await r.json()).value;
       if (Number.isFinite(v)) {
         const s = document.createElement("span");
-        s.className = "visits"; s.textContent = `${v.toLocaleString("en-US")} visits`;
+        s.className = "visits"; s.textContent = `${v.toLocaleString("en-US")} visit${v === 1 ? "" : "s"}`;
         $("siteFoot").append(document.createElement("br"), s);
       }
     } catch (e) {}
