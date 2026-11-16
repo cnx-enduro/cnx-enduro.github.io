@@ -175,6 +175,8 @@ a.back { display: inline-block; text-decoration: none; }
   #map { min-height: 0; }
   #profile { height: 96px; flex: none; }
   .mapwrap:has(#profile:not([hidden])) { height: 56vh; }
+  .mapwrap { transition: height .2s ease; }
+  .mapwrap.tall:has(#profile:not([hidden])) { height: calc(100vh - var(--tallgap, 210px)); height: calc(100svh - var(--tallgap, 210px)); }
   .panel { width: auto; border-right: 0; order: 0; overflow: visible; }
   .facts { grid-template-columns: repeat(2, 1fr); }
   .top .btn { padding: 8px 10px; font-size: 13px; }

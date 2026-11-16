@@ -151,6 +151,28 @@
   };
   const fitAll = () => fitTo(boundsOf(section), 24);
 
+  // Phones, track page: the map and height chart open tall, filling the screen down to the track's name.
+  // Scrolling down to read shrinks them back to the normal size; scrolling back to the very top makes them tall again.
+  const phone = window.matchMedia("(max-width: 820px)");
+  const wrap = document.querySelector(".mapwrap");
+  const setTall = on => {
+    if (wrap.classList.contains("tall") === on) return;
+    wrap.classList.toggle("tall", on);
+    clearTimeout(setTall.t);
+    setTall.t = setTimeout(() => map.invalidateSize(), 260);  // after the 0.2 s size change
+  };
+  const tallGap = () => {  // the header plus the lines down to the track's name stay on screen
+    const h2 = document.querySelector("#detail .detail-head h2");
+    if (!h2) return;
+    const gap = document.querySelector(".top").offsetHeight + (h2.getBoundingClientRect().bottom - wrap.getBoundingClientRect().bottom) + 12;
+    wrap.style.setProperty("--tallgap", Math.round(gap) + "px");
+  };
+  window.addEventListener("scroll", () => {
+    if (!current || !phone.matches) return;
+    if (window.scrollY > 30) setTall(false);
+    else if (window.scrollY <= 0) setTall(true);
+  }, { passive: true });
+
   function highlight(id, on) {
     const card = document.querySelector(`.card[data-id="${id}"]`);
     if (card) card.classList.toggle("hl", on);
@@ -308,6 +330,7 @@
   function showOverview(id) {
     current = null;
     $("map").classList.remove("ontrack");  // park banner back on the overview map
+    setTall(false);
     map.fire("whererefresh");
     const changed = section !== id;
     setSection(id);
@@ -441,6 +464,13 @@
     if (window.innerWidth <= 820) window.scrollTo({ top: 0 });
 
     drawProfile(t);
+    if (phone.matches) {  // straight to tall with no slide, so the fit below uses the tall size
+      tallGap();
+      wrap.style.transition = "none";
+      wrap.classList.add("tall");
+      void wrap.offsetHeight;  // apply the new height now
+      wrap.style.transition = "";
+    }
     fitTo(L.latLngBounds(t.line), 30);
   }
 
