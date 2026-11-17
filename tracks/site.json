@@ -1,6 +1,28 @@
 {
   "title": "Chiang Mai Enduro Riders Tracks",
   "subtitle": "Beginner-friendly enduro GPX routes around Chiang Mai",
+  "notice": {
+    "title": "Easy GPS tracks for beginners",
+    "sub": "All outside national parks.",
+    "rows": [
+      {
+        "icon": "park",
+        "bold": "No off-road riding in Doi Suthep or Hang Dong",
+        "text": "Restricted areas. Red stripes on the map = Doi Suthep-Pui National Park. Ride these tracks instead.",
+        "red": true
+      },
+      {
+        "icon": "🔒",
+        "bold": "The GPX files are for the local enduro community",
+        "text": "and shouldn't be reshared or published on other public sites."
+      },
+      {
+        "icon": "⚠️",
+        "bold": "Ride at your own risk",
+        "text": "Trails change. Ride with others."
+      }
+    ]
+  },
   "restricted": "Please ride these community tracks instead of Doi Suthep or Hang Dong, which are restricted areas.",
   "noRide": "Red striped area on the map: Doi Suthep-Pui National Park. No off-road riding there.",
   "shareNotice": "The GPX files are for the local enduro community and shouldn't be reshared or published on other public sites.",

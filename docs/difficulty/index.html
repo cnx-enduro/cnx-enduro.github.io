@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Difficulty levels | Chiang Mai Enduro Riders</title>
+<meta name="description" content="Trail difficulty levels L0 to L4 for Chiang Mai Enduro Riders.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
+<!-- Page made by Jul (text + photos), moved onto the site in the site's style. L2 "Beginner-friendly" put back per Pavel/Jul in the group (Nov 2026). -->
+<style>
+:root { --bg:#0b0c0e; --surface:#15171b; --surface-2:#1d2026; --line:#2a2e35; --text:#ecedef; --muted:#9aa0a9; --accent:#f5a524; color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#f6f6f4; --surface:#fff; --surface-2:#f0f0ed; --line:#deded9; --text:#17181a; --muted:#5d636b; --accent:#b86e00; color-scheme: light; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 18px 16px 32px; }
+.back { display: inline-block; color: var(--accent); text-decoration: none; margin: 0 0 14px; }
+h1 { font-size: clamp(26px, 6vw, 36px); margin: 0 0 4px; line-height: 1.15; }
+.group { color: var(--muted); font-weight: 600; margin: 0 0 12px; }
+.intro { font-size: 17px; margin: 0 0 18px; }
+.rules { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; font-weight: 600; font-size: 16px; padding: 12px 16px; margin: 0 0 24px;
+         display: grid; grid-template-columns: auto auto; grid-template-rows: repeat(3, auto); grid-auto-flow: column; justify-content: start; gap: 4px 40px; }
+.rules p { margin: 0; }
+.levels-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; }
+.levels-nav a { text-decoration: none; background: var(--c); color: var(--t, #fff); font-weight: 700; font-size: 16px; padding: 9px 13px; border-radius: 10px; box-shadow: 0 0 0 1px var(--line); }
+.level { margin: 0 0 34px; scroll-margin-top: 12px; }
+.head { display: flex; gap: 16px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-left: 8px solid var(--c); border-radius: 10px 10px 0 0; padding: 16px; }
+.badge { flex: 0 0 auto; width: 60px; height: 60px; border-radius: 12px; background: var(--c); color: var(--t, #fff); font-weight: 800; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px var(--line); }
+.head h2 { margin: 0; font-size: clamp(24px, 5vw, 30px); line-height: 1.2; }
+.tagline { margin: 2px 0 8px; font-size: 17px; }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 16px; }
+dt { font-weight: 700; }
+dd { margin: 0; color: var(--muted); }
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.photos img { width: 100%; height: auto; display: block; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px; background: var(--surface-2); }
+footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 14px; }
+@media (max-width: 520px) {
+  .rules { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; font-size: 15px; }
+  .intro { font-size: 16px; }
+  .levels-nav a { font-size: 14px; padding: 8px 10px; }
+  .head { padding: 12px; gap: 12px; }
+  .badge { width: 50px; height: 50px; font-size: 20px; }
+  .tagline { font-size: 16px; }
+  dl { grid-template-columns: 1fr; font-size: 15px; }
+  dd { margin-bottom: 6px; }
+}
+/* Phones and small tablets: swipe through the photos, the next one peeks in at the edge. */
+@media (max-width: 700px) {
+  .photos { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 8px -16px 0; padding: 0 16px 6px; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; }
+  .photos img { flex: 0 0 80%; width: 80%; scroll-snap-align: start; }
+}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../">← All tracks</a>
+<h1>Difficulty levels</h1>
+<p class="group">Chiang Mai Enduro Riders</p>
+<p class="intro">Every ride is announced with a level. Join rides at or below your level.</p>
+<nav class="levels-nav"><a href="#l0" style="--c:#c4c4c4;--t:#1a1a1a">L0 Paved</a><a href="#l1" style="--c:#1e9e4a;--t:#fff">L1 Easy</a><a href="#l2" style="--c:#1f5fbf;--t:#fff">L2 Narrow</a><a href="#l3" style="--c:#d32f2f;--t:#fff">L3 Steep</a><a href="#l4" style="--c:#111111;--t:#fff">L4 Technical</a></nav>
+<div class="rules"><p>Rally/ADV: max L1.</p><p>Dual sport (CRF): max L3.</p><p>50/50 tyres: max L2.</p><p>Leader can make exceptions.</p><p>Wet: one level harder.</p></div>
+
+<section class="level" id="l0" style="--c:#c4c4c4;--t:#1a1a1a">
+  <div class="head">
+    <div class="badge">L0</div>
+    <div>
+      <h2>Paved</h2>
+      <p class="tagline">Sightseeing on concrete or tarmac.</p>
+      <dl>
+        <dt>Terrain</dt><dd>Relaxing mountain and village roads.</dd>
+        <dt>Skills</dt><dd>Open to all.</dd>
+        <dt>Bike</dt><dd>Any.</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="photos"><img src="img/l0-1.jpg" loading="lazy" width="720" height="900" alt="L0 Paved trail, photo 1"><img src="img/l0-2.jpg" loading="lazy" width="720" height="900" alt="L0 Paved trail, photo 2"><img src="img/l0-3.jpg" loading="lazy" width="720" height="900" alt="L0 Paved trail, photo 3"></div>
+</section>
+<section class="level" id="l1" style="--c:#1e9e4a;--t:#fff">
+  <div class="head">
+    <div class="badge">L1</div>
+    <div>
+      <h2>Easy</h2>
+      <p class="tagline">Flowing dirt double track or wide single track.</p>
+      <dl>
+        <dt>Terrain</dt><dd>Any line, mostly flat, shallow ruts, no obstacles.</dd>
+        <dt>Skills</dt><dd>Beginner-friendly, seated riding.</dd>
+        <dt>Bike</dt><dd>ADV, CRF, or lighter. 50/50 tyres ok.</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="photos"><img src="img/l1-1.jpg" loading="lazy" width="720" height="900" alt="L1 Easy trail, photo 1"><img src="img/l1-2.jpg" loading="lazy" width="720" height="900" alt="L1 Easy trail, photo 2"><img src="img/l1-3.jpg" loading="lazy" width="720" height="900" alt="L1 Easy trail, photo 3"></div>
+</section>
+<section class="level" id="l2" style="--c:#1f5fbf;--t:#fff">
+  <div class="head">
+    <div class="badge">L2</div>
+    <div>
+      <h2>Narrow</h2>
+      <p class="tagline">Flowing single track.</p>
+      <dl>
+        <dt>Terrain</dt><dd>Deeper ruts, small up/downhills, some cliff exposure.</dd>
+        <dt>Skills</dt><dd>Beginner-friendly, standing riding, slow-speed balance, U-turns, line selection.</dd>
+        <dt>Bike</dt><dd>CRF, or lighter. 50/50 tyres ok.</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="photos"><img src="img/l2-1.jpg" loading="lazy" width="720" height="900" alt="L2 Narrow trail, photo 1"><img src="img/l2-2.jpg" loading="lazy" width="720" height="900" alt="L2 Narrow trail, photo 2"><img src="img/l2-3.jpg" loading="lazy" width="720" height="900" alt="L2 Narrow trail, photo 3"></div>
+</section>
+<section class="level" id="l3" style="--c:#d32f2f;--t:#fff">
+  <div class="head">
+    <div class="badge">L3</div>
+    <div>
+      <h2>Steep</h2>
+      <p class="tagline">Slow single track with climbs.</p>
+      <dl>
+        <dt>Terrain</dt><dd>Loose and rocky uphills, steep descents, more cliff exposure, small obstacles.</dd>
+        <dt>Skills</dt><dd>Clutch control, climb recovery, steep descents, traction control, stamina.</dd>
+        <dt>Bike</dt><dd>CRF, or lighter. 100% off-road tyres + rim locks + pull strap.</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="photos"><img src="img/l3-1.jpg" loading="lazy" width="720" height="900" alt="L3 Steep trail, photo 1"><img src="img/l3-2.jpg" loading="lazy" width="720" height="900" alt="L3 Steep trail, photo 2"><img src="img/l3-3.jpg" loading="lazy" width="720" height="900" alt="L3 Steep trail, photo 3"></div>
+</section>
+<section class="level" id="l4" style="--c:#111111;--t:#fff">
+  <div class="head">
+    <div class="badge">L4</div>
+    <div>
+      <h2>Technical</h2>
+      <p class="tagline">Crawl single track with big obstacles.</p>
+      <dl>
+        <dt>Terrain</dt><dd>Boulders, root steps, big logs, very steep slopes, heavily overgrown trails.</dd>
+        <dt>Skills</dt><dd>Wheel lifts, momentum climbs, walking the bike down, physical fitness.</dd>
+        <dt>Bike</dt><dd>&lt; 120 kg. 100% off-road tyres + rim locks + pull strap.</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="photos"><img src="img/l4-1.jpg" loading="lazy" width="720" height="900" alt="L4 Technical trail, photo 1"><img src="img/l4-2.jpg" loading="lazy" width="720" height="900" alt="L4 Technical trail, photo 2"><img src="img/l4-3.jpg" loading="lazy" width="720" height="900" alt="L4 Technical trail, photo 3"></div>
+</section>
+<footer>Last updated November 2026</footer>
+</main>
+</body>
+</html>

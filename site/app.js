@@ -12,6 +12,15 @@
   $("title").textContent = site.title;
   $("restricted").textContent = site.restricted;
   if (site.noRide) $("noRide").querySelector("span").textContent = site.noRide; else $("noRide").hidden = true;
+  // Main notice as a headline plus one row per point (icon, bold first line, small grey rest), so it can be
+  // scanned at a glance (site.json "notice"). Without it the older plain paragraphs show.
+  if (site.notice) {
+    const n = site.notice, icon = r => r.icon === "park" ? `<i class="sw"></i>` : esc(r.icon || "");
+    $("noticeRows").innerHTML = `<p class="nhead">${esc(n.title)}</p>` + (n.sub ? `<p class="nsub">${esc(n.sub)}</p>` : "") +
+      n.rows.map(r => `<div class="nrow${r.red ? " red" : ""}"><span class="nic" aria-hidden="true">${icon(r)}</span><span><b>${esc(r.bold)}</b>${r.text ? `<span>${esc(r.text)}</span>` : ""}</span></div>`).join("");
+    $("noticeRows").hidden = false;
+    document.querySelector(".notice").classList.add("rowsmode");
+  }
   for (const k of ["shareNotice", "riskNotice"]) if (site[k]) { $(k).textContent = site[k]; $(k).hidden = false; }
   $("contribute").textContent = site.contribute;
   // Tip for groups: share live location in an app the riders already have (site.json groupTip).
@@ -193,6 +202,8 @@
 
   // Main list: paved vs off-road at a glance (Pavel); the full breakdown and wet conditions are on the track page.
   // Off-road = single + double + the bits not on the map (usually trails).
+  // Warning chips: the smoke-season closure gets the same 🔥 as its row in the notice box at the top.
+  const flagText = f => (/smoke season/i.test(f.text) ? "🔥 " : "") + esc(f.text);
   const surfaceChip = t => {
     if (!t.surface) return "";
     const paved = t.surface.shares.paved;
@@ -210,7 +221,7 @@
           ${stat("↑ ≈", t.climb != null ? t.climb + " m" : null)}
           ${stat("", t.loop ? "Loop" : "One way")}
         </span>
-        <span class="chips">${surfaceChip(t)}${t.flags.filter(f => f.kind === "legal").map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</span>
+        <span class="chips">${surfaceChip(t)}${t.flags.filter(f => f.kind === "legal" || f.kind === "card").map(f => `<span class="chip ${f.level}">${flagText(f)}</span>`).join("")}</span>
         <span class="ver" style="display:block">${verLine(t)}</span>
       </span>
     </button></li>`;
@@ -402,7 +413,7 @@
       <div class="detail-head">
         <div class="muted small">${t.category !== sections[0].id ? esc(sectionOf(t.category).title) + " · " : ""}Track ${t.id} · ${dots(t.difficulty)} ${t.difficulty ? t.difficulty + "/5" : ""}</div>
         <h2>${esc(t.name)}</h2>
-        <div class="chips">${t.flags.map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</div>
+        <div class="chips">${t.flags.filter(f => f.kind !== "card").map(f => `<span class="chip ${f.level}">${flagText(f)}</span>`).join("")}</div>
       </div>
       <div class="actions">
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>

@@ -357,6 +357,14 @@ def flags(fields):
         out.append({"kind": "wet", "level": "mid", "text": "Slippery when wet"})
     elif wet:
         out.append({"kind": "wet", "level": "ok", "text": "OK when wet"})
+    # "Card tags: a; b" in NOTES.txt → tags on the track's card in the list (the track page has the full details)
+    for tag in d.get("card tags", "").split(";"):
+        if tag.strip():
+            out.append({"kind": "card", "level": "warn", "text": tag.strip().rstrip(".")})
+    # "Tags: a; b" in NOTES.txt → extra warning tags on the track page (e.g. "Risk of drowning the bike")
+    for tag in d.get("tags", "").split(";"):
+        if tag.strip():
+            out.append({"kind": "tag", "level": "warn", "text": tag.strip().rstrip(".")})
     return out
 
 
@@ -467,7 +475,7 @@ def main():
             "file": fn,
             "name": track_name(fn),
             "difficulty": diff,
-            "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category", "map labels")],
+            "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category", "map labels", "tags", "card tags")],
             "labels": labels,
             "flags": flags(fields),
             "pois": sorted(read_pois(os.path.join(TRACKS, fn), pts) + label_stops(pts, labels), key=lambda p: p["km"]),

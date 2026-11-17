@@ -269,3 +269,18 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 #profile .pyou { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 3px solid #fff; border-radius: 50%; background: #2f7cf6; pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
 /* the small km tag beside the blue location dot */
 .leaflet-tooltip.youkm { padding: 1px 6px; font-size: 12px; font-weight: 700; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+/* a row that looks like the fold-outs but opens another page (the difficulty levels) */
+a.rules.linkrow { display: flex; justify-content: space-between; padding: 10px 14px; font-weight: 600; color: var(--text); text-decoration: none; }
+a.rules.linkrow span { color: var(--accent); }
+a.rules.linkrow:hover { border-color: var(--muted); }
+/* Main notice in rows: headline, one row per point, bold first line then small grey text */
+.notice.rowsmode > p { display: none; }
+#noticeRows .nhead { font-size: 18px; font-weight: 800; margin: 0 0 2px; }
+#noticeRows .nsub { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+#noticeRows .nrow { display: grid; grid-template-columns: 24px 1fr; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+#noticeRows .nic { font-size: 17px; line-height: 1.3; text-align: center; }
+#noticeRows .nrow b { display: block; font-size: 15px; line-height: 1.35; }
+#noticeRows .nrow b + span { display: block; font-size: 13px; color: var(--muted); line-height: 1.45; margin-top: 1px; }
+#noticeRows .nrow.red b { color: #ff6b6b; }
+#noticeRows .sw { display: inline-block; width: 16px; height: 12px; border: 2px solid #ff2a2a; margin-top: 4px;
+  background: repeating-linear-gradient(0deg, rgba(255,42,42,.15) 0 3px, #ff2a2a 3px 4px); }
