@@ -171,12 +171,15 @@
     const x = Math.cos(from.lat * Math.PI / 180) * Math.sin(to.lat * Math.PI / 180) - Math.sin(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) * Math.cos((to.lng - from.lng) * Math.PI / 180);
     return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
   };
-  const map = baseMap("map", { satelliteKey: site.satelliteKey, routeBearing, whereText: ll => {
+  const map = baseMap("map", { satelliteKey: site.satelliteKey, routeBearing,
+    offlineTrack: () => current && { id: current.id, name: current.name, file: current.file }, whereText: ll => {
     if (!current) return "";
     const n = nearestOnLine(current.line, [ll.lat, ll.lng]);
     const km = kmAlong(current)(n).toFixed(1);
     return n.dist <= 200 ? `${km} km` : `${n.dist >= 1000 ? (n.dist / 1000).toFixed(1) + " km" : Math.round(n.dist) + " m"} off track`;
   } });
+  // Offline: a small background helper (sw.js) keeps a copy of the page so it opens with no signal.
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   if (/[?&]cnxtest\b/.test(location.search)) window.__cnx = { map };  // only for the automatic device tests
   addNoRideZones(map, { key: true });
   const layers = {};

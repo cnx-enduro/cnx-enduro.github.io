@@ -519,6 +519,12 @@ def main():
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
+    # Offline map pieces are cut on a computer (tools/offline-tiles), not here: say when a track has none yet.
+    off_path = os.path.join(SRC, "offline", "tracks.json")
+    off = json.load(open(off_path))["tracks"] if os.path.exists(off_path) else {}
+    for t in tracks:
+        if t["id"] not in off:
+            warn(f"Track {t['id']} has no offline map yet: run `cd tools/offline-tiles && npm install && node cut.mjs`, then build again")
     os.makedirs(os.path.join(OUT, "gpx"))
     for t in tracks:
         shutil.copy2(os.path.join(TRACKS, t["file"]), os.path.join(OUT, "gpx", t["file"]))

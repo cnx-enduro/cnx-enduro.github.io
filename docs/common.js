@@ -40,10 +40,11 @@ function baseMap(el, opts = {}) {
     "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token=" + encodeURIComponent(opts.satelliteKey), {
       maxZoom: 19, attribution: 'Powered by <a href="https://www.esri.com">Esri</a> | Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     });
-  if (opts.layersControl !== false) L.control.layers(bases, null, { position: "topright" }).addTo(map);
+  const layersCtl = opts.layersControl !== false ? L.control.layers(bases, null, { position: "topright" }).addTo(map) : null;
   L.control.scale({ imperial: false }).addTo(map);
   if (opts.locate !== false) addLocate(map, opts.whereText, turns ? opts.routeBearing : null);
   if (opts.locate !== false) addRainLock(map);
+  if (opts.offlineTrack) addOffline(map, { bases, layersCtl, track: opts.offlineTrack });  // added last: sits above the lock
   return map;
 }
 
@@ -263,6 +264,183 @@ function addRainLock(map) {
     btn.addEventListener("click", e => { e.preventDefault(); if (e.detail === 0 && !locked) setLocked(true); });  // keyboard: Enter locks
     btn.addEventListener("contextmenu", e => e.preventDefault());  // a long press must not open the phone's menu
     setTimeout(() => setLocked(false), 0);
+    return box;
+  };
+  ctl.addTo(map);
+}
+
+// 💾 Offline map, bottom left above the lock. On a track page one tap saves that track's map to the phone
+// (our own map pieces in site/offline/, cut by tools/offline-tiles: the OSM map server doesn't allow saving
+// its map), plus the page itself, so the track, the map and the blue dot all work with no signal.
+// Saved = green with a tick; tap again to remove it. With no signal the map switches to the saved map by itself
+// (also when the OSM map stops loading), and back when the signal returns. The saved map is also in the layer
+// menu as "Saved map (offline)". It's a simpler map: roads, villages, rivers, green forest, and dirt tracks and
+// paths as brown dashed lines like on the OSM map.
+const OFFLINE_TILES = "cnx-offline-v1", OFFLINE_SHELL = "cnx-shell-v1";
+function addOffline(map, o) {
+  if (!("caches" in window)) return;
+  let index = null, lib = null, pm = null, auto = false, before = null, busy = false, btn = null, sign = null, signT = null;
+  const getIndex = async () => index || (index = await (await fetch("offline/tracks.json", { cache: "no-cache" })).json());
+  const loadLib = () => lib || (lib = new Promise((ok, bad) => {
+    if (window.protomapsL) return ok();
+    const sc = document.createElement("script"); sc.src = "vendor/protomaps-leaflet.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc);
+  }));
+  // The map layer itself, made the first time it's needed (the drawing library loads only then).
+  const group = L.layerGroup();
+  group.on("add", async () => {
+    try {
+      await loadLib();
+      if (!pm) {
+        const P = window.protomapsL, brown = "#8a4b14";
+        // Outside the saved strip there's no map piece: the server answers "not found" (a web page), which the
+        // reader would try to read as map data. Treat any piece that can't be read as an empty piece.
+        if (!P.ZxySource.prototype.__cnxSafe) {
+          const get = P.ZxySource.prototype.get;
+          P.ZxySource.prototype.get = async function (c, size) {
+            try { return await get.call(this, c, size); } catch (e) { if (e && e.name === "AbortError") throw e; return new Map(); }
+          };
+          P.ZxySource.prototype.__cnxSafe = true;
+          // Saved pieces are read straight from the phone's store, so the map works with no signal even when the
+          // background helper (sw.js) isn't running yet (first visit, or a phone that stopped it).
+          const f0 = window.fetch.bind(window);
+          window.fetch = async (u, opt) => {
+            const url = typeof u === "string" ? u : (u && u.url) || "";
+            if (url.includes("offline/tiles/")) {
+              try { const hit = await (await caches.open(OFFLINE_TILES)).match(new URL(url, location.href).href); if (hit) return hit; } catch (e) {}
+            }
+            return f0(u, opt);
+          };
+        }
+        pm = P.leafletLayer({ url: "offline/tiles/{z}/{x}/{y}.mvt", flavor: "light", lang: "en", maxDataZoom: 15, maxZoom: 19,
+          attribution: '<a href="https://protomaps.com">Protomaps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+        const line = (w, dash, test) => ({ dataLayer: "roads", filter: (z, f) => f.props.kind === "path" && test(f.props.kind_detail),
+          symbolizer: new P.LineSymbolizer({ color: brown, dashColor: brown, width: z => w(z), dashWidth: z => w(z), dash, lineCap: "butt" }) });
+        const wood = { dataLayer: "landuse", filter: (z, f) => ["wood", "forest", "nature_reserve"].includes(f.props.kind),
+          symbolizer: new P.PolygonSymbolizer({ fill: "#b5d39a", opacity: 0.85 }) };
+        const i = pm.paintRules.findIndex(r => r.dataLayer === "roads");
+        pm.paintRules.splice(i < 0 ? pm.paintRules.length : i, 0, wood);
+        pm.paintRules.push(
+          line(z => (z < 13 ? 1.2 : z < 15 ? 1.8 : 2.4), [6, 3], k => k === "track"),                                     // dirt tracks
+          line(z => (z < 14 ? 1 : 1.6), [2, 3], k => ["path", "footway", "bridleway", "cycleway", "steps"].includes(k)));  // paths
+      }
+      if (map.hasLayer(group) && !group.hasLayer(pm)) group.addLayer(pm);
+    } catch (e) { say("The saved map couldn't load", 4000); }
+  });
+  if (o.layersCtl) o.layersCtl.addBaseLayer(group, "Saved map (offline)");
+  const baseOn = () => Object.values(o.bases).find(b => map.hasLayer(b));
+  const toSaved = why => {
+    if (map.hasLayer(group)) return;
+    before = baseOn() || before; auto = true;
+    Object.values(o.bases).forEach(b => map.removeLayer(b));
+    map.addLayer(group);
+    if (why) say(why, 5000);
+  };
+  const toOnline = () => {
+    if (!auto || !map.hasLayer(group)) return;
+    auto = false; map.removeLayer(group); map.addLayer(before || Object.values(o.bases)[0]);
+  };
+  map.on("baselayerchange", e => { if (e.layer !== group) auto = false; });  // the rider picked a map: leave it
+  window.addEventListener("offline", () => toSaved("No signal: showing your saved map"));
+  window.addEventListener("online", toOnline);
+  // Weak signal: the phone says "online" but the map pieces stop arriving.
+  let fails = 0, failT = null;
+  Object.values(o.bases).forEach(b => b.on("tileerror", () => {
+    fails++; clearTimeout(failT); failT = setTimeout(() => { fails = 0; }, 15000);
+    if (fails >= 6) toSaved("Map not loading: showing your saved map");
+  }));
+  Object.values(o.bases).forEach(b => b.on("tileload", () => { fails = 0; }));
+  if (navigator.onLine === false) setTimeout(() => toSaved("No signal: showing your saved map"), 0);
+
+  // ---- the button ----
+  const marker = id => new URL(`offline/saved/${id}`, location.href).href;  // a small record in the phone: "this track is saved"
+  const say = (text, ms) => {
+    if (!sign) return;
+    clearTimeout(signT); sign.textContent = text; sign.hidden = !text;
+    if (ms) signT = setTimeout(() => { sign.hidden = true; }, ms);
+  };
+  const ICON_SAVE = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v11m0 0-4.5-4.5M12 14l4.5-4.5M4 15v4.5h16V15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const ICON_DONE = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const show = (state, label) => {
+    if (!btn) return;
+    btn.className = state; btn.innerHTML = state === "saved" || state === "update" ? ICON_DONE : ICON_SAVE;
+    btn.title = label; btn.setAttribute("aria-label", label);
+  };
+  const savedRec = async id => { const r = await (await caches.open(OFFLINE_TILES)).match(marker(id)); return r ? r.json() : null; };
+  const refresh = async () => {
+    if (busy) return;
+    const t = o.track();
+    if (!t) return show("", "Save a track's map for no signal: open a track first");
+    const rec = await savedRec(t.id).catch(() => null);
+    if (!rec) return show("", `Save the map of ${t.name} for no signal`);
+    loadLib().catch(() => {});  // get the map drawing code now, while there's signal
+    let fresh = true;
+    if (navigator.onLine !== false) try { fresh = (await getIndex()).made === rec.made; } catch (e) {}
+    show(fresh ? "saved" : "update", fresh ? `Map of ${t.name} saved. Tap to remove it` : `A newer map of ${t.name} is out. Tap to update`);
+  };
+  map.on("whererefresh", refresh);  // a track opened, or back to the list
+  const shellUrls = t => {
+    const u = ["./", "data/tracks.json", "offline/tracks.json", "areas/doi-suthep-pui.geojson", "vendor/protomaps-leaflet.js",
+      "vendor/images/layers.png", "vendor/images/layers-2x.png", `gpx/${t.file}`];
+    document.querySelectorAll("script[src], link[rel=stylesheet][href]").forEach(e => u.push(e.getAttribute("src") || e.getAttribute("href")));
+    return [...new Set(u)].filter(x => !/^https?:/.test(x));
+  };
+  const save = async t => {
+    if (navigator.onLine === false) return say("No signal. Save it where there's signal or Wi-Fi", 5000);
+    busy = true; show("busy", "Saving…");
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+      const idx = await getIndex(), list = (idx.tracks[t.id] || {}).tiles || [];
+      if (!list.length) throw new Error("no map for this track");
+      const shell = await caches.open(OFFLINE_SHELL), tiles = await caches.open(OFFLINE_TILES);
+      const jobs = [...shellUrls(t).map(u => [shell, u]), ...list.map(k => [tiles, `offline/tiles/${k}.mvt`])];
+      let done = 0, next = 0;
+      const worker = async () => {
+        while (next < jobs.length) {
+          const [c, u] = jobs[next++];
+          if (!(await c.match(u))) {
+            let ok = false;
+            for (let a = 0; a < 3 && !ok; a++) { try { await c.add(new Request(u, { cache: "no-cache" })); ok = true; } catch (e) { if (a === 2) throw e; } }
+          }
+          done++; if (done % 10 === 0 || done === jobs.length) say(`Saving ${Math.round(done / jobs.length * 100)}%`);
+        }
+      };
+      await Promise.all(Array.from({ length: 6 }, worker));
+      await tiles.put(marker(t.id), new Response(JSON.stringify({ made: idx.made, tiles: list.length, bytes: idx.tracks[t.id].bytes })));
+      busy = false; await refresh();
+      say(`Saved ✓ ${t.name} works with no signal`, 5000);
+    } catch (e) {
+      busy = false; await refresh();
+      say("Couldn't save. Check the signal and try again", 6000);
+    }
+  };
+  const remove = async t => {
+    const tiles = await caches.open(OFFLINE_TILES), idx = await getIndex().catch(() => null);
+    await tiles.delete(marker(t.id));
+    if (idx) {
+      // keep pieces another saved track still uses
+      const keep = new Set();
+      for (const id of Object.keys(idx.tracks)) if (id !== t.id && (await tiles.match(marker(id)))) idx.tracks[id].tiles.forEach(k => keep.add(k));
+      await Promise.all((idx.tracks[t.id] || { tiles: [] }).tiles.filter(k => !keep.has(k)).map(k => tiles.delete(`offline/tiles/${k}.mvt`)));
+    }
+    await refresh(); say("Removed from the phone", 3000);
+  };
+  const ctl = L.control({ position: "bottomleft" });
+  ctl.onAdd = () => {
+    const box = L.DomUtil.create("div", "leaflet-bar offsave");
+    box.innerHTML = `<a href="#" role="button"></a><span class="offsign" hidden></span>`;
+    L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box);
+    btn = box.querySelector("a"); sign = box.querySelector(".offsign");
+    btn.addEventListener("click", async e => {
+      e.preventDefault();
+      if (busy) return;
+      const t = o.track();
+      if (!t) return say("Open a track, then tap here to save its map", 4000);
+      const rec = await savedRec(t.id).catch(() => null);
+      if (rec && btn.className !== "update") { if (confirm(`Remove the saved map of ${t.name} from this phone?`)) remove(t); return; }
+      save(t);
+    });
+    show("", "Save a track's map for no signal: open a track first");
+    setTimeout(refresh, 0);
     return box;
   };
   ctl.addTo(map);
