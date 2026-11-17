@@ -124,12 +124,37 @@
 
   // ---------- map ----------
   // Blue-dot label on a track page: how far along this track the rider is (or how far off it).
-  const map = baseMap("map", { satelliteKey: site.satelliteKey, whereText: ll => {
+  // Compass "route up": the open track's direction at the rider's spot (within 200 m of it), in degrees from north,
+  // aimed at the track about 80 m ahead so the map doesn't jump at every zigzag.
+  // Riding the track backwards (km going down since the last fix) aims back along the track instead.
+  const routeBearing = (ll, before) => {
+    if (!current) return null;
+    const line = current.line, n = nearestOnLine(line, [ll.lat, ll.lng]);
+    if (n.dist > 200 || line.length < 2) return null;
+    let back = false;
+    if (before) {
+      const k = kmAlong(current), m = nearestOnLine(line, [before.lat, before.lng]);
+      back = m.dist <= 200 && k(n) < k(m);
+    }
+    const from = L.latLng(n.lat, n.lon);
+    let to = null, d = 0, prevPt = from;
+    for (let i = back ? n.i : n.i + 1; back ? i >= 0 : i < line.length; i += back ? -1 : 1) {
+      const p = L.latLng(line[i][0], line[i][1]);
+      d += prevPt.distanceTo(p); prevPt = p; to = p;
+      if (d >= 80) break;
+    }
+    if (!to || from.distanceTo(to) < 5) return null;
+    const y = Math.sin((to.lng - from.lng) * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180);
+    const x = Math.cos(from.lat * Math.PI / 180) * Math.sin(to.lat * Math.PI / 180) - Math.sin(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) * Math.cos((to.lng - from.lng) * Math.PI / 180);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  };
+  const map = baseMap("map", { satelliteKey: site.satelliteKey, routeBearing, whereText: ll => {
     if (!current) return "";
     const n = nearestOnLine(current.line, [ll.lat, ll.lng]);
     const km = kmAlong(current)(n).toFixed(1);
     return n.dist <= 200 ? `${km} km` : `${n.dist >= 1000 ? (n.dist / 1000).toFixed(1) + " km" : Math.round(n.dist) + " m"} off track`;
   } });
+  if (/[?&]cnxtest\b/.test(location.search)) window.__cnx = { map };  // only for the automatic device tests
   addNoRideZones(map, { key: true });
   const layers = {};
   const all = L.featureGroup().addTo(map);

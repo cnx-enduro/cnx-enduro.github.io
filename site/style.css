@@ -284,3 +284,13 @@ a.rules.linkrow:hover { border-color: var(--muted); }
 #noticeRows .nrow.red b { color: #ff6b6b; }
 #noticeRows .sw { display: inline-block; width: 16px; height: 12px; border: 2px solid #ff2a2a; margin-top: 4px;
   background: repeating-linear-gradient(0deg, rgba(255,42,42,.15) 0 3px, #ff2a2a 3px 4px); }
+/* 🧭 compass button, above the location button and its ON/OFF sign */
+.leaflet-bottom.leaflet-right .compass.leaflet-control { margin-bottom: 30px; border: 2px solid #2f7cf6; border-radius: 50%; overflow: hidden; }
+.compass a { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 50%; }
+.compass svg { transition: transform .3s ease; }
+.compass .n { fill: #e53935; } .compass .s { fill: #9aa0a9; } .compass .c { fill: #333; }
+.compass a.route { background: #2f7cf6; } .compass a.route .s { fill: #fff; }
+.compass a.off { background: #e9eaec; opacity: .55; cursor: default; } .compass a.off .n { fill: #8a8f98; }
+.leaflet-bottom.leaflet-right .compass.leaflet-control:has(a.off) { border-color: #9aa0a9; }
+/* while the map is turned, map tiles can show hairline gaps; overlap them by half a pixel */
+.leaflet-rotate-pane .leaflet-tile-container img.leaflet-tile { width: 257px !important; height: 257px !important; mix-blend-mode: normal; }

@@ -28,7 +28,10 @@ function baseMap(el, opts = {}) {
     maxZoom: 17, subdomains: "abc",
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Style &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
   });
-  const map = L.map(el, { layers: [osm], zoomControl: true, preferCanvas: true }).setView([18.85, 98.98], 9);
+  // opts.routeBearing → this map can turn (compass button); the turning add-on is only loaded on the main page.
+  const turns = !!opts.routeBearing && typeof L.Map.prototype.setBearing === "function";
+  const map = L.map(el, { layers: [osm], zoomControl: true, preferCanvas: true,
+    ...(turns ? { rotate: true, bearing: 0, rotateControl: false, touchRotate: false, shiftKeyRotate: false, compassBearing: false } : {}) }).setView([18.85, 98.98], 9);
   map.attributionControl.setPrefix(false);  // drop the "Leaflet" + flag credit; the map data credits stay
   // Satellite (Esri World Imagery, key locked to the site's address in Chu's Esri account, expires 2027-11-13).
   // Tiles download only after someone picks Satellite, so it costs nothing for everyone else.
@@ -39,7 +42,7 @@ function baseMap(el, opts = {}) {
     });
   if (opts.layersControl !== false) L.control.layers(bases, null, { position: "topright" }).addTo(map);
   L.control.scale({ imperial: false }).addTo(map);
-  if (opts.locate !== false) addLocate(map, opts.whereText);
+  if (opts.locate !== false) addLocate(map, opts.whereText, turns ? opts.routeBearing : null);
   return map;
 }
 
@@ -50,7 +53,7 @@ function baseMap(el, opts = {}) {
 // The screen stays awake while it's ON. The phone asks permission the first time (its own pop-up). Nothing is sent anywhere.
 // whereText(latlng) → extra line for the dot's label (the track page uses it for "km X of this track").
 const LOCATE_RESUME_MS = 5000;
-function addLocate(map, whereText) {
+function addLocate(map, whereText, routeBearing) {
   if (!("geolocation" in navigator)) return;
   let watch = null, dot = null, ring = null, last = null, follow = false, resume = null, btn = null, msg = null, sign = null;
   // Keep the screen on while location is ON, so the phone doesn't lock mid-ride and freeze the dot.
@@ -64,6 +67,60 @@ function addLocate(map, whereText) {
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
   // A small tag beside the dot with the km on the open track (e.g. "19.8 km"), small so it doesn't hide the map.
   // On the track list there's nothing to say, so the dot stands alone.
+  // 🧭 Compass (main map only): grey while location is OFF; tap = North up, tap again = Route up (the map turns
+  // so the way ahead points up), tap again = North up. The needle always points to real north.
+  // Route up follows the open track's direction at your km; away from the track it follows the way you move.
+  let cmpMode = "north", cmpBtn = null, prev = null, heading = null, cmp = null;
+  const cmpShow = () => {
+    if (!cmpBtn) return;
+    const on = watch !== null && !!last;  // awake only once the phone has found you
+    cmpBtn.classList.toggle("off", !on); cmpBtn.classList.toggle("route", on && cmpMode === "route");
+    const t = !on ? "Compass: turn location on first" : cmpMode === "route" ? "Route up. Tap for north up" : "North up. Tap to turn the map with the route";
+    cmpBtn.title = t; cmpBtn.setAttribute("aria-label", t);
+    cmpBtn.querySelector("svg").style.transform = `rotate(${map.getBearing ? map.getBearing() : 0}deg)`;
+  };
+  const bearingTo = (a, b) => {  // degrees clockwise from north, a → b
+    const y = Math.sin((b.lng - a.lng) * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180);
+    const x = Math.cos(a.lat * Math.PI / 180) * Math.sin(b.lat * Math.PI / 180) - Math.sin(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.cos((b.lng - a.lng) * Math.PI / 180);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  };
+  const turnTo = h => {
+    if (h == null || !map.setBearing) return;
+    const now = (360 - map.getBearing()) % 360, diff = Math.abs(((h - now) + 540) % 360 - 180);
+    if (diff < 4) return;  // ignore tiny wobbles
+    map.setBearing(-h); cmpShow();
+  };
+  const cmpFix = () => {  // called on every GPS fix
+    if (!routeBearing) return;
+    const moved = prev && last.distanceTo(prev) >= 15;
+    if (!prev || moved) {
+      const h = routeBearing(last, prev);
+      heading = h != null ? h : moved ? bearingTo(prev, last) : heading;
+      prev = L.latLng(last.lat, last.lng);
+    }
+    if (cmpMode === "route") turnTo(heading);
+    cmpShow();
+  };
+  const cmpReset = () => { cmpMode = "north"; prev = null; heading = null; if (map.setBearing) map.setBearing(0); cmpShow(); };
+  if (routeBearing) {
+    map.on("rotate", () => { if (cmpBtn) cmpBtn.querySelector("svg").style.transform = `rotate(${map.getBearing()}deg)`; });
+    cmp = L.control({ position: "bottomright" });
+    cmp.onAdd = () => {
+      const box = L.DomUtil.create("div", "leaflet-bar compass");
+      box.innerHTML = `<a href="#" role="button"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 2 15.5 12h-7z" class="n"/><path d="M12 22 8.5 12h7z" class="s"/><circle cx="12" cy="12" r="1.6" class="c"/></svg></a>`;
+      L.DomEvent.disableClickPropagation(box);
+      cmpBtn = box.querySelector("a");
+      cmpBtn.addEventListener("click", e => {
+        e.preventDefault();
+        if (watch === null || !last) return;  // grey: location is off or not found yet
+        if (cmpMode === "north") { cmpMode = "route"; turnTo(heading); }
+        else { cmpMode = "north"; map.setBearing(0); }
+        cmpShow();
+      });
+      setTimeout(cmpShow, 0);
+      return box;
+    };
+  }
   const label = () => (whereText && last ? whereText(last) : "");
   const setLabel = () => {
     if (!dot) return;
@@ -98,7 +155,7 @@ function addLocate(map, whereText) {
       if (watch !== null) navigator.geolocation.clearWatch(watch);
       watch = null; last = null; follow = false; clearTimeout(resume);
       if (dot) { map.removeLayer(dot); map.removeLayer(ring); dot = ring = null; }
-      freeScreen(); show(false); say("");
+      freeScreen(); show(false); say(""); cmpReset();
       map.fire("whereupdate", { latlng: null });  // location off: the page clears its own "you are here" marks
     };
     btn.addEventListener("click", e => {
@@ -119,7 +176,8 @@ function addLocate(map, whereText) {
           dot.setLatLng(last); ring.setLatLng(last).setRadius(acc);
         }
         say("");
-        map.fire("whereupdate", { latlng: last });  // the page can mark the rider elsewhere too (the height chart)
+        map.fire("whereupdate", { latlng: last });
+        cmpFix();  // the page can mark the rider elsewhere too (the height chart)
         setLabel();
         if (first) { map.setView(last, Math.max(map.getZoom(), 14)); first = false; }
         else if (follow) map.panTo(last, { animate: true });
@@ -128,10 +186,12 @@ function addLocate(map, whereText) {
         else if (!dot) say("Looking for GPS signal…");
       }, { enableHighAccuracy: true, maximumAge: 5000 });
       holdScreen();
+      cmpShow();  // location is on now: the compass wakes up
     });
     return box;
   };
   ctl.addTo(map);
+  if (cmp) cmp.addTo(map);  // added after, so it sits above the location button
 }
 
 // No-ride zones, on every map: Doi Suthep-Pui National Park striped red under the tracks, and a "No-ride zone"
