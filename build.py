@@ -410,6 +410,11 @@ def main():
             warn(f"{fn}: file name should start with a track number like '08-'")
             continue
         tid = m.group(1).zfill(2)
+        # site.json "hiddenTracks": ["02"] takes a track off the site (list, map, downloads, zips) while its
+        # GPX + notes stay in the repo, e.g. while a rider updates it. Remove the number to bring it back.
+        if tid in site.get("hiddenTracks", []):
+            print(f"Track {tid} hidden (site.json hiddenTracks)")
+            continue
         pts = read_gpx(os.path.join(TRACKS, fn))
         if len(pts) < 2:
             warn(f"{fn}: no track points found")

@@ -203,5 +203,8 @@
       "bold": "Wet = one level harder",
       "text": "Read each track's notes"
     }
-  }
+  },
+  "hiddenTracks": [
+    "02"
+  ]
 }
