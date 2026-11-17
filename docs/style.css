@@ -286,7 +286,7 @@ a.rules.linkrow:hover { border-color: var(--muted); }
   background: repeating-linear-gradient(0deg, rgba(255,42,42,.15) 0 3px, #ff2a2a 3px 4px); }
 /* 🧭 compass button, above the location button and its ON/OFF sign */
 .leaflet-bottom.leaflet-right .compass.leaflet-control { margin-bottom: 30px; border: 2px solid #2f7cf6; border-radius: 50%; overflow: hidden; }
-.compass a { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 50%; }
+.leaflet-bar.compass a { width: 40px !important; height: 40px !important; line-height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 50%; }  /* + 2px ring = 44 px, same as the location button */
 .compass svg { transition: transform .3s ease; }
 .compass .n { fill: #e53935; } .compass .s { fill: #9aa0a9; } .compass .c { fill: #333; }
 .compass a.route { background: #2f7cf6; } .compass a.route .s { fill: #fff; }
@@ -294,3 +294,69 @@ a.rules.linkrow:hover { border-color: var(--muted); }
 .leaflet-bottom.leaflet-right .compass.leaflet-control:has(a.off) { border-color: #9aa0a9; }
 /* while the map is turned, map tiles can show hairline gaps; overlap them by half a pixel */
 .leaflet-rotate-pane .leaflet-tile-container img.leaflet-tile { width: 257px !important; height: 257px !important; mix-blend-mode: normal; }
+
+/* 🔒 Rain lock, bottom left: same 44 px round as the location button */
+.leaflet-bar.rainlock { position: relative; border: 0 !important; border-radius: 50%; box-shadow: 0 1px 6px rgba(0,0,0,0.6) !important; z-index: 10001; }
+.leaflet-bar.rainlock a { position: relative; display: flex !important; align-items: center; justify-content: center; width: 44px !important; height: 44px !important;
+  border-radius: 50% !important; color: #e0a020; background: #fff; border: 2px solid #e0a020; text-decoration: none;
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* unlocked: see-through so it stays out of the way; locked: solid amber */
+.leaflet-bar.rainlock:has(a:not(.on)) { box-shadow: none !important; }
+.leaflet-bar.rainlock a:not(.on) { background: rgba(0,0,0,0.35); color: rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.45); }
+.leaflet-bar.rainlock a.on { background: #e0a020; color: #000; }
+.rainlock .ring { position: absolute; inset: -6px; width: 52px; height: 52px; transform: rotate(-90deg); pointer-events: none; }
+.rainlock .ring circle { fill: none; stroke: #fff; stroke-width: 4; stroke-dasharray: 132; stroke-dashoffset: 132; }
+.rainlock a.holding .ring circle { stroke-dashoffset: 0; transition: stroke-dashoffset 2s linear; }
+.rainlock .locksign { position: absolute; left: 0; bottom: 52px; width: max-content; padding: 2px 7px; border-radius: 8px;
+  font-size: 11px; font-weight: 700; background: #e0a020; color: #000; }
+.raincover { position: fixed; inset: 0; z-index: 10000; touch-action: none; background: rgba(224,160,32,0.06);
+  box-shadow: inset 0 0 0 4px #e0a020; }
+.raincover[hidden] { display: none; }
+/* while locked, the lock button sits above the cover so a 2 s hold can reach it */
+body.rainlocked .leaflet-bottom.leaflet-left { z-index: 10001; }
+/* Scale bar ("3 km"): as small and as low as the map credits on the right (Chu 11/18) */
+.leaflet-bottom .leaflet-control-scale { margin: 0 !important; }
+.leaflet-control-scale-line { font-size: inherit; line-height: 20px; padding: 0 5px; border-width: 1px; border-color: #ccc; background: rgba(0,0,0,0.55); color: #ccc; text-shadow: none; }  /* + 1px border = the credits' height; width = the ruler, changes with zoom */
+@media (max-width: 600px) { .leaflet-control-scale-line { font-size: 10px; line-height: 12px; } }
+/* Every map button is 44 px (Chu 11/18: all buttons the same size as the location button) */
+.leaflet-touch .leaflet-control-zoom a, .leaflet-control-zoom a { width: 44px !important; height: 44px !important; line-height: 44px !important; font-size: 24px !important; }
+.leaflet-touch .leaflet-control-layers-toggle, .leaflet-control-layers-toggle { width: 44px !important; height: 44px !important; }
+
+/* Guide tiles (Chu 11/18: more graphical): 2 x 2, big icon, short title, small grey line */
+.guides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
+.guides > * { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; min-height: 92px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text);
+  font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.guides > *:visited { color: var(--text); }
+.guides > *:hover { border-color: var(--muted); }
+.guides .gic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; margin-bottom: 4px;
+  background: color-mix(in srgb, var(--c) 22%, transparent); box-shadow: inset 0 0 0 1.5px var(--c); }
+.guides b { font-size: 15px; line-height: 1.2; }
+.guides small { font-size: 12px; color: var(--muted); line-height: 1.25; }
+.guides button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+/* the texts open under the tiles; their own title rows are hidden (the tile is the title) */
+.guides ~ details.rules > summary { display: none; }
+.guides ~ details.rules:not([open]) { display: none; }
+.guides ~ details.rules[open] { margin-top: 8px; }
+.guides ~ details.rules > div { padding-top: 12px; }
+/* Scannable panels under the guide tiles: icon rows (like the notice box), level badges, short headline */
+.brows .nrow { display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.brows .nrow:first-child { border-top: 0; }
+.brows .nic { font-size: 18px; line-height: 1.3; text-align: center; }
+.brows .nrow b { display: block; font-size: 15px; line-height: 1.35; }
+.brows .nrow b + span { display: block; font-size: 13px; color: var(--muted); line-height: 1.45; margin-top: 1px; }
+.bhead { font-weight: 700; font-size: 15px; margin: 0 0 4px !important; }
+.lvhead { margin: 12px 0 6px !important; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.lvlist { display: block; text-decoration: none; color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 10px; }
+.lvlist:visited { color: var(--text); }
+.lvlist .lv { display: grid; grid-template-columns: 34px auto 1fr; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.lvlist .lv:first-child { border-top: 0; }
+.lvlist .lvb { display: grid; place-items: center; height: 22px; border-radius: 5px; font-size: 12px; font-weight: 800; }
+.lvlist .lv b { font-size: 15px; }
+.lvlist .lv > span:last-child { font-size: 13px; color: var(--muted); }
+.lvlist .lvmore { display: block; padding: 6px 0 4px; border-top: 1px solid var(--line); color: var(--accent); font-size: 13px; font-weight: 600; }
+.fullpost { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.fullpost summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; }
+.fullpost p, .fullpost li { font-size: 14px; }
+.brows .adot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-top: 3px; }
+.brows .nrow b .app { font-weight: 800; }

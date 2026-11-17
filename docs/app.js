@@ -23,21 +23,34 @@
   }
   for (const k of ["shareNotice", "riskNotice"]) if (site[k]) { $(k).textContent = site[k]; $(k).hidden = false; }
   $("contribute").textContent = site.contribute;
+  // One scannable row: icon, bold short line, small grey rest (same look as the notice box).
+  // r.app + r.c: the app's name in its own colour (WhatsApp green, Google Maps blue, Messenger purple) with a matching dot.
+  const iconRow = r => `<div class="nrow"><span class="nic" aria-hidden="true">${r.c ? `<i class="adot" style="background:${esc(r.c)}"></i>` : esc(r.icon)}</span>` +
+    `<span><b>${r.app ? `<span class="app" style="color:${esc(r.c)}">${esc(r.app)}</span> · ` : ""}${esc(r.bold)}</b>${r.text ? `<span>${esc(r.text)}</span>` : ""}</span></div>`;
+  // Guide tiles: a tile opens its text under the tiles and closes the others; tap again to close.
+  document.querySelectorAll("#guides button").forEach(b => b.addEventListener("click", () => {
+    const d = $(b.dataset.open), open = !d.open;
+    document.querySelectorAll("#guides button").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-expanded", "false"); $(x.dataset.open).open = false; });
+    d.open = open; b.classList.toggle("on", open); b.setAttribute("aria-expanded", String(open));
+  }));
   // Tip for groups: share live location in an app the riders already have (site.json groupTip).
   if (site.groupTip) {
     const g = $("groupTip");
     g.querySelector("summary").textContent = site.groupTip.title;
-    g.querySelector("div").innerHTML = `<ul>${site.groupTip.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` +
-      (site.groupTip.note ? `<p class="muted">${esc(site.groupTip.note)}</p>` : "");
+    g.querySelector("div").innerHTML = site.groupTip.rows ? `<div class="brows">${site.groupTip.rows.map(iconRow).join("")}</div>` :
+      `<ul>${site.groupTip.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` + (site.groupTip.note ? `<p class="muted">${esc(site.groupTip.note)}</p>` : "");
     g.hidden = false;
   }
   // "How to share GPX responsibly": a rider's own post, word for word, with its photo (site.json shareGuide).
   if (site.shareGuide) {
     const sg = site.shareGuide, g = $("shareGuide"), ps = a => (a || []).map(x => `<p>${esc(x)}</p>`).join("");
     g.querySelector("summary").textContent = sg.title;
-    g.querySelector("div").innerHTML = (sg.byline ? `<p class="muted small">${esc(sg.byline)}</p>` : "") + ps(sg.intro) +
+    const full = (sg.byline ? `<p class="muted small">${esc(sg.byline)}</p>` : "") + ps(sg.intro) +
       (sg.rules ? `<ol>${sg.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ol>` : "") + ps(sg.outro) +
       (sg.photo ? `<img src="${esc(sg.photo)}" alt="${esc(sg.photoAlt || "")}" loading="lazy">` : "");
+    // Short version first (icon rows); the rider's own post, word for word, folds out under it.
+    g.querySelector("div").innerHTML = sg.summary ? `<p class="bhead">${esc(sg.summary.head)}</p><div class="brows">${sg.summary.rows.map(iconRow).join("")}</div>` +
+      `<details class="fullpost"><summary>${esc(sg.summary.more)}</summary>${full}</details>` : full;
     g.hidden = false;
   }
   // Footer on every page: who looks after the site and where comments go. The address is put together here,
@@ -121,6 +134,16 @@
     if (b.type === "scale") return `<div class="scale">${b.items.map(([n, t]) => `${dots(n)}<span>${esc(t)}</span>`).join("")}</div>`;
     return `<p>${esc(b.text)}</p>`;
   }).join("");
+
+  // "Before you ride", scannable (site.json beforeRide): icon rows like the notice box, then the L0–L4 levels
+  // as coloured badges (same colours as the /difficulty page), then the wet rule.
+  const beforeRideHtml = b => {
+    const row = iconRow;
+    return `<div class="brows">${b.gear.map(row).join("")}</div>` +
+      `<p class="lvhead">${esc(b.levelsTitle)}</p><a class="lvlist" href="difficulty/">` +
+      b.levels.map(l => `<span class="lv"><span class="lvb" style="background:${esc(l.c)};color:${esc(l.t)}">${esc(l.l)}</span><b>${esc(l.name)}</b><span>${esc(l.text)}</span></span>`).join("") +
+      `<span class="lvmore">${esc(b.levelsLink)}</span></a>` + `<div class="brows">${row(b.wet)}</div>`;
+  };
 
   // ---------- map ----------
   // Blue-dot label on a track page: how far along this track the rider is (or how far off it).
@@ -260,7 +283,7 @@
     $("subtitle").textContent = sec.subtitle;
     $("intro").textContent = sec.intro;
     $("rulesSummary").textContent = sec.rulesSummary;
-    $("rulesBody").innerHTML = rulesHtml(data.rules[id] || []);
+    $("rulesBody").innerHTML = isMain && site.beforeRide ? beforeRideHtml(site.beforeRide) : rulesHtml(data.rules[id] || []);
     $("toMain").hidden = isMain;
     $("secPick").value = id;
     document.querySelectorAll("#secTabs a").forEach(a => {

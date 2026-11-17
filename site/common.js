@@ -43,6 +43,7 @@ function baseMap(el, opts = {}) {
   if (opts.layersControl !== false) L.control.layers(bases, null, { position: "topright" }).addTo(map);
   L.control.scale({ imperial: false }).addTo(map);
   if (opts.locate !== false) addLocate(map, opts.whereText, turns ? opts.routeBearing : null);
+  if (opts.locate !== false) addRainLock(map);
   return map;
 }
 
@@ -107,7 +108,7 @@ function addLocate(map, whereText, routeBearing) {
     cmp = L.control({ position: "bottomright" });
     cmp.onAdd = () => {
       const box = L.DomUtil.create("div", "leaflet-bar compass");
-      box.innerHTML = `<a href="#" role="button"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 2 15.5 12h-7z" class="n"/><path d="M12 22 8.5 12h7z" class="s"/><circle cx="12" cy="12" r="1.6" class="c"/></svg></a>`;
+      box.innerHTML = `<a href="#" role="button"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 2 15.5 12h-7z" class="n"/><path d="M12 22 8.5 12h7z" class="s"/><circle cx="12" cy="12" r="1.6" class="c"/></svg></a>`;
       L.DomEvent.disableClickPropagation(box);
       cmpBtn = box.querySelector("a");
       cmpBtn.addEventListener("click", e => {
@@ -194,6 +195,79 @@ function addLocate(map, whereText, routeBearing) {
   if (cmp) cmp.addTo(map);  // added after, so it sits above the location button
 }
 
+// 🔒 Rain lock, bottom left: one tap and the screen ignores every touch (rain drops make phones tap and scroll
+// by themselves). The map keeps following the rider and the screen stays awake. To unlock, hold the lock
+// for 2 s (a ring fills up); a quick tap or a drop does nothing. The phone's own buttons and gestures still work.
+const UNLOCK_HOLD_MS = 2000;
+function addRainLock(map) {
+  let locked = false, wake = null, timer = null, cover = null, btn = null, sign = null, justUnlocked = 0;
+  const holdScreen = async () => {
+    if (!locked || wake || !("wakeLock" in navigator)) return;
+    try { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } catch (e) { wake = null; }
+  };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
+  const swallow = e => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); };
+  const setLocked = on => {
+    locked = on;
+    document.body.classList.toggle("rainlocked", on);
+    cover.hidden = !on;
+    btn.classList.toggle("on", on);
+    sign.textContent = on ? "Hold 2 s to unlock" : "";
+    sign.hidden = !on;
+    const t = on ? "Screen locked. Hold for 2 seconds to unlock" : "Lock the screen (rain)";
+    btn.title = t; btn.setAttribute("aria-label", t); btn.setAttribute("aria-pressed", String(on));
+    if (on) holdScreen(); else if (wake) { wake.release().catch(() => {}); wake = null; }
+  };
+  const cancel = () => { clearTimeout(timer); timer = null; btn.classList.remove("holding"); };
+  // Finger (touch) and mouse handled apart: touch events don't get cut short by the phone's own long-press
+  // menu, and the finger lifting after the 2 s hold must not count as a new tap (or it locks straight back).
+  const press = e => {
+    if (e.cancelable) e.preventDefault();
+    if (!locked) return;
+    btn.classList.add("holding");
+    timer = setTimeout(() => { cancel(); justUnlocked = Date.now(); setLocked(false); }, UNLOCK_HOLD_MS);
+  };
+  const lift = e => {
+    if (e.cancelable) e.preventDefault();
+    if (timer) return cancel();  // let go too early: stays locked
+    if (!locked && Date.now() - justUnlocked > 800) setLocked(true);
+  };
+  // The cover sits over the whole page and eats every touch, click, scroll and pinch.
+  cover = document.createElement("div");
+  cover.className = "raincover"; cover.hidden = true;
+  ["touchmove", "pointerdown", "pointerup", "click", "dblclick", "wheel", "contextmenu", "gesturestart"]
+    .forEach(ev => cover.addEventListener(ev, swallow, { passive: false }));
+  // On phones the cover can end up on top of the lock button itself, so a press that lands on the cover
+  // where the button is counts as pressing the button.
+  const onBtn = e => { const p = e.changedTouches ? e.changedTouches[0] : e, r = btn.getBoundingClientRect();
+    return p.clientX >= r.left - 6 && p.clientX <= r.right + 6 && p.clientY >= r.top - 6 && p.clientY <= r.bottom + 6; };
+  cover.addEventListener("touchstart", e => { swallow(e); if (onBtn(e)) press(e); }, { passive: false });
+  cover.addEventListener("mousedown", e => { swallow(e); if (e.button === 0 && onBtn(e)) press(e); });
+  cover.addEventListener("touchend", e => { swallow(e); if (timer) cancel(); }, { passive: false });
+  cover.addEventListener("mouseup", e => { swallow(e); if (timer) cancel(); });
+  cover.addEventListener("touchcancel", cancel);
+  document.body.appendChild(cover);
+  const ctl = L.control({ position: "bottomleft" });
+  ctl.onAdd = () => {
+    const box = L.DomUtil.create("div", "leaflet-bar rainlock");
+    box.innerHTML = `<a href="#" role="button" aria-pressed="false"><svg class="ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-13C4.7 21 4 20.3 4 19.5v-8C4 10.7 4.7 10 5.5 10H7zm2 0h6V8a3 3 0 0 0-6 0v2z" fill="currentColor"/></svg></a><span class="locksign" hidden></span>`;
+    L.DomEvent.disableClickPropagation(box);
+    L.DomEvent.disableScrollPropagation(box);
+    btn = box.querySelector("a"); sign = box.querySelector(".locksign");
+    btn.addEventListener("touchstart", press, { passive: false });
+    btn.addEventListener("touchend", lift, { passive: false });
+    btn.addEventListener("touchcancel", cancel);
+    btn.addEventListener("mousedown", e => { if (e.button === 0) press(e); });
+    btn.addEventListener("mouseup", e => { if (e.button === 0) lift(e); });
+    btn.addEventListener("mouseleave", cancel);
+    btn.addEventListener("click", e => { e.preventDefault(); if (e.detail === 0 && !locked) setLocked(true); });  // keyboard: Enter locks
+    btn.addEventListener("contextmenu", e => e.preventDefault());  // a long press must not open the phone's menu
+    setTimeout(() => setLocked(false), 0);
+    return box;
+  };
+  ctl.addTo(map);
+}
+
 // No-ride zones, on every map: Doi Suthep-Pui National Park striped red under the tracks, and a "No-ride zone"
 // label while the cursor is inside it (a tap on a phone). key: true adds the legend in the corner.
 const RESTRICTED = "#ff2a2a";
@@ -201,7 +275,9 @@ let zoneData = null;
 function addNoRideZones(map, opts = {}) {
   zoneData = zoneData || fetch("areas/doi-suthep-pui.geojson").then(r => r.json());
   zoneData.then(area => {
-    map.createPane("areas").style.zIndex = 350;  // under the tracks, so a track over the zone stays clickable
+    // under the tracks, so a track over the zone stays clickable; inside the rotating layer when the map can turn
+    // (leaflet-rotate), or the zone drifts off its real place
+    map.createPane("areas", map.getPane("rotatePane") || undefined).style.zIndex = 350;
     // Filled with thin red stripes (an SVG pattern in the zone's own renderer) so it reads as "no riding", not just a border.
     const renderer = L.svg({ pane: "areas" }), patId = "noride" + L.stamp(map);
     L.geoJSON(area, { pane: "areas", renderer, interactive: false,

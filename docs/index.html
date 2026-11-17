@@ -8,7 +8,7 @@
 <meta name="description" content="Beginner-friendly enduro GPX routes around Chiang Mai, with notes and downloads.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.min.css">
-<link rel="stylesheet" href="style.css?v=35a7e96d">
+<link rel="stylesheet" href="style.css?v=6d56c75a">
 </head>
 <body>
 <header class="top">
@@ -40,11 +40,17 @@
         <p id="riskNotice" class="share" hidden></p>
         <div id="noticeRows" hidden></div>
       </div>
+      <!-- 4 guide tiles: tap one and its text opens under the tiles (one at a time) -->
+      <nav class="guides" id="guides" aria-label="Guides">
+        <button type="button" data-open="rules"><span class="gic" style="--c:#e0a020">📋</span><b>Before you ride</b><small>Gear · wet rule</small></button>
+        <a href="difficulty/"><span class="gic" style="--c:#2f9e6e">📶</span><b>Difficulty</b><small>L0–L4, with photos →</small></a>
+        <button type="button" data-open="groupTip"><span class="gic" style="--c:#2f7cf6">👥</span><b>Group ride</b><small>Share live location</small></button>
+        <button type="button" data-open="shareGuide"><span class="gic" style="--c:#b05cd6">🗺️</span><b>Sharing GPX</b><small>Do it responsibly</small></button>
+      </nav>
       <details class="rules" id="rules">
         <summary id="rulesSummary">Read before riding</summary>
         <div id="rulesBody"></div>
       </details>
-      <a class="rules linkrow" href="difficulty/">Difficulty levels L0–L4, with photos <span aria-hidden="true">→</span></a>
       <details class="rules" id="groupTip" hidden>
         <summary></summary>
         <div></div>
@@ -73,7 +79,7 @@
 
 <script src="vendor/leaflet.min.js"></script>
 <script src="vendor/leaflet-rotate.js"></script>
-<script src="common.js?v=401be043"></script>
-<script src="app.js?v=703c5a19"></script>
+<script src="common.js?v=69d483d6"></script>
+<script src="app.js?v=5431fe88"></script>
 </body>
 </html>

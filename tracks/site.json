@@ -35,7 +35,32 @@
       "Google Maps: Location sharing → pick the riders → Until you turn this off.",
       "Messenger: in the group chat, Location → Share live location. It stops after about 1 hour, so share again."
     ],
-    "note": "Sharing uses your phone's battery and data. Turn it off when you get home."
+    "note": "Sharing uses your phone's battery and data. Turn it off when you get home.",
+    "rows": [
+      {
+        "app": "WhatsApp",
+        "c": "#25D366",
+        "bold": "8 hours",
+        "text": "Group chat → Location → Share live location"
+      },
+      {
+        "app": "Google Maps",
+        "c": "#4285F4",
+        "bold": "until you stop",
+        "text": "Location sharing → pick the riders"
+      },
+      {
+        "app": "Messenger",
+        "c": "#A855F7",
+        "bold": "about 1 hour",
+        "text": "Group chat → Location → Share live location. Share again after"
+      },
+      {
+        "icon": "🔋",
+        "bold": "Uses battery and data",
+        "text": "Turn it off when you get home"
+      }
+    ]
   },
   "shareGuide": {
     "title": "How to share GPX responsibly 🗺️",
@@ -56,7 +81,33 @@
       "This isn't about hiding trails. For the harder trails, join a local group and ride with people who know them. If you're only visiting, a local guide is the quickest way in.",
       "Share the easy stuff, keep the rest off the internet 🤙"
     ],
-    "byline": "By Jul"
+    "byline": "By Jul",
+    "summary": {
+      "head": "Share the easy stuff, keep the rest off the internet 🤙",
+      "rows": [
+        {
+          "icon": "🚫",
+          "bold": "No single track online",
+          "text": "A pickup can't get in to recover you or the bike. Exception: the easy routes on this site"
+        },
+        {
+          "icon": "🤔",
+          "bold": "Picture someone unprepared on it",
+          "text": "Alone, wrong bike, slick laterite. If that worries you, keep it private"
+        },
+        {
+          "icon": "🔒",
+          "bold": "Hard, remote, protected: offline",
+          "text": "Share those only with friends you trust"
+        },
+        {
+          "icon": "🤝",
+          "bold": "Harder trails: ride with a local group",
+          "text": "Visiting? A local guide is the quickest way in"
+        }
+      ],
+      "more": "Read Jul's full post"
+    }
   },
   "siteUrl": "https://cnx-enduro.github.io/",
   "footer": "Built and maintained by Chu. Comments and ideas: {email}",
@@ -78,5 +129,79 @@
     }
   ],
   "satelliteKey": "AAPTaxFJ8VQI4luJA2aglHR7sjQ..0MFIW6EavKBBEVEFIsK1eSCWOI7FLVSXxmtpv6OCzhdcDAt5dJq7t8lBNkbJUz5HgA6BUeC17Lh3JEbDdZu5SQtC4xCB56KMtn331DXaFY2Ff7hi4-AisyCPm3Cu2ZdRgl1RVgNeGOhuPHYEMubFmkAAc3AadM4AxsRDQFmp3oUgUiw7n6gbng-gRmG4jiH4pXSbUQMKY2WhMZdUslTcsJejb--CmNYVYVcmt_dshvZs1ra6rmqEAok.AT1_ugCaKr9I",
-  "satelliteKeyExpires": "2027-11-13"
+  "satelliteKeyExpires": "2027-11-13",
+  "beforeRide": {
+    "_note": "Short, scannable 'Before you ride' panel (Chu 11/18). Rows from Pavel's NOTES header; levels from Jul's /difficulty page. Overrides the NOTES header text for the main section.",
+    "gear": [
+      {
+        "icon": "🏍️",
+        "bold": "Enduro bike, 150 kg max",
+        "text": "Heavier at your own risk"
+      },
+      {
+        "icon": "🛞",
+        "bold": "100% enduro tyres",
+        "text": "Not stock 50/50. Rim locks help"
+      },
+      {
+        "icon": "🦺",
+        "bold": "Full protection",
+        "text": "Tall boots, knees, elbows, gloves, helmet"
+      },
+      {
+        "icon": "⛽",
+        "bold": "Full tank, 4 L water, snacks",
+        "text": ""
+      },
+      {
+        "icon": "👥",
+        "bold": "Don't ride alone",
+        "text": ""
+      }
+    ],
+    "levelsTitle": "Difficulty levels",
+    "levels": [
+      {
+        "l": "L0",
+        "name": "Paved",
+        "text": "Concrete or tarmac",
+        "c": "#c4c4c4",
+        "t": "#1a1a1a"
+      },
+      {
+        "l": "L1",
+        "name": "Easy",
+        "text": "Wide dirt track, seated",
+        "c": "#1e9e4a",
+        "t": "#fff"
+      },
+      {
+        "l": "L2",
+        "name": "Narrow",
+        "text": "Flowing single track, standing",
+        "c": "#1f5fbf",
+        "t": "#fff"
+      },
+      {
+        "l": "L3",
+        "name": "Steep",
+        "text": "Slow single track, climbs",
+        "c": "#d32f2f",
+        "t": "#fff"
+      },
+      {
+        "l": "L4",
+        "name": "Technical",
+        "text": "Big obstacles",
+        "c": "#111111",
+        "t": "#fff"
+      }
+    ],
+    "levelsLink": "See photos of each level →",
+    "wet": {
+      "icon": "🌧️",
+      "bold": "Wet = one level harder",
+      "text": "Read each track's notes"
+    }
+  }
 }
