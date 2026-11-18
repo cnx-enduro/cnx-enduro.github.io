@@ -207,7 +207,7 @@ select, input[type=file] { font: inherit; color: var(--text); background: var(--
 .surfkey i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #000; margin-right: 6px; vertical-align: -1px; }
 
 /* map: restricted-area key */
-.areakey { color: #ff9a9a; font-weight: 600; white-space: nowrap; }  /* sits in the credits row, bottom right */
+.areakey { color: #ff2a2a; font-weight: 700; white-space: nowrap; }  /* sits in the credits row, bottom right */
 .leaflet-control-attribution .areakey i { width: 13px; height: 9px; margin-right: 4px; vertical-align: -1px; }
 .areakey i, .noride i { display: inline-block; width: 16px; height: 12px; border: 2px solid #ff2a2a; margin-right: 6px; vertical-align: -2px;
   background: repeating-linear-gradient(0deg, rgba(255,42,42,.7) 0 1px, rgba(255,42,42,.08) 1px 4px); }
