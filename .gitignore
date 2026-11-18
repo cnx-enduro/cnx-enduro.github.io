@@ -7,3 +7,4 @@ PLAN_*.md
 research/
 qr/
 node_modules/
+tools/offline-tiles/package-lock.json
