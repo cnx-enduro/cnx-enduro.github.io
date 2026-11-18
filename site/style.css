@@ -372,3 +372,7 @@ body.rainlocked .leaflet-bottom.leaflet-left { z-index: 10001; }
 @keyframes offpulse { 50% { transform: translateY(3px); } }
 .offsave .offsign { position: absolute; left: 54px; bottom: 10px; width: max-content; max-width: calc(100vw - 140px); padding: 4px 8px; border-radius: 8px;
   font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.8); color: #fff; }
+
+/* Level badge on track cards + track page (Jul's L0–L4) */
+.lvtag { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 12px; font-weight: 800; line-height: 1.5; text-decoration: none; white-space: nowrap; }
+.lvtag:visited { color: inherit; }

@@ -260,13 +260,22 @@
     const paved = t.surface.shares.paved;
     return `<span class="chip">Paved ${paved}% · Off-road ${100 - paved}%</span>`;
   };
+  // Difficulty as Jul's L0–L4 level (site.json trackLevels, colours from beforeRide.levels) instead of the old 1–5 dots.
+  // The badge links to that level on the /difficulty page. A track without a level keeps the dots.
+  // (cards are buttons, so there the badge is plain; on the track page it's a link)
+  const level = (t, link) => {
+    const l = (site.trackLevels || {})[t.id], d = l && ((site.beforeRide || {}).levels || []).find(x => x.l === l);
+    if (!d) return "";
+    const st = `class="lvtag" style="background:${esc(d.c)};color:${esc(d.t)}"`;
+    return link ? `<a ${st} href="difficulty/#${l.toLowerCase()}" title="${esc(l + " " + d.name)}: see the difficulty page">${esc(l)} ${esc(d.name)} →</a>` : `<span ${st}>${esc(l)} ${esc(d.name)}</span>`;
+  };
   const card = t => `
     <li><button class="card" data-id="${t.id}">
       <span class="swatch" style="background:${t.color}"></span>
       <span>
         <h3><span class="num">${t.id}</span>${esc(t.name)}</h3>
         <span class="stats">
-          <span>${dots(t.difficulty)}</span>
+          <span>${level(t) || dots(t.difficulty)}</span>
           ${stat("", t.km + " km")}
           ${hours(t) ? stat("", esc(hours(t))) : ""}
           ${stat("↑ ≈", t.climb != null ? t.climb + " m" : null)}
@@ -462,7 +471,7 @@
     $("detail").innerHTML = `
       <button class="back" id="back">← All ${t.category === main.id ? "" : esc(sectionOf(t.category).title) + " "}tracks</button>
       <div class="detail-head">
-        <div class="muted small">${t.category !== sections[0].id ? esc(sectionOf(t.category).title) + " · " : ""}Track ${t.id} · ${dots(t.difficulty)} ${t.difficulty ? t.difficulty + "/5" : ""}</div>
+        <div class="muted small">${t.category !== sections[0].id ? esc(sectionOf(t.category).title) + " · " : ""}Track ${t.id} · ${level(t, true) || `${dots(t.difficulty)} ${t.difficulty ? t.difficulty + "/5" : ""}`}</div>
         <h2>${esc(t.name)}</h2>
         <div class="chips">${t.flags.filter(f => f.kind !== "card").map(f => `<span class="chip ${f.level}">${flagText(f)}</span>`).join("")}</div>
       </div>
