@@ -470,9 +470,8 @@ function addNoRideZones(map, opts = {}) {
     defs.appendChild(pat);
     svg.insertBefore(defs, svg.firstChild);
     if (opts.key) {
-      const key = L.control({ position: "bottomleft" });
-      key.onAdd = () => L.DomUtil.create("div", "areakey");
-      key.addTo(map).getContainer().innerHTML = `<i></i>Doi Suthep-Pui National Park: no off-road riding`;
+      // In the map's bottom row, just before the map credits (Chu 11/19), same small size.
+      if (map.attributionControl) map.attributionControl.setPrefix(`<span class="areakey"><i></i>Doi Suthep-Pui National Park: no off-road riding</span>`);
     }
 
     // The tracks' canvas sits on top and takes every mouse event, so the zone can't have its own hover.
