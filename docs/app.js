@@ -139,11 +139,12 @@
   // as coloured badges (same colours as the /difficulty page), then the wet rule.
   const beforeRideHtml = b => {
     const row = iconRow;
-    return `<div class="brows">${b.gear.map(row).join("")}</div>` +
-      `<p class="lvhead">${esc(b.levelsTitle)}</p><a class="lvlist" href="difficulty/">` +
-      b.levels.map(l => `<span class="lv"><span class="lvb" style="background:${esc(l.c)};color:${esc(l.t)}">${esc(l.l)}</span><b>${esc(l.name)}</b><span>${esc(l.text)}</span></span>`).join("") +
-      `<span class="lvmore">${esc(b.levelsLink)}</span></a>` + `<div class="brows">${row(b.wet)}</div>`;
+    return `<div class="brows">${b.gear.map(row).join("")}</div>`;
   };
+  // Difficulty levels box, right above the track list (main section only): L0–L4 badges → /difficulty, then the wet rule.
+  const levelsHtml = b => `<p class="lvhead">${esc(b.levelsTitle)}</p><a class="lvlist" href="difficulty/">` +
+    b.levels.map(l => `<span class="lv"><span class="lvb" style="background:${esc(l.c)};color:${esc(l.t)}">${esc(l.l)}</span><b>${esc(l.name)}</b><span>${esc(l.text)}</span></span>`).join("") +
+    `<span class="lvmore">${esc(b.levelsLink)}</span></a><div class="brows lvwet">${iconRow(b.wet)}</div>`;
 
   // ---------- map ----------
   // Blue-dot label on a track page: how far along this track the rider is (or how far off it).
@@ -304,6 +305,7 @@
       if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     $("listHead").textContent = isMain ? "Tracks" : sec.title;
+    if (site.beforeRide && site.beforeRide.levels) { $("levelsBox").innerHTML = isMain ? levelsHtml(site.beforeRide) : ""; $("levelsBox").hidden = !isMain; }
 
     const others = sections.filter(s => s.id !== id && s.id !== main.id && tracks.some(t => t.category === s.id));
     $("list").innerHTML = tracks.filter(t => t.category === id).map(card).join("") +

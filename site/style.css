@@ -376,3 +376,6 @@ body.rainlocked .leaflet-bottom.leaflet-left { z-index: 10001; }
 /* Level badge on track cards + track page (Jul's L0–L4) */
 .lvtag { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 12px; font-weight: 800; line-height: 1.5; text-decoration: none; white-space: nowrap; }
 .lvtag:visited { color: inherit; }
+#levelsBox { margin-top: 16px; }
+#levelsBox .lvhead { margin: 0 0 6px !important; }
+#levelsBox .lvwet .nrow { padding: 8px 2px 0; }
