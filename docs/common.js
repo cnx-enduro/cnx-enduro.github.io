@@ -358,8 +358,10 @@ function addOffline(map, o) {
     clearTimeout(signT); sign.textContent = text; sign.hidden = !text;
     if (ms) signT = setTimeout(() => { sign.hidden = true; }, ms);
   };
-  const ICON_SAVE = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v11m0 0-4.5-4.5M12 14l4.5-4.5M4 15v4.5h16V15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const ICON_DONE = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  // Folded paper map with a down arrow (save the map) / with a tick (saved): reads as "map", not just "download".
+  const MAP = `<path d="M3 6.5 8.5 4.5 15.5 7 21 5v12.5L15.5 19.5 8.5 17 3 19z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 4.5V17M15.5 7v5" fill="none" stroke="currentColor" stroke-width="1.6"/>`;
+  const ICON_SAVE = `<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">${MAP}<circle cx="17.5" cy="17.5" r="5.2" fill="#2f7cf6"/><path d="M17.5 14.6v5.2m0 0-2.2-2.2m2.2 2.2 2.2-2.2" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const ICON_DONE = `<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">${MAP}<circle cx="17.5" cy="17.5" r="5.2" fill="#fff"/><path d="M15.2 17.6l1.6 1.6 3.1-3.3" fill="none" stroke="#2f9e6e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const show = (state, label) => {
     if (!btn) return;
     btn.className = state; btn.innerHTML = state === "saved" || state === "update" ? ICON_DONE : ICON_SAVE;
