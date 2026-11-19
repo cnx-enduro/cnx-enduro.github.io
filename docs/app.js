@@ -100,6 +100,9 @@
       $("qrImg").innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
       $("qrImg").hidden = false;
       $("qrUrl").textContent = url.replace(/^https?:\/\//, "");
+      // On a track page the code opens that track: say which one above the code.
+      const tr = current ? `${current.id} ${current.name}` : "";
+      $("qrTrackName").textContent = tr; $("qrTrackName").hidden = !tr;
     } catch (e) {
       $("qrImg").hidden = true;
       $("qrUrl").textContent = "Couldn't load the QR code. Check your internet and try again.";

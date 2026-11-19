@@ -380,3 +380,4 @@ body.rainlocked .leaflet-bottom.leaflet-left { z-index: 10001; }
 #levelsBox { margin-top: 16px; }
 #levelsBox .lvhead { margin: 0 0 6px !important; }
 #levelsBox .lvwet .nrow { padding: 8px 2px 0; }
+.qrtrack { font-weight: 700; font-size: 16px; margin: -4px 0 10px; }
