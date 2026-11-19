@@ -188,11 +188,17 @@
   addNoRideZones(map, { key: true });
   const layers = {};
   const all = L.featureGroup().addTo(map);
+  // Track colour = its difficulty level (site.json colorBy "level"; brighter "map" shade of the level colour so the
+  // line shows over green forest), else one colour per track. The start dot carries the track number so tracks
+  // of the same colour can still be told apart.
+  const levelOf = t => { const l = (site.trackLevels || {})[t.id]; return l && ((site.beforeRide || {}).levels || []).find(x => x.l === l); };
   tracks.forEach((t, i) => {
-    t.color = colorFor(i);
+    const lv = site.colorBy === "level" && levelOf(t);
+    t.color = (lv && (lv.map || lv.c)) || colorFor(i);
     const casing = L.polyline(t.line, { color: "#000", weight: 7, opacity: 0.55, interactive: false });
     const line = L.polyline(t.line, { color: t.color, weight: 4, opacity: 0.95 });
-    const start = L.circleMarker(t.start, { radius: 6, color: "#000", weight: 2, fillColor: t.color, fillOpacity: 1 });
+    const start = L.marker(t.start, { icon: L.divIcon({ className: "tstart", iconSize: [24, 24], iconAnchor: [12, 12],
+      html: `<span style="background:${t.color}">${Number(t.id)}</span>` }) });
     line.bindTooltip(`${t.id} · ${esc(t.name)}`, { sticky: true });
     start.bindTooltip(`Start · ${esc(t.name)}`);
     const g = L.featureGroup([casing, line, start]).addTo(all);
@@ -428,7 +434,7 @@
     for (const l of Object.values(layers)) {
       l.line.setStyle({ opacity: 0.95, weight: 4 });
       l.casing.setStyle({ opacity: 0.55 });
-      l.start.setStyle({ opacity: 1, fillOpacity: 1 });
+      l.start.setOpacity(1); l.start.setZIndexOffset(0);
     }
     fitAll();
   }
@@ -444,7 +450,7 @@
       const on = id === t.id;
       l.line.setStyle({ opacity: on ? 1 : 0.25, weight: on ? 5 : 3 });
       l.casing.setStyle({ opacity: on ? 0.7 : 0 });
-      l.start.setStyle({ opacity: on ? 1 : 0.25, fillOpacity: on ? 1 : 0.25 });
+      l.start.setOpacity(on ? 1 : 0.3); l.start.setZIndexOffset(on ? 1000 : 0);
     }
     layers[t.id].g.bringToFront();
     clearSurface();
@@ -460,7 +466,6 @@
       // a nested group doesn't keep its drawing order, so stack them explicitly: outline, colour, laterite, start
       pieces.bringToFront();
       laterite.bringToFront();
-      layers[t.id].start.bringToFront();
       surfaceHover(t, pieces);
     }
     if (t.pois.length) {

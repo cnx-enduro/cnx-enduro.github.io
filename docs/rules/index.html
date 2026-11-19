@@ -44,6 +44,24 @@ h2 { font-size: clamp(22px, 5vw, 28px); margin: 0 0 12px; }
 .thanks { margin: 14px 0 0; font-weight: 600; }
 footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 14px; }
 @media (max-width: 520px) { .rule b, .row b { font-size: 16px; } .strike { font-size: 16px; padding: 12px 8px; } }
+
+/* pictures (tools/rules-graphics.py) */
+.ico { position: relative; width: 52px; height: 52px; border-radius: 12px; background: #2a2110; color: var(--accent); display: grid; place-items: center; }
+.ico svg { width: 34px; height: 34px; }
+.ico .n { position: absolute; top: -7px; left: -7px; min-width: 22px; height: 22px; border-radius: 11px; background: var(--accent); color: #111; font-size: 13px; font-weight: 800; display: grid; place-items: center; padding: 0 5px; }
+.rule { grid-template-columns: 52px 1fr; gap: 14px; }
+.row { grid-template-columns: 44px 1fr; }
+.row .ico { width: 44px; height: 44px; border-radius: 10px; }
+.row .ico svg { width: 28px; height: 28px; }
+.fig { display: block; width: 100%; height: auto; margin: 10px 0 2px; }
+.cards { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; }
+.ycard, .rcard { width: 54px; height: 74px; border-radius: 6px; transform: rotate(-8deg); box-shadow: 0 4px 10px rgba(0,0,0,.5); }
+.ycard { background: #f5c518; } .rcard { background: #e5484d; }
+.cards b { font-size: 18px; } .cards small { display: block; color: var(--muted); font-size: 14px; font-weight: 600; }
+.tiles4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 4px; }
+.tiles4 div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.tiles4 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
+@media (max-width: 520px) { .tiles4 { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
@@ -54,11 +72,11 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <nav class="jump"><a href="#rules">📜 Rules</a><a href="#break">⚠️ If you break them</a><a href="#remember">🙏 Please remember</a><a href="../difficulty/">📶 Difficulty levels</a><a href="../leaders/">🧭 Leader rules</a></nav>
 
 <section id="rules">
-<div class="rule"><div class="num">1</div><div><b>Keep it to Enduro.</b><span>This group is only for organizing rides, discussing dirt bikes, and sharing riding pics.</span></div></div>
-<div class="rule"><div class="num">2</div><div><b>No drama.</b><span>If you've got an issue with someone, sort it out in private. Feedback on rides is welcome, but share it <strong class="hl">privately</strong> with organizers or admins.</span></div></div>
-<div class="rule"><div class="num">3</div><div><b>Easy tracks are on our member-only website <a href="../">cnx-enduro.github.io</a> but do not ask for or share intermediate/harder tracks in the group.</b><span>Because unprepared or irresponsible people riding harder tracks without the assistance of more experienced riders can get themselves, and the whole CNX enduro community, in trouble with the local authorities. If you want to ride harder tracks, join our organized rides.</span></div></div>
-<div class="rule"><div class="num">4</div><div><b>Do not post any of our community tracks on other websites or social media.</b></div></div>
-<div class="rule"><div class="num">5</div><div><b>No commercial posts without admin approval.</b></div></div>
+<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="12" cy="33" r="7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="33" r="7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 33 19 22h11l7 11M19 22l-3-6h-4M30 22l4-8h5M24 33l6-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">1</span></div><div><b>Keep it to Enduro.</b><span>This group is only for organizing rides, discussing dirt bikes, and sharing riding pics.</span></div></div>
+<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 8h24v15H14l-6 5v-5H5z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="27" y="29" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 29v-4a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">2</span></div><div><b>No drama.</b><span>If you've got an issue with someone, sort it out in private. Feedback on rides is welcome, but share it <strong class="hl">privately</strong> with organizers or admins.</span></div></div>
+<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 12 17 8l13 4 13-4v28l-13 4-13-4-12 4z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 8v28M30 12v28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">3</span></div><div><b>Easy tracks are on our member-only website <a href="../">cnx-enduro.github.io</a> but do not ask for or share intermediate/harder tracks in the group.</b><span>Because unprepared or irresponsible people riding harder tracks without the assistance of more experienced riders can get themselves, and the whole CNX enduro community, in trouble with the local authorities. If you want to ride harder tracks, join our organized rides.</span></div></div>
+<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 11l26 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 26l6-6 6 6M24 20v12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">4</span></div><div><b>Do not post any of our community tracks on other websites or social media.</b></div></div>
+<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 25 25 7h15v15L22 40z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="33" cy="15" r="2.5" fill="currentColor"/><path d="M6 6l36 36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">5</span></div><div><b>No commercial posts without admin approval.</b></div></div>
 </section>
 
 <section id="break">
@@ -69,10 +87,10 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <section id="remember">
 <h2>Also, please remember</h2>
 <div class="rows">
-<div class="row"><i>🏘️</i><div><b>RESPECT LOCALS: ride SLOWLY and SILENTLY through villages.</b><span>Stay off closed or restricted trails. Be polite and compliant if locals get angry with you for accidental trespassing. Your behavior reflects on the whole Enduro community!</span></div></div>
-<div class="row"><i>⚠️</i><div><b>Ride at your own risk:</b><span>everyone is responsible for themselves and their bike. Admins and leaders are volunteers, not guides, and they do not guarantee your legal or physical safety.</span></div></div>
-<div class="row"><i>🪖</i><div><b>Minimum gear:</b><span>helmet, high boots, knee protection, and gloves on every group ride.</span></div></div>
-<div class="row"><i>🔕</i><div><b>Fewer notifications in the chat</b><span>Instead of replying “lol”, “nice” or “👍”, just react to the message. Try to put your thoughts in one message rather than five short ones, and take one-on-one chats to private messages.</span></div></div>
+<div class="row"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 24 15 15l10 9v16H5z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 40v-8h6v8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 38a9 9 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M37 38l-4-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>RESPECT LOCALS: ride SLOWLY and SILENTLY through villages.</b><span>Stay off closed or restricted trails. Be polite and compliant if locals get angry with you for accidental trespassing. Your behavior reflects on the whole Enduro community!</span></div></div>
+<div class="row"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5l15 5v11c0 10-6 17-15 21C15 38 9 31 9 21V10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 15v10M24 31v.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>Ride at your own risk:</b><span>everyone is responsible for themselves and their bike. Admins and leaders are volunteers, not guides, and they do not guarantee your legal or physical safety.</span></div></div>
+<div class="row"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 28a14 14 0 0 1 28 0v4H10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14v8M10 32h28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 26h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>Minimum gear:</b><span>helmet, high boots, knee protection, and gloves on every group ride.</span><div class="tiles4"><div><i>🪖</i>helmet</div><div><i>🥾</i>high boots</div><div><i>🦵</i>knee protection</div><div><i>🧤</i>gloves</div></div></div></div>
+<div class="row"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 34V22a10 10 0 0 1 20 0v12l4 4H10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 42h6M6 6l36 36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>Fewer notifications in the chat</b><span>Instead of replying “lol”, “nice” or “👍”, just react to the message. Try to put your thoughts in one message rather than five short ones, and take one-on-one chats to private messages.</span></div></div>
 </div>
 <p class="thanks">Thank you for the cooperation🙏</p>
 </section>

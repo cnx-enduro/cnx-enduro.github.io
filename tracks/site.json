@@ -166,35 +166,40 @@
         "name": "Paved",
         "text": "Concrete or tarmac",
         "c": "#c4c4c4",
-        "t": "#1a1a1a"
+        "t": "#1a1a1a",
+        "map": "#cfd3d8"
       },
       {
         "l": "L1",
         "name": "Easy",
         "text": "Wide dirt track, seated",
         "c": "#1e9e4a",
-        "t": "#fff"
+        "t": "#fff",
+        "map": "#35d66b"
       },
       {
         "l": "L2",
         "name": "Narrow",
         "text": "Flowing single track, standing",
         "c": "#1f5fbf",
-        "t": "#fff"
+        "t": "#fff",
+        "map": "#4b8dff"
       },
       {
         "l": "L3",
         "name": "Steep",
         "text": "Slow single track, climbs",
         "c": "#d32f2f",
-        "t": "#fff"
+        "t": "#fff",
+        "map": "#ff4d4d"
       },
       {
         "l": "L4",
         "name": "Technical",
         "text": "Big obstacles",
         "c": "#111111",
-        "t": "#fff"
+        "t": "#fff",
+        "map": "#f2f2f2"
       }
     ],
     "levelsLink": "See photos of each level →",
@@ -217,5 +222,6 @@
     "07": "L1",
     "08": "L1",
     "09": "L1"
-  }
+  },
+  "colorBy": "level"
 }
