@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Join the group | Chiang Mai Enduro Riders</title>
-<meta name="description" content="Agree to the group rules and get the join link.">
+<meta name="description" content="Agree to the group rules, then an admin sends you the invite.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
-<!-- Join page (Chu 11/19): rider ticks every box + types their name; the Google script (submitUrl, kind "join") emails the agreement as the record and only then returns the Messenger join link, so the link is never in this page. PREVIEW = true until the script is updated. -->
+<!-- Join page (Chu 11/19): rider ticks every box + types their name; the Google script (submitUrl, kind "join") emails the agreement to the admins as the record; an admin then sends the Messenger invite (no join link on the page). PREVIEW = true until the script is updated. -->
 <style>
 
 
@@ -88,8 +88,8 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 18px;
 </g></svg></div>
 <h1>Join the ride 🏍️💨</h1>
 <p class="group">Chiang Mai Enduro Riders</p>
-<p class="draft">Preview for the admins: nothing is sent, the join link is an example.</p>
-<p class="intro">Four quick ticks and your name, then you get the link to the group chat. Takes 30 seconds, less than warming up your bike.</p>
+<p class="draft">Preview for the admins: nothing is sent.</p>
+<p class="intro">Four quick ticks and your name, then an admin sends you the invite to the group chat. Takes 30 seconds, less than warming up your bike.</p>
 <form id="f" novalidate>
 <div class="fuel"><span>⛽ Fuel</span><span class="bar"><i id="fuel"></i></span><span id="fuelN">0/4</span></div>
 <div class="steps">
@@ -101,23 +101,21 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 18px;
 <label class="name" for="name">Your name on Facebook</label>
 <input type="text" id="name" autocomplete="name" maxlength="80" placeholder="e.g. Somchai Send-It">
 <input type="text" class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-<button class="go" id="go" type="submit" disabled>Let's ride: get the join link 🏁</button>
+<button class="go" id="go" type="submit" disabled>Let's ride: send it 🏁</button>
 <p class="left" id="left"></p>
 <div class="msg err" id="err" hidden></div>
 </form>
 <div class="done" id="done" hidden>
 <h2>Brap brap! You're in 🏁</h2>
 <p class="meme">Send it (responsibly) 🤙</p>
-<p>Thanks, <b id="who"></b>. Tap below to join the group chat.</p>
-<a class="joinbtn" id="link" href="#">Join the group chat</a>
-<p class="left">An admin will approve you soon.</p>
+<p>Thanks, <b id="who"></b>. An admin will send you the invite to the group chat soon. Keep an eye on your Messenger 📩</p>
 </div>
 <footer>Your name, the date and what you ticked are sent to the group admins as a record. Nothing else is kept.</footer>
 </main>
 <script>
 // Join: every box ticked + a name → the site's Google script emails the agreement to the admins (the record)
-// and only then answers with the Messenger join link. PREVIEW = true: nothing is sent (admins are trying it out);
-// set it to false once the script has the "join" part and the real invite link.
+// (the record); an admin then sends the invite. PREVIEW = true: nothing is sent (admins are trying it out);
+// set it to false once the script has the "join" part.
 const PREVIEW = true;
 const SUBMIT = "https://script.google.com/macros/s/AKfycbyFrBDhAARPfLQ-m7ILGMDTfW5QtEEY9v6pYqta9nB76e0dH2heKeFIC-TXQfBK5pM0Ww/exec";
 const $ = id => document.getElementById(id);
@@ -135,14 +133,14 @@ $("f").addEventListener("submit", async e => {
   const payload = { kind: "join", name: $("name").value.trim(), agreed: boxes.map(b => b.value), page: location.href, website: $("website").value,
     test: /[?&]test\b/.test(location.search) };
   try {
-    const out = PREVIEW || /[?&]mock\b/.test(location.search) ? { ok: true, link: "https://m.me/j/EXAMPLE" }
+    const out = PREVIEW || /[?&]mock\b/.test(location.search) ? { ok: true }
       : await (await fetch(SUBMIT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })).json();
-    if (!out.ok || !out.link) throw new Error(out.error || "no link");
-    $("who").textContent = payload.name; $("link").href = out.link; $("f").hidden = true; $("done").hidden = false;
+    if (!out.ok) throw new Error(out.error || "not sent");
+    $("who").textContent = payload.name; $("f").hidden = true; $("done").hidden = false;
     document.body.classList.add("wheelie"); window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (err) {
     $("err").textContent = "Stalled 😅 Couldn't send it. Check your internet and try again."; $("err").hidden = false;
-    $("go").textContent = "Let's ride: get the join link 🏁"; update();
+    $("go").textContent = "Let's ride: send it 🏁"; update();
   }
 });
 </script>
