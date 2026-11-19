@@ -381,3 +381,7 @@ body.rainlocked .leaflet-bottom.leaflet-left { z-index: 10001; }
 #levelsBox .lvhead { margin: 0 0 6px !important; }
 #levelsBox .lvwet .nrow { padding: 8px 2px 0; }
 .qrtrack { font-weight: 700; font-size: 16px; margin: -4px 0 10px; }
+/* Community rules tile: full width, first */
+.guides > .wide { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; gap: 12px; }
+.guides > .wide .gic { margin: 0; flex: 0 0 auto; }
+.guides > .wide small { margin-left: auto; }
