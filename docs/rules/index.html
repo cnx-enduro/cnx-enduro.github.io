@@ -39,6 +39,8 @@ h2 { font-size: clamp(22px, 5vw, 28px); margin: 0 0 12px; }
 .row { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
 .row:first-child { border-top: 0; }
 .row i { font-style: normal; font-size: 22px; line-height: 1.2; text-align: center; }
+.leadlink { text-decoration: none; color: var(--text); border-color: var(--accent); }
+.leadlink .num { background: var(--surface-2); font-size: 20px; }
 .thanks { margin: 14px 0 0; font-weight: 600; }
 footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 14px; }
 @media (max-width: 520px) { .rule b, .row b { font-size: 16px; } .strike { font-size: 16px; padding: 12px 8px; } }
@@ -49,7 +51,7 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <a class="back" href="../">← All tracks</a>
 <h1>Community rules</h1>
 <p class="group">Chiang Mai Enduro Riders</p>
-<nav class="jump"><a href="#rules">📜 Rules</a><a href="#break">⚠️ If you break them</a><a href="#remember">🙏 Please remember</a><a href="../difficulty/">📶 Difficulty levels</a></nav>
+<nav class="jump"><a href="#rules">📜 Rules</a><a href="#break">⚠️ If you break them</a><a href="#remember">🙏 Please remember</a><a href="../difficulty/">📶 Difficulty levels</a><a href="../leaders/">🧭 Leader rules</a></nav>
 
 <section id="rules">
 <div class="rule"><div class="num">1</div><div><b>Keep it to Enduro.</b><span>This group is only for organizing rides, discussing dirt bikes, and sharing riding pics.</span></div></div>
@@ -75,6 +77,7 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <p class="thanks">Thank you for the cooperation🙏</p>
 </section>
 
+<section id="leaders"><a class="rule leadlink" href="../leaders/"><div class="num">🧭</div><div><b>Leading a ride?</b><span>Rules for group leaders: navigation, the meeting point, “always turn right”, breaks. Read them before you lead →</span></div></a></section>
 <footer>Last updated November 2026</footer>
 </main>
 </body>
