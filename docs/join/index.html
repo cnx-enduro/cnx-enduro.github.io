@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Join the group | Chiang Mai Enduro Riders</title>
+<meta name="description" content="Agree to the group rules and get the join link.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
+<!-- Join page (Chu 11/19): rider ticks every box + types their name; the Google script (submitUrl, kind "join") emails the agreement as the record and only then returns the Messenger join link, so the link is never in this page. PREVIEW = true until the script is updated. -->
+<style>
+
+
+:root { --bg:#0b0c0e; --surface:#15171b; --surface-2:#1d2026; --line:#2a2e35; --text:#ecedef; --muted:#9aa0a9; --accent:#f5a524; color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#f6f6f4; --surface:#fff; --surface-2:#f0f0ed; --line:#deded9; --text:#17181a; --muted:#5d636b; --accent:#b86e00; color-scheme: light; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 18px 16px 32px; }
+.back { display: inline-block; color: var(--accent); text-decoration: none; margin: 0 0 14px; }
+h1 { font-size: clamp(26px, 6vw, 36px); margin: 0 0 4px; line-height: 1.15; }
+.group { color: var(--muted); font-weight: 600; margin: 0 0 12px; }
+.intro { font-size: 17px; margin: 0 0 18px; }
+
+.hero { display: block; width: 100%; height: auto; margin: 0 0 6px; }
+.hero .bikeg { transform-box: fill-box; }
+.draft { background: #3a2c08; border: 1px solid #6b5212; color: #ffd36b; border-radius: 10px; padding: 10px 14px; font-weight: 700; margin: 0 0 14px; font-size: 14px; }
+.fuel { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; margin: 0 0 14px; font-weight: 800; }
+.fuel .bar { height: 14px; border-radius: 7px; background: var(--surface-2); overflow: hidden; border: 1px solid var(--line); }
+.fuel .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #e5484d, #f5a524 50%, #35d66b); transition: width .35s ease; }
+.steps { display: grid; gap: 10px; margin: 0 0 16px; }
+.tick { display: grid; grid-template-columns: 48px 1fr 34px; gap: 12px; align-items: center; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 12px; cursor: pointer; transition: border-color .2s, transform .15s; }
+.tick:active { transform: scale(.98); }
+.tick .ico { width: 48px; height: 48px; border-radius: 12px; background: #2a2110; color: var(--accent); display: grid; place-items: center; }
+.tick .ico svg { width: 30px; height: 30px; }
+.tick b { display: block; font-size: 16px; line-height: 1.3; }
+.tick .fun { display: block; color: var(--accent); font-size: 14px; font-weight: 700; margin-top: 3px; }
+.tick .sub { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.tick a { color: var(--text); text-decoration: underline; }
+.tick input { appearance: none; -webkit-appearance: none; width: 32px; height: 32px; border: 2.5px solid var(--muted); border-radius: 9px; margin: 0; display: grid; place-items: center; background: var(--bg); }
+.tick input:checked { background: #35d66b; border-color: #35d66b; }
+.tick input:checked::after { content: ""; width: 9px; height: 16px; border: solid #0b0c0e; border-width: 0 4px 4px 0; transform: rotate(45deg) translate(-1px, -2px); }
+.tick:has(input:checked) { border-color: #35d66b; }
+.tick:has(input:checked) .ico { background: #10261b; color: #35d66b; }
+label.name { display: block; font-weight: 800; margin: 4px 0 6px; }
+input[type=text] { width: 100%; font: inherit; font-size: 17px; padding: 13px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--text); }
+input[type=text]:focus { outline: none; border-color: var(--accent); }
+.go { display: block; width: 100%; margin: 14px 0 6px; font: inherit; font-size: 19px; font-weight: 900; padding: 16px; border-radius: 14px; border: 0; background: var(--accent); color: #111; cursor: pointer; box-shadow: 0 4px 0 #9a6400; }
+.go:active { transform: translateY(2px); box-shadow: 0 2px 0 #9a6400; }
+.go:disabled { background: var(--surface-2); color: var(--muted); box-shadow: none; cursor: default; }
+.left { color: var(--muted); font-size: 14px; text-align: center; margin: 0 0 10px; }
+.msg { border-radius: 10px; padding: 12px 14px; margin: 10px 0; font-weight: 600; }
+.msg.err { background: #3a0d0d; color: #ff8a8a; border: 1px solid #7a1c1c; }
+.done { text-align: center; background: var(--surface); border: 2px solid #35d66b; border-radius: 16px; padding: 18px 16px 22px; }
+.done h2 { margin: 4px 0 4px; font-size: 26px; }
+.done .meme { color: var(--accent); font-weight: 800; margin: 0 0 6px; }
+.joinbtn { display: inline-block; margin: 10px 0 8px; padding: 15px 24px; border-radius: 14px; background: #0084ff; color: #fff; font-weight: 900; font-size: 18px; text-decoration: none; }
+.hp { position: absolute; left: -9999px; }
+footer { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+.wheelie .bikeg { animation: wheelie 1.4s ease-in-out infinite; transform-origin: 40px 72px; }
+@keyframes wheelie { 0%,100% { transform: translate(80px,30px) rotate(0); } 50% { transform: translate(80px,30px) rotate(-12deg); } }
+@media (prefers-reduced-motion: reduce) { .wheelie .bikeg { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../">← All tracks</a>
+<div id="heroWrap"><svg class="hero" viewBox="0 0 360 150" role="img" aria-label="A dirt bike kicking up dust">
+<defs><linearGradient id="hill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3a2a17"/><stop offset="1" stop-color="#1d150c"/></linearGradient></defs>
+<path d="M0 128 C60 108 110 120 170 112 S290 92 360 104 V150 H0Z" fill="url(#hill)"/>
+<g class="dust" fill="#8a6a45"><circle cx="70" cy="112" r="10" opacity=".5"/><circle cx="52" cy="104" r="14" opacity=".35"/><circle cx="30" cy="96" r="18" opacity=".22"/><circle cx="12" cy="86" r="20" opacity=".12"/></g>
+<g class="bikeg" transform="translate(80 30)">
+<g fill="none" stroke="#ecedef" stroke-width="7"><circle cx="40" cy="72" r="21"/><circle cx="162" cy="72" r="21"/></g>
+<g fill="none" stroke="#ecedef" stroke-width="5" stroke-dasharray="3 4"><circle cx="40" cy="72" r="26"/><circle cx="162" cy="72" r="26"/></g>
+<circle cx="40" cy="72" r="5" fill="#9aa0a9"/><circle cx="162" cy="72" r="5" fill="#9aa0a9"/>
+<path d="M40 72 L88 60" stroke="#9aa0a9" stroke-width="7" stroke-linecap="round"/>
+<path d="M162 72 L134 22" stroke="#cfd3d8" stroke-width="8" stroke-linecap="round"/>
+<path d="M126 20 l22 -4" stroke="#ecedef" stroke-width="5" stroke-linecap="round"/>
+<rect x="80" y="50" width="32" height="22" rx="4" fill="#5d636b"/>
+<path d="M98 62 Q70 58 42 46" stroke="#cfd3d8" stroke-width="6" fill="none" stroke-linecap="round"/>
+<path d="M22 40 L66 36 L104 38 L122 30 L136 34 L118 50 L70 52 L40 50 Z" fill="#f5a524"/>
+<path d="M150 42 Q164 34 178 40" stroke="#f5a524" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M132 22 l14 -4 l4 14 l-14 4z" fill="#e05d2f"/>
+<path d="M92 16 L82 40" stroke="#2f7cf6" stroke-width="9" stroke-linecap="round"/>
+<path d="M90 22 L126 20" stroke="#2f7cf6" stroke-width="6" stroke-linecap="round"/>
+<path d="M82 40 L102 50 L98 66" stroke="#2f7cf6" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M92 66 h14" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+<circle cx="96" cy="6" r="11" fill="#e05d2f"/><path d="M98 2 h10 v6 h-8z" fill="#111"/><path d="M104 0 l10 4" stroke="#e05d2f" stroke-width="4" stroke-linecap="round"/>
+</g></svg></div>
+<h1>Join the ride 🏍️💨</h1>
+<p class="group">Chiang Mai Enduro Riders</p>
+<p class="draft">Preview for the admins: nothing is sent, the join link is an example.</p>
+<p class="intro">Four quick ticks and your name, then you get the link to the group chat. Takes 30 seconds, less than warming up your bike.</p>
+<form id="f" novalidate>
+<div class="fuel"><span>⛽ Fuel</span><span class="bar"><i id="fuel"></i></span><span id="fuelN">0/4</span></div>
+<div class="steps">
+<label class="tick"><span class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="7" width="30" height="36" rx="3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17h16M16 25h16M16 33h10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>I've read the <a href="../rules/" target="_blank">Community rules</a></b><span class="fun">Read 'em. All of 'em. Even the boring ones 📜</span><span class="sub">No drama, no sharing harder tracks, keep it enduro.</span></span><input type="checkbox" name="agree" value="rules"></label>
+<label class="tick"><span class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 40c0-8 5-13 11-13s11 5 11 13M21 40c0-8 5-13 11-13s11 5 11 13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>I've read <a href="../legal/" target="_blank">About this group</a></b><span class="fun">Not a tour company. Just mates who like mud 🤝</span><span class="sub">No business, no fees, no guiding.</span></span><input type="checkbox" name="agree" value="about"></label>
+<label class="tick"><span class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5l15 5v11c0 10-6 17-15 21C15 38 9 31 9 21V10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 23l5 5 9-10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>I ride at my own risk</b><span class="fun">Your bike, your call, your bruises 🩹</span><span class="sub">I'm responsible for myself and my bike. Leaders are volunteers, not guides.</span></span><input type="checkbox" name="agree" value="risk"></label>
+<label class="tick"><span class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 30a16 16 0 0 1 32 0v5H8z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14v10h16M8 35h32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>I wear the minimum gear on every group ride</b><span class="fun">ATGATT: all the gear, all the time 🪖</span><span class="sub">Helmet, high boots, knee protection, gloves.</span></span><input type="checkbox" name="agree" value="gear"></label>
+</div>
+<label class="name" for="name">Your name on Facebook</label>
+<input type="text" id="name" autocomplete="name" maxlength="80" placeholder="e.g. Somchai Send-It">
+<input type="text" class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<button class="go" id="go" type="submit" disabled>Let's ride: get the join link 🏁</button>
+<p class="left" id="left"></p>
+<div class="msg err" id="err" hidden></div>
+</form>
+<div class="done" id="done" hidden>
+<h2>Brap brap! You're in 🏁</h2>
+<p class="meme">Send it (responsibly) 🤙</p>
+<p>Thanks, <b id="who"></b>. Tap below to join the group chat.</p>
+<a class="joinbtn" id="link" href="#">Join the group chat</a>
+<p class="left">An admin will approve you soon.</p>
+</div>
+<footer>Your name, the date and what you ticked are sent to the group admins as a record. Nothing else is kept.</footer>
+</main>
+<script>
+// Join: every box ticked + a name → the site's Google script emails the agreement to the admins (the record)
+// and only then answers with the Messenger join link. PREVIEW = true: nothing is sent (admins are trying it out);
+// set it to false once the script has the "join" part and the real invite link.
+const PREVIEW = true;
+const SUBMIT = "https://script.google.com/macros/s/AKfycbyFrBDhAARPfLQ-m7ILGMDTfW5QtEEY9v6pYqta9nB76e0dH2heKeFIC-TXQfBK5pM0Ww/exec";
+const $ = id => document.getElementById(id);
+const boxes = [...document.querySelectorAll('input[name=agree]')];
+const update = () => {
+  const done = boxes.filter(b => b.checked).length, left = boxes.length - done, named = $("name").value.trim().length > 1;
+  $("fuel").style.width = (done / boxes.length * 100) + "%"; $("fuelN").textContent = `${done}/${boxes.length}`;
+  $("go").disabled = !!left || !named;
+  $("left").textContent = left ? `Tick ${left} more box${left > 1 ? "es" : ""} to fill the tank` : named ? "Tank's full. Let's go!" : "Last thing: your name";
+};
+boxes.forEach(b => b.addEventListener("change", update)); $("name").addEventListener("input", update); update();
+$("f").addEventListener("submit", async e => {
+  e.preventDefault(); if ($("go").disabled) return;
+  $("err").hidden = true; $("go").disabled = true; $("go").textContent = "Kickstarting…";
+  const payload = { kind: "join", name: $("name").value.trim(), agreed: boxes.map(b => b.value), page: location.href, website: $("website").value,
+    test: /[?&]test\b/.test(location.search) };
+  try {
+    const out = PREVIEW || /[?&]mock\b/.test(location.search) ? { ok: true, link: "https://m.me/j/EXAMPLE" }
+      : await (await fetch(SUBMIT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })).json();
+    if (!out.ok || !out.link) throw new Error(out.error || "no link");
+    $("who").textContent = payload.name; $("link").href = out.link; $("f").hidden = true; $("done").hidden = false;
+    document.body.classList.add("wheelie"); window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (err) {
+    $("err").textContent = "Stalled 😅 Couldn't send it. Check your internet and try again."; $("err").hidden = false;
+    $("go").textContent = "Let's ride: get the join link 🏁"; update();
+  }
+});
+</script>
+</body>
+</html>
