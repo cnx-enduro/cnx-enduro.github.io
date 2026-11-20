@@ -422,7 +422,7 @@ def main():
         surface = None
         try:
             runs = surfaces.surfaces_for(pts, surface_cache)["runs"]
-            sh = surfaces.shares(runs, {"single": ["single"], "double": ["double"],
+            sh = surfaces.shares(runs, {"single": ["single"], "double": ["double"], "lanes": ["lanes"],
                                         "paved": ["tarmac", "concrete"], "unknown": ["unknown"]})
             surface = {"pieces": surface_pieces(pts, runs), "shares": sh}
             # laterite is drawn on top of the surface colours, and only where the map knows it

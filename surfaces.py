@@ -3,6 +3,8 @@
 Every ~20 m of track is matched to the nearest mapped road within 25 m, and that road's tags decide the class.
 Jul's rule: paved if the surface is a paved one, or tracktype=grade1, or smoothness is excellent/good;
 otherwise unpaved: single on paths, double on everything else. unknown = no mapped road near the track.
+Jul 11/21: concrete lanes (surface=concrete:lanes, two concrete strips) are their own class, not paved:
+most riders prefer dirt, and bigger bikes expecting a full-width road get a nasty surprise.
 The cache (tracks/surface-cache.json, keyed by the track's shape) keeps the matched road tags, not the classes,
 so a rule change needs no new download; delete a track's entry to pick up new OpenStreetMap edits.
 """
@@ -17,10 +19,10 @@ import urllib.request
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
 STEP_M = 20       # sample spacing along the track
 SNAP_M = 25       # max distance from a GPS point to a mapped road
-CLASSES = ["single", "double", "concrete", "tarmac", "unknown"]
+CLASSES = ["single", "double", "lanes", "concrete", "tarmac", "unknown"]
 
 TARMAC = {"asphalt", "paved", "chipseal"}
-CONCRETE = {"concrete", "concrete:plates", "concrete:lanes", "paving_stones", "sett", "cobblestone", "metal", "wood"}
+CONCRETE = {"concrete", "concrete:plates", "paving_stones", "sett", "cobblestone", "metal", "wood"}
 PATHS = {"path", "footway", "bridleway", "cycleway", "steps"}
 MAIN_ROADS = {"motorway", "trunk", "primary", "secondary", "tertiary",
               "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link"}
@@ -34,7 +36,9 @@ def classify(tags):
     hw = tags.get("highway", "")
     surface = tags.get("surface", "").split(";")[0].strip()
     rough = tags.get("smoothness", "") in {"bad", "very_bad", "horrible", "very_horrible", "impassable"}
-    if surface in TARMAC or (not surface and hw in MAIN_ROADS):  # main roads without a surface tag are tarmac
+    if surface == "concrete:lanes":  # two narrow concrete strips: not paved (Jul)
+        cls = "lanes"
+    elif surface in TARMAC or (not surface and hw in MAIN_ROADS):  # main roads without a surface tag are tarmac
         cls = "tarmac"
     elif surface in CONCRETE or tags.get("tracktype") == "grade1" or tags.get("smoothness") in {"excellent", "good"}:
         cls = "concrete"
