@@ -65,6 +65,7 @@ function startNavigate(o) {
         <button type="button" class="nb-sun" aria-label="Daylight">${SUN(26)}<span><small>Dark</small><b class="nb-dark">--:--</b></span><i class="nb-dot">✓</i></button></div>
       <div class="nb-bar"><i></i></div><div class="nb-foot"><b class="nb-pct">0%</b><span><b class="nb-left">${t.km} km</b> to go</span></div>
     </div>
+    <button type="button" class="navstop" aria-label="Stop navigating"><i></i><span>Stop</span></button>
     <div class="navsun" hidden><button type="button" class="ns-x" aria-label="Close">✕</button><div class="ns-body"></div></div>
     <div class="navahead"></div>
     <div class="navoff" hidden></div>
@@ -84,6 +85,7 @@ function startNavigate(o) {
   mini.onclick = () => setBig(true);
   q(".nb-eta").onclick = () => setBig(false);
   q(".nb-x").onclick = () => stop(true);
+  q(".navstop").onclick = () => stop(true);  // always in sight next to the small box (Chu 11/21: no way to stop before)
   q(".nb-sun").onclick = () => { sunBox.hidden = !sunBox.hidden; clearTimeout(smallT); if (sunBox.hidden) setBig(true); };
   q(".ns-x").onclick = () => { sunBox.hidden = true; setBig(true); };
   map.on("click", closeSun);
