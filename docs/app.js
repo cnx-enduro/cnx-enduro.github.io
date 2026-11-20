@@ -267,8 +267,9 @@
   const flagText = f => (/smoke season/i.test(f.text) ? "🔥 " : "") + esc(f.text);
   const surfaceChip = t => {
     if (!t.surface) return "";
-    const paved = t.surface.shares.paved;
-    return `<span class="chip">Paved ${paved}% · Off-road ${100 - paved}%</span>`;
+    // concrete lanes (two strips) are neither paved nor off-road: shown on their own when a track has them (Jul)
+    const paved = t.surface.shares.paved, lanes = t.surface.shares.lanes || 0;
+    return `<span class="chip">Paved ${paved}%${lanes ? ` · Concrete lanes ${lanes}%` : ""} · Off-road ${100 - paved - lanes}%</span>`;
   };
   // Difficulty as Jul's L0–L4 level (site.json trackLevels, colours from beforeRide.levels) instead of the old 1–5 dots.
   // The badge links to that level on the /difficulty page. A track without a level keeps the dots.
@@ -359,6 +360,7 @@
   const SURFACES = [
     ["single", "Single track", "#e5397a"],
     ["double", "Double track / dirt", "#ff9800"],
+    ["lanes", "Concrete lanes (two strips)", "#33d6ff"],
     ["paved", "Paved", "#f4f4f4"],
     ["unknown", "Not on the map", "#8a8f98"],
   ];
