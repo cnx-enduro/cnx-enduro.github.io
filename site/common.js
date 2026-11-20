@@ -1,6 +1,16 @@
 // Shared by index.html and editors.html.
 const COLORS = ["#4fc3f7", "#ffb74d", "#81c784", "#f06292", "#ba68c8", "#fff176", "#4db6ac", "#ff8a65", "#90caf9", "#e6ee9c"];
 
+// Hidden beta (Chu 11/21): ▶ Navigate, ⏺ Record and the green phone line show only on a phone that opened the site
+// with ?beta in the link (remembered on that phone; ?beta=off forgets it). Riders without it see nothing new.
+const CNX_BETA = (() => {
+  const m = location.search.match(/[?&]beta(=off)?\b/);
+  try {
+    if (m) { if (m[1]) localStorage.removeItem("cnx-beta"); else localStorage.setItem("cnx-beta", "1"); }
+    return !!(m ? !m[1] : localStorage.getItem("cnx-beta"));
+  } catch (e) { return !!(m && !m[1]); }
+})();
+
 function colorFor(i) { return COLORS[i % COLORS.length]; }
 
 function esc(s) {
@@ -44,7 +54,8 @@ function baseMap(el, opts = {}) {
   L.control.scale({ imperial: false }).addTo(map);
   if (opts.locate !== false) addLocate(map, opts.whereText, turns ? opts.routeBearing : null);
   if (opts.locate !== false) addRainLock(map);
-  if (opts.offlineTrack) addOffline(map, { bases, layersCtl, track: opts.offlineTrack });  // added last: sits above the lock
+  if (opts.offlineTrack) addOffline(map, { bases, layersCtl, track: opts.offlineTrack });  // sits above the lock
+  if (opts.record && opts.locate !== false && CNX_BETA) addRecord(map);  // above the saved-map button
   return map;
 }
 
@@ -123,6 +134,42 @@ function addLocate(map, whereText, routeBearing) {
       return box;
     };
   }
+  // ▶ Navigate sets map.cnxLead (e.g. 0.22): the dot sits that share of the screen below the middle, more road ahead
+  const aim = ll => {
+    if (!map.cnxLead) return ll;
+    const p = map.latLngToContainerPoint(ll), sz = map.getSize();
+    return map.containerPointToLatLng([p.x, p.y - sz.y * map.cnxLead]);
+  };
+  // Thin bright green line from the dot = where the phone points (its compass), whenever location is ON (Chu 11/21).
+  // iPhone asks once ("Allow motion & orientation") when location is turned on; it must be asked straight from the tap.
+  let phoneDir = null, beam = null, beamRaf = 0;
+  const beamDraw = () => {
+    cancelAnimationFrame(beamRaf);
+    beamRaf = requestAnimationFrame(() => {
+      if (!beam) return;
+      if (phoneDir == null || !last || watch === null) { beam.hidden = true; return; }
+      const p = map.latLngToContainerPoint(last), b = map.getBearing ? map.getBearing() : 0;
+      beam.style.left = p.x + "px"; beam.style.top = (p.y - 2000) + "px";
+      beam.style.transform = `rotate(${phoneDir + b}deg)`; beam.hidden = false;
+    });
+  };
+  const onTurn = e => {
+    let h = null;
+    if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;  // iPhone
+    else if (e.absolute && e.alpha != null) h = (360 - e.alpha + ((screen.orientation && screen.orientation.angle) || 0)) % 360;  // Android
+    if (h == null) return;
+    phoneDir = h; beamDraw();
+  };
+  const turnEvent = "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
+  const beamStart = () => {
+    if (!beam) { beam = document.createElement("div"); beam.className = "phonebeam"; beam.hidden = true; map.getContainer().appendChild(beam); }
+    // (newer Chrome asks too; listen either way: a phone that says no simply sends nothing)
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function")
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    window.addEventListener(turnEvent, onTurn);
+  };
+  const beamStop = () => { window.removeEventListener(turnEvent, onTurn); phoneDir = null; beamDraw(); };
+  map.on("move zoom rotate viewreset resize", beamDraw);
   const label = () => (whereText && last ? whereText(last) : "");
   const setLabel = () => {
     if (!dot) return;
@@ -136,7 +183,7 @@ function addLocate(map, whereText, routeBearing) {
     if (watch === null) return;
     follow = false;
     clearTimeout(resume);
-    resume = setTimeout(() => { if (watch !== null && last) { follow = true; map.panTo(last, { animate: true }); } }, LOCATE_RESUME_MS);
+    resume = setTimeout(() => { if (watch !== null && last) { follow = true; map.panTo(aim(last), { animate: true }); } }, LOCATE_RESUME_MS);
   };
   // Another track opened / back to the list: new label text, and let the map show that track for a moment.
   map.on("whererefresh", () => { if (dot) { setLabel(); pause(); } });
@@ -157,13 +204,14 @@ function addLocate(map, whereText, routeBearing) {
       if (watch !== null) navigator.geolocation.clearWatch(watch);
       watch = null; last = null; follow = false; clearTimeout(resume);
       if (dot) { map.removeLayer(dot); map.removeLayer(ring); dot = ring = null; }
-      freeScreen(); show(false); say(""); cmpReset();
+      freeScreen(); show(false); say(""); cmpReset(); beamStop();
       map.fire("whereupdate", { latlng: null });  // location off: the page clears its own "you are here" marks
     };
     btn.addEventListener("click", e => {
       e.preventDefault();
       if (watch !== null) return stop();
       show(true); follow = true; say("Finding you…");
+      if (CNX_BETA) beamStart();  // straight from the tap (iPhone's compass question needs that)
       let first = true;
       // No timeout: in the hills the GPS can drop for a while; the watch keeps going and the dot
       // comes back by itself. Only a "blocked" answer stops it.
@@ -178,11 +226,12 @@ function addLocate(map, whereText, routeBearing) {
           dot.setLatLng(last); ring.setLatLng(last).setRadius(acc);
         }
         say("");
-        map.fire("whereupdate", { latlng: last });
+        map.fire("whereupdate", { latlng: last, pos });  // pos: time, accuracy and height, for Navigate and Record
         cmpFix();  // the page can mark the rider elsewhere too (the height chart)
+        beamDraw();
         setLabel();
-        if (first) { map.setView(last, Math.max(map.getZoom(), 14)); first = false; }
-        else if (follow) map.panTo(last, { animate: true });
+        if (first) { map.setView(last, Math.max(map.getZoom(), 14)); first = false; if (map.cnxLead) map.panTo(aim(last), { animate: false }); }
+        else if (follow) map.panTo(aim(last), { animate: true });
       }, err => {
         if (err.code === 1) { stop(); say("Location is blocked. Allow it for this site in your phone's settings."); }
         else if (!dot) say("Looking for GPS signal…");
@@ -194,6 +243,12 @@ function addLocate(map, whereText, routeBearing) {
   };
   ctl.addTo(map);
   if (cmp) cmp.addTo(map);  // added after, so it sits above the location button
+  // For ▶ Navigate and ⏺ Record: turn location on (same as tapping the button) and turn the map with the route.
+  map.cnxLocate = {
+    on: () => { if (watch === null && btn) btn.click(); },
+    isOn: () => watch !== null,
+    routeUp: () => { if (!routeBearing) return; cmpMode = "route"; if (last) turnTo(heading); cmpShow(); },
+  };
 }
 
 // 🔒 Rain lock, bottom left: one tap and the screen ignores every touch (rain drops make phones tap and scroll
@@ -426,6 +481,15 @@ function addOffline(map, o) {
     }
     await refresh(); say("Removed from the phone", 3000);
   };
+  // ▶ Navigate saves the open track's map by itself when there's signal.
+  map.cnxOffline = {
+    ensure: async t => {
+      if (await savedRec(t.id).catch(() => null)) return "saved";
+      if (navigator.onLine === false) return "nosignal";
+      if (!busy) save(t);
+      return "saving";
+    },
+  };
   const ctl = L.control({ position: "bottomleft" });
   ctl.onAdd = () => {
     const box = L.DomUtil.create("div", "leaflet-bar offsave");
@@ -446,6 +510,132 @@ function addOffline(map, o) {
     return box;
   };
   ctl.addTo(map);
+}
+
+// ⏺ Record, bottom left above the saved-map button: tap = start recording the ride (turns location on),
+// tap again (red ⏹) = stop, then a box asks for a name and Save… lets the phone pick where the GPX file goes
+// (computer and newer Android Chrome: a real save screen; iPhone: the share sheet, "Save to Files").
+// The ride is kept in the phone while recording, so a reload or a closed tab doesn't lose it: the box comes back.
+// Websites only get GPS while the page is on screen, so the screen is kept awake (location ON does that).
+const REC_KEY = "cnx-rec-v1";
+function addRecord(map) {
+  if (!("geolocation" in navigator)) return;
+  let rec = null, on = false, casing = null, line = null, btn = null, sign = null, tick = null, sheet = null;
+  const store = () => { try { localStorage.setItem(REC_KEY, JSON.stringify(rec)); } catch (e) {} };
+  const forget = () => { try { localStorage.removeItem(REC_KEY); } catch (e) {} };
+  const loadRec = () => { try { const r = JSON.parse(localStorage.getItem(REC_KEY)); return r && Array.isArray(r.pts) ? r : null; } catch (e) { return null; } };
+  const meters = pts => { let d = 0; for (let i = 1; i < pts.length; i++) d += L.latLng(pts[i - 1][0], pts[i - 1][1]).distanceTo([pts[i][0], pts[i][1]]); return d; };
+  const climbOf = pts => {  // GPS height jumps a lot: count a climb only once it's 5 m above the last low point
+    const e = pts.map(p => p[2]).filter(v => v != null);
+    if (e.length < pts.length * 0.8 || e.length < 2) return null;
+    let up = 0, ref = e[0];
+    for (const v of e) { if (v > ref + 5) { up += v - ref; ref = v; } else if (v < ref) ref = v; }
+    return Math.round(up);
+  };
+  const dur = ms => { const m = Math.max(0, Math.round(ms / 60000)); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`; };
+  const pad = n => String(n).padStart(2, "0");
+  const defaultName = r => { const d = new Date(r.start); return `Ride ${d.getDate()} ${d.toLocaleString("en-GB", { month: "short" })} ${d.getFullYear()} ${pad(d.getHours())}-${pad(d.getMinutes())}`; };
+  const draw = () => {
+    const ll = rec.pts.map(p => [p[0], p[1]]);
+    if (!line) {
+      casing = L.polyline(ll, { color: "#000", weight: 8, opacity: 0.5, interactive: false }).addTo(map);
+      line = L.polyline(ll, { color: "#e53935", weight: 5, opacity: 1, interactive: false }).addTo(map);
+    } else { casing.setLatLngs(ll); line.setLatLngs(ll); }
+    casing.bringToFront(); line.bringToFront();
+  };
+  const undraw = () => { if (line) { map.removeLayer(line); map.removeLayer(casing); line = casing = null; } };
+  const show = () => {
+    if (!btn) return;
+    btn.classList.toggle("on", on); sign.hidden = !on;
+    const t = on ? "Recording. Tap to stop" : "Record your ride (GPX)";
+    btn.title = t; btn.setAttribute("aria-label", t); btn.setAttribute("aria-pressed", String(on));
+    clearInterval(tick);
+    if (on) { const up = () => { sign.textContent = dur(Date.now() - rec.start); }; up(); tick = setInterval(up, 15000); }
+  };
+  map.on("whereupdate", e => {
+    if (!on || !e.pos) return;
+    const c = e.pos.coords;
+    if (c.accuracy > 50) return;  // a wild fix (inside a valley, just woken up): skip it
+    const p = [+c.latitude.toFixed(6), +c.longitude.toFixed(6), c.altitude != null ? Math.round(c.altitude * 10) / 10 : null, e.pos.timestamp || Date.now()];
+    const prev = rec.pts[rec.pts.length - 1];
+    if (prev && L.latLng(prev[0], prev[1]).distanceTo([p[0], p[1]]) < 4 && p[3] - prev[3] < 15000) return;
+    rec.pts.push(p); store(); draw();
+  });
+  const gpx = (r, name) => {
+    const x = s => String(s).replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]));
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="CNX Enduro Tracks" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>${x(name)}</name><trkseg>\n` +
+      r.pts.map(p => `<trkpt lat="${p[0]}" lon="${p[1]}">${p[2] != null ? `<ele>${p[2]}</ele>` : ""}<time>${new Date(p[3]).toISOString()}</time></trkpt>`).join("\n") +
+      `\n</trkseg></trk>\n</gpx>\n`;
+  };
+  // Where to save: the phone's own screen. "cancel" = the rider closed it (keep the box open).
+  const saveFile = async (text, filename) => {
+    const blob = new Blob([text], { type: "application/gpx+xml" });
+    if (window.showSaveFilePicker) {
+      try {
+        const h = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: "GPX track", accept: { "application/gpx+xml": [".gpx"] } }] });
+        const w = await h.createWritable(); await w.write(blob); await w.close(); return "saved";
+      } catch (e) { if (e.name === "AbortError") return "cancel"; }
+    }
+    const file = new File([blob], filename, { type: "application/gpx+xml" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return "saved"; } catch (e) { if (e.name === "AbortError") return "cancel"; }
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    return "saved";
+  };
+  const closeSheet = () => { if (sheet) { sheet.remove(); sheet = null; } };
+  const openSheet = unfinished => {
+    closeSheet();
+    const km = meters(rec.pts) / 1000, climb = climbOf(rec.pts), last = rec.pts[rec.pts.length - 1];
+    sheet = document.createElement("div"); sheet.className = "recsheet";
+    sheet.innerHTML = `<div class="recdim"></div><div class="recbox" role="dialog" aria-label="Save your ride">
+      ${unfinished ? `<p class="recnote">Your ride wasn't saved yet</p>` : ""}
+      <div class="recstats"><span><b>${km.toFixed(1)}</b> km</span><span><b>${dur((last ? last[3] : Date.now()) - rec.start)}</b></span>${climb != null ? `<span><b>⛰ ${climb}</b> m</span>` : ""}</div>
+      <label>Name<span class="recname"><input type="text" maxlength="80" autocomplete="off" spellcheck="false"><i>.gpx</i></span></label>
+      <button type="button" class="btn primary recsave">💾 Save…</button>
+      <button type="button" class="btn reckeep">Keep recording</button>
+      <button type="button" class="recdel">Delete ride</button>
+      <p class="recmsg small" role="status"></p></div>`;
+    document.body.appendChild(sheet);
+    const input = sheet.querySelector("input"), msg = sheet.querySelector(".recmsg");
+    input.value = rec.name || defaultName(rec);
+    input.addEventListener("input", () => { rec.name = input.value; store(); });
+    sheet.querySelector(".recsave").onclick = async () => {
+      if (!rec.pts.length) { msg.textContent = "Nothing recorded yet: no GPS fix came in."; return; }
+      const name = (input.value.trim() || defaultName(rec)).replace(/\.gpx$/i, "");
+      const res = await saveFile(gpx(rec, name), name.replace(/[\\/:*?"<>|]+/g, "-") + ".gpx");
+      if (res !== "saved") return;
+      rec = null; forget(); undraw(); closeSheet(); show();
+    };
+    sheet.querySelector(".reckeep").onclick = () => { on = true; closeSheet(); map.cnxLocate && map.cnxLocate.on(); show(); };
+    sheet.querySelector(".recdel").onclick = () => {
+      if (!confirm("Delete this ride? It can't be brought back.")) return;
+      rec = null; forget(); undraw(); closeSheet(); show();
+    };
+  };
+  const ctl = L.control({ position: "bottomleft" });
+  ctl.onAdd = () => {
+    const box = L.DomUtil.create("div", "leaflet-bar recbtn");
+    box.innerHTML = `<span class="recsign" hidden></span><a href="#" role="button" aria-pressed="false"><i></i></a>`;
+    L.DomEvent.disableClickPropagation(box);
+    btn = box.querySelector("a"); sign = box.querySelector(".recsign");
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      if (on) { on = false; show(); openSheet(false); return; }
+      if (rec && rec.pts.length) return openSheet(true);  // an unsaved ride is waiting
+      rec = { start: Date.now(), pts: [] }; on = true; store();
+      map.cnxLocate && map.cnxLocate.on();
+      show();
+    });
+    show();
+    return box;
+  };
+  ctl.addTo(map);
+  // A ride left over from before a reload / closed tab: draw it and ask what to do with it.
+  const left = loadRec();
+  if (left && left.pts.length) { rec = left; draw(); setTimeout(() => openSheet(true), 600); }
+  else if (left) forget();
 }
 
 // No-ride zones, on every map: Doi Suthep-Pui National Park striped red under the tracks, and a "No-ride zone"

@@ -388,3 +388,99 @@ body.rainlocked .leaflet-bottom.leaflet-left { z-index: 10001; }
 /* Track start dot with the track number (main map) */
 .tstart span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #000;
   color: #000; font: 800 12px/1 system-ui, sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,.6); }
+
+/* ▶ Navigate (nav.js). Track page button: green, first in the row */
+.btn.navgo { background: #1e9e4a; border-color: #1e9e4a; color: #fff; font-weight: 800; }
+.btn.navgo:hover { background: #22b154; }
+body.navmode #profile { display: none; }
+.navui { position: absolute; inset: 0; z-index: 900; pointer-events: none; font-family: inherit; }
+.navui > * { pointer-events: auto; }
+.navui button { font: inherit; color: inherit; cursor: pointer; }
+/* small box (default), top left */
+.navmini { position: absolute; left: 8px; top: 8px; width: 104px; min-height: 48px; padding: 6px 8px 7px; border-radius: 12px;
+  background: rgba(12,14,18,.92); border: 2px solid #2f9e6e; box-shadow: 0 2px 8px rgba(0,0,0,.5); color: #fff; text-align: left; }
+.navmini b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.3px; line-height: 1.1; }
+.nm-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.nm-bar { position: relative; flex: 1; height: 5px; border-radius: 3px; background: #2a2f37; overflow: hidden; }
+.nm-bar i, .nb-bar i { position: absolute; inset: 0 auto 0 0; background: #4b8dff; border-radius: 3px; }
+.nm-dot { width: 9px; height: 9px; border-radius: 50%; background: #2f9e6e; flex: none; }
+.navui[data-sun=amber] .navmini { border-color: #e0a020; } .navui[data-sun=amber] .nm-dot { background: #e0a020; }
+.navui[data-sun=red] .navmini { border-color: #ff4d4d; } .navui[data-sun=red] .nm-dot { background: #ff4d4d; }
+.navui[data-sun=red] .navmini b, .navui[data-sun=red] .nb-eta b { color: #ff6b6b; }
+/* big box */
+.navbig { position: absolute; left: 8px; right: 8px; top: 8px; max-width: 420px; background: rgba(12,14,18,.94); color: #fff;
+  border-radius: 16px; padding: 10px 12px 9px; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.nb-row { display: flex; align-items: center; gap: 10px; }
+.nb-x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #2a2f37; font-size: 20px !important; flex: none; }
+.nb-eta { display: flex; flex-direction: column; align-items: flex-start; background: none; border: 0; padding: 0; line-height: 1; }
+.nb-eta small { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #8a93a0; margin-bottom: 3px; }
+.nb-eta b { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+.nb-sun { margin-left: auto; display: flex; align-items: center; gap: 5px; height: 44px; padding: 0 6px 0 8px; border-radius: 22px;
+  background: #1d2128; border: 2px solid #2f9e6e; }
+.nb-sun span { display: flex; flex-direction: column; line-height: 1; text-align: left; }
+.nb-sun small { font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: #8a93a0; margin-bottom: 2px; }
+.nb-sun b { font-size: 15px; font-weight: 800; }
+.nb-dot { width: 18px; height: 18px; border-radius: 50%; background: #2f9e6e; color: #fff; font: 800 11px/18px system-ui; text-align: center; font-style: normal; }
+.navui[data-sun=amber] .nb-sun { border-color: #e0a020; } .navui[data-sun=amber] .nb-dot { background: #e0a020; }
+.navui[data-sun=red] .nb-sun { border-color: #ff4d4d; } .navui[data-sun=red] .nb-dot { background: #ff4d4d; }
+.nb-bar { position: relative; height: 10px; border-radius: 5px; background: #2a2f37; margin-top: 8px; overflow: hidden; }
+.nb-foot { display: flex; justify-content: space-between; font-size: 13px; color: #8a93a0; margin-top: 4px; } .nb-foot b { color: #fff; }
+/* sun box */
+.navsun { position: absolute; left: 8px; right: 8px; top: 118px; max-width: 420px; background: #14171c; color: #fff; border: 1px solid #333a44;
+  border-radius: 16px; padding: 12px 14px; }
+.ns-x { position: absolute; right: 6px; top: 6px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #2a2f37; font-size: 18px !important; }
+.ns-l { display: flex; align-items: center; gap: 10px; font-size: 18px; padding: 5px 0; } .ns-l span { width: 28px; text-align: center; font-size: 22px; }
+.ns-l.big { font-size: 20px; font-weight: 800; color: #ff6b6b; }
+.ns-tip { font-size: 12px; color: #8a93a0; border-top: 1px solid #2a2f37; margin-top: 6px; padding-top: 7px; }
+/* stops + laterite ahead, under the small box */
+.navahead { position: absolute; left: 8px; top: 64px; display: flex; flex-direction: column; gap: 6px; pointer-events: none !important; }
+.navbig:not([hidden]) ~ .navahead { top: 128px; }
+.na { display: flex; align-items: center; gap: 7px; padding: 5px 10px 5px 6px; border-radius: 12px; background: rgba(12,14,18,.92); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); width: max-content; }
+.na > i { width: 30px; height: 30px; border-radius: 50%; background: #f5a524; color: #111; font: 700 18px/30px system-ui; text-align: center; font-style: normal; flex: none; }
+.na.water > i { background: #1e9bd7; color: #fff; font-size: 20px; }
+.na > span { display: flex; flex-direction: column; line-height: 1.1; } .na b { font-size: 18px; } .na small { font-size: 11px; color: #8a93a0; max-width: 200px; }
+.na.laterite { border: 2px solid #d32f2f; } .na.laterite svg { flex: none; }
+.navpin { width: 26px; height: 26px; border-radius: 50%; background: #f5a524; color: #111; font: 700 16px/26px system-ui; text-align: center; border: 2px solid #fff; animation: navpp 1.4s infinite; }
+.navpin.water { background: #1e9bd7; color: #fff; }
+@keyframes navpp { 50% { box-shadow: 0 0 0 8px rgba(255,255,255,.35); } }
+/* off track (or riding to the track): top of the screen, on the track's side */
+.navoff { position: absolute; top: 66px; display: flex; flex-direction: column; gap: 3px; pointer-events: none !important; }
+.navoff.left { left: 10px; align-items: flex-start; } .navoff.right { right: 10px; align-items: flex-end; }
+.no-lbl { background: #d32f2f; color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .6px; padding: 3px 9px; border-radius: 8px; }
+.no-go { display: flex; align-items: center; gap: 6px; background: #1e9e4a; color: #fff; font-weight: 800; font-size: 24px; padding: 5px 14px 5px 8px; border-radius: 24px; box-shadow: 0 2px 10px rgba(0,0,0,.5); white-space: nowrap; }
+.no-sub { font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; padding: 0 6px; }
+.navglow { position: absolute; inset: 0; pointer-events: none !important; box-shadow: inset 0 0 0 5px #ff3b3b, inset 0 0 40px 14px rgba(255,40,40,.55); animation: navpulse 1.2s ease-in-out infinite; }
+@keyframes navpulse { 50% { box-shadow: inset 0 0 0 5px #ff3b3b, inset 0 0 22px 6px rgba(255,40,40,.35); } }
+/* green line: where the phone points (whenever location is ON) */
+.phonebeam { z-index: 640;  position: absolute; width: 1.5px; height: 2000px; margin-left: -.75px; transform-origin: 50% 100%; background: #39ff14; pointer-events: none !important; }
+.navtoast { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); width: max-content; max-width: 80%; margin: 0; padding: 6px 10px;
+  border-radius: 8px; background: rgba(0,0,0,.8); color: #fff; font-size: 13px; text-align: center; }
+.navui [hidden], .phonebeam[hidden] { display: none !important; }
+
+/* ⏺ Record, bottom left above the saved-map button */
+.leaflet-bar.recbtn { position: relative; border: 0 !important; border-radius: 50%; box-shadow: 0 1px 6px rgba(0,0,0,0.6) !important; }
+.leaflet-bar.recbtn a { display: flex !important; align-items: center; justify-content: center; width: 44px !important; height: 44px !important;
+  border-radius: 50% !important; background: #fff; border: 0; }
+.recbtn a i { width: 18px; height: 18px; border-radius: 50%; background: #e53935; }
+.recbtn a.on { background: #e53935; animation: recp 1.4s infinite; }
+.recbtn a.on i { width: 16px; height: 16px; border-radius: 3px; background: #fff; }
+@keyframes recp { 50% { box-shadow: 0 0 0 7px rgba(229,57,53,.35); } }
+.recsign { position: absolute; left: 50%; bottom: 50px; transform: translateX(-50%); background: #e53935; color: #fff; font-weight: 700;
+  font-size: 11px; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.recsign::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #fff; margin-right: 4px; vertical-align: 1px; animation: recblink 1s infinite; }
+@keyframes recblink { 50% { opacity: .2; } }
+.recsheet { position: fixed; inset: 0; z-index: 20000; }
+.recdim { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+.recbox { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 460px); box-sizing: border-box; background: #14171c; color: #e9edf2;
+  border-radius: 20px 20px 0 0; padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; }
+.recnote { margin: 0 0 8px; color: #f5a524; font-weight: 700; }
+.recstats { display: flex; gap: 14px; font-size: 15px; margin-bottom: 10px; } .recstats b { font-size: 20px; }
+.recbox label { font-size: 13px; color: #8a93a0; }
+.recname { display: flex; align-items: center; margin: 4px 0 12px; background: #0b0d10; border: 2px solid #4b8dff; border-radius: 12px; padding: 0 10px; height: 46px; }
+.recname input { flex: 1; min-width: 0; background: none; border: 0; color: #e9edf2; font-size: 16px; outline: none; }
+.recname i { color: #8a93a0; font-style: normal; }
+.recbox .btn { justify-content: center; height: 48px; font-size: 16px; font-weight: 700; margin-top: 8px; }
+.recdel { background: none; border: 0; color: #ff6b6b; font: inherit; font-size: 14px; font-weight: 600; height: 40px; margin-top: 4px; cursor: pointer; }
+.recmsg { color: #f5a524; margin: 4px 0 0; min-height: 1em; }
+/* Navigate: the arrival box takes the top-left corner; zoom with two fingers (or the mouse wheel) instead */
+body.navmode .leaflet-control-zoom { display: none; }

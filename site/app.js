@@ -175,7 +175,7 @@
     const x = Math.cos(from.lat * Math.PI / 180) * Math.sin(to.lat * Math.PI / 180) - Math.sin(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) * Math.cos((to.lng - from.lng) * Math.PI / 180);
     return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
   };
-  const map = baseMap("map", { satelliteKey: site.satelliteKey, routeBearing,
+  const map = baseMap("map", { satelliteKey: site.satelliteKey, routeBearing, record: true,
     offlineTrack: () => current && { id: current.id, name: current.name, file: current.file }, whereText: ll => {
     if (!current) return "";
     const n = nearestOnLine(current.line, [ll.lat, ll.lng]);
@@ -419,6 +419,25 @@
 
   function go(id) { location.hash = id ? "#" + id : ""; }
 
+  // ▶ Navigate (nav.js): the map fills the phone screen, surface colours off, the route drawn blue / grey.
+  // ✕ in its box brings the normal track page back.
+  let nav = null;
+  const endNav = () => { if (nav) { nav.stop(); nav = null; } wrap.style.height = ""; };
+  function startNav(t) {
+    if (nav) return;
+    const o = { map, t, kmOf: kmAlong(t), length: field(t, "length"), youAt,
+      onExit: () => { nav = null; wrap.style.height = ""; showTrack(t); } };
+    if (navigator.getBattery) navigator.getBattery().then(b => { o.battery = b; }).catch(() => {});
+    if (phone.matches) { window.scrollTo({ top: 0 }); wrap.style.height = "100svh"; }
+    if (surfaceLayer) map.removeLayer(surfaceLayer);
+    layers[t.id].line.setStyle({ opacity: 0 }); layers[t.id].casing.setStyle({ opacity: 0 });
+    if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }
+    map.setView(youAt || t.start, 16, { animate: false });
+    nav = startNavigate(o);  // straight from the tap: the iPhone compass question needs it
+    setTimeout(() => map.invalidateSize(), 260);
+    if (/[?&]cnxtest\b/.test(location.search)) window.__cnx.nav = nav;
+  }
+
   function showOverview(id) {
     current = null;
     $("map").classList.remove("ontrack");  // park banner back on the overview map
@@ -488,6 +507,7 @@
         <div class="chips">${t.flags.filter(f => f.kind !== "card").map(f => `<span class="chip ${f.level}">${flagText(f)}</span>`).join("")}</div>
       </div>
       <div class="actions">
+        ${CNX_BETA ? `<button class="btn navgo" id="navGo" type="button">▶ Navigate</button>` : ""}
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
         <button class="btn" id="copy">Copy link</button>
@@ -547,6 +567,7 @@
       try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; }
       catch { $("copy").textContent = "Copy failed"; }
     };
+    if ($("navGo")) $("navGo").onclick = () => startNav(t);
     if ($("sendForm")) setupSendForm(t);
     document.querySelectorAll(".poirow").forEach(b => b.onclick = () => {  // a stop in the list → show it on the map
       const m = poiLayer.getLayers()[+b.dataset.i];
@@ -741,6 +762,7 @@
   }
 
   function route() {
+    endNav();
     const id = location.hash.slice(1);
     const t = tracks.find(t => t.id === id);
     if (t) showTrack(t);
