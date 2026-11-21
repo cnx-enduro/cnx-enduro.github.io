@@ -17,7 +17,7 @@
 // Firebase is only downloaded when someone taps Ride together; sw.js keeps a copy so it opens with no signal.
 // No signal (Chu 11/21, Android in the hills): the ride is kept in the phone, a refresh or reopening the site puts
 // you straight back in with no internet, 👥 turns grey with 📵, and it all reconnects by itself.
-// Leader status (🍜 Lunch · ⏸ Waiting · 🥵 Suffer) shows in purple on everyone's map. 🚶 Walk shows on your dot.
+// Leader status (🥪 Break · ⏸ Waiting · 🪚 Forest cleaning: a hard section, everyone digging and cutting bamboo; Chu 11/22) shows in purple on everyone's map. 🚶 Walk shows on your dot.
 const RIDE = { SEND_MS: 10000, STALE_MS: 120000, SPREAD_M: 2000, SPREAD_OK_M: 1500, HOURS: 8, FB: "13.2.0" };
 const RIDE_COLORS = ["#f5a524", "#22c55e", "#ec4899", "#06b6d4", "#ef4444", "#a855f7", "#eab308", "#14b8a6", "#f97316", "#84cc16"];
 
@@ -229,7 +229,7 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     const rows = Object.entries(riders).filter(([id]) => id !== me).map(([id, r]) => ({ id, r, m: along(r) })).sort((a, b) => (b.m ?? -1) - (a.m ?? -1));
     const meRow = `<div class="rs-row me"><i style="background:#2f7cf6">📍</i><span class="n">Me ${lead ? "🚩" : ""}${(riders[me] || {}).role === "sweep" ? "🧹" : ""}${sosMine ? "🆘" : ""}</span>` +
       `<span class="d">${meM != null ? "km " + (meM / 1000).toFixed(1) : ""}<small>${meM != null && tr ? "of " + tr.km : ""}</small></span></div>`;
-    const STAT = [["lunch", "🍜", "Lunch"], ["wait", "⏸", "Waiting"], ["suffer", "🥵", "Suffer"]];
+    const STAT = [["lunch", "🥪", "Break"], ["wait", "⏸", "Waiting"], ["forest", "🪚", "Forest cleaning"]];
     const row = ({ id, r, m }) => {
       const you = id === me, st = !you && isStale(r), d = m != null && meM != null ? m - meM : null;
       const badge = (r.role === "lead" ? "🚩" : "") + (r.role === "sweep" ? "🧹" : "") + (r.sos ? "🆘" : "");
@@ -307,7 +307,7 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
   [chip, wait, banner, stat].forEach(el => { L.DomEvent.disableClickPropagation(el); L.DomEvent.disableScrollPropagation(el); });
   function paintStatus() {
     if (!g || !status || !status.s) { stat.hidden = true; document.body.classList.remove("hasridestat"); return; }
-    const S = { lunch: "🍜 Lunch", wait: "⏸ Waiting", suffer: "🥵 Suffer" }[status.s]; if (!S) { stat.hidden = true; return; }
+    const S = { lunch: "🥪 Break", wait: "⏸ Waiting", forest: "🪚 Forest cleaning" }[status.s]; if (!S) { stat.hidden = true; return; }
     const who = (riders[g.leader] || {}).n || "Leader", ago = status.t ? Math.round((Date.now() - status.t) / 60000) : 0;
     stat.innerHTML = `🚩 ${esc(who)}: ${S}<small>${ago < 1 ? "now" : ago + " min ago"}</small>`;
     stat.hidden = false; document.body.classList.add("hasridestat");
