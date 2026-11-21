@@ -847,6 +847,7 @@ function addWalk(map) {
     const nb = status.querySelector(".wnav"); if (nb) nb.onclick = () => end(true);
     find.innerHTML = `${BIKE_SVG}<span>${guiding ? "Finding your bike…" : bat != null && bat < 15 ? "🔋 " + bat + "% · Find my bike" : "Find my bike"}</span>`;
     find.classList.toggle("on", guiding); find.classList.toggle("batlow", bat != null && bat < 15);
+    status.classList.toggle("wide", guiding); document.body.classList.toggle("walkguide", guiding);
   };
   const tick = () => {  // parking-sensor buzz: from 100 m, faster as you get closer
     clearTimeout(buzzT); buzzT = null;
@@ -911,7 +912,7 @@ function addWalk(map) {
   function end() {
     W = null; guiding = false; lastM = null; store(); clearTimeout(buzzT); buzzT = null;
     if (layers) { layers.g.remove(); layers = null; }
-    map.cnxWalking = false; document.body.classList.remove("walking");
+    map.cnxWalking = false; document.body.classList.remove("walking", "walkguide");
     status.hidden = true; find.hidden = true; warn.hidden = true;
     if (btn) { btn.classList.remove("on"); btn.title = "Walk: exploring on foot. Pins your bike"; }
     map.fire("walkchange", { on: false });

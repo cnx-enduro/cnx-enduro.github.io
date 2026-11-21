@@ -657,3 +657,10 @@ body.walking .navmini, body.walking .navbig, body.walking .navahead, body.walkin
 .bikepin { width: 44px; height: 44px; border-radius: 50%; background: #ff8a1f; border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; color: #fff; }
 .bikepin .bikeic { width: 28px; height: 19px; }
 .foot { font-size: 13px; filter: drop-shadow(0 0 2px #000); }
+
+/* 🚶 status box: as narrow as the arrival box; while finding the bike it spans the top row with ▶ Navigate */
+.walkst { width: 104px; min-width: 0; overflow: hidden; padding: 5px 7px; gap: 5px; }
+.walkst .bikeic { width: 24px; height: 16px; } .walkst b { font-size: 17px; }
+.walkst.wide { width: auto; right: 62px; max-width: 420px; }
+.walkst.wide .wnav { margin-left: auto; }
+body.walkguide .navstop, body.walkguide .ridechip { visibility: hidden; }
