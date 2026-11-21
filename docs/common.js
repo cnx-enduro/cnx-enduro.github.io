@@ -5,6 +5,9 @@ const COLORS = ["#4fc3f7", "#ffb74d", "#81c784", "#f06292", "#ba68c8", "#fff176"
 // beta"). Old ?beta links still work; the word is simply ignored.
 const CNX_BETA = true;
 
+// The time of a GPS fix. Some phones/browsers report it oddly (seen in an iPhone test engine: sunset came out 19:04);
+// anything more than an hour off the phone's clock → use the clock.
+function fixTime(pos) { const t = pos && pos.timestamp; return t && Math.abs(t - Date.now()) < 3600e3 ? t : Date.now(); }
 // A short message near the top of the screen that goes away by itself (no tap needed).
 function cnxToast(html, ms = 3000) {
   let t = document.querySelector(".cnxtoast");
@@ -190,7 +193,7 @@ function addLocate(map, whereText, routeBearing) {
     else if (quiet > 6500 && !stuck) setStuck(true);
   }, 1000);
   const gpsFix = pos => {  // direction of travel from GPS, only while really moving
-    const c = pos.coords, now = pos.timestamp || Date.now(), here = L.latLng(c.latitude, c.longitude);
+    const c = pos.coords, now = fixTime(pos), here = L.latLng(c.latitude, c.longitude);
     if (c.speed != null && c.speed >= 2.2 && c.heading != null && !isNaN(c.heading)) { gpsDir = c.heading; gpsAt = now; }
     else if (prevFix && now - prevFix.t <= 6000 && here.distanceTo(prevFix.ll) >= 12 && here.distanceTo(prevFix.ll) / ((now - prevFix.t) / 1000) >= 2.2) {
       gpsDir = bearingTo(prevFix.ll, here); gpsAt = now; }
@@ -611,7 +614,7 @@ function addRecord(map) {
     if (!on || !e.pos) return;
     const c = e.pos.coords;
     if (c.accuracy > 50) return;  // a wild fix (inside a valley, just woken up): skip it
-    const p = [+c.latitude.toFixed(6), +c.longitude.toFixed(6), c.altitude != null ? Math.round(c.altitude * 10) / 10 : null, e.pos.timestamp || Date.now()];
+    const p = [+c.latitude.toFixed(6), +c.longitude.toFixed(6), c.altitude != null ? Math.round(c.altitude * 10) / 10 : null, fixTime(e.pos)];
     const prev = rec.pts[rec.pts.length - 1];
     if (prev && L.latLng(prev[0], prev[1]).distanceTo([p[0], p[1]]) < 4 && p[3] - prev[3] < 15000) return;
     rec.pts.push(p); store(); draw();
@@ -879,7 +882,7 @@ function addWalk(map) {
     if (!W || !e.latlng) return;
     const c = e.pos && e.pos.coords;
     if (c && c.accuracy > 40) return;  // a wild fix under trees: skip
-    const here = e.latlng, now = (e.pos && e.pos.timestamp) || Date.now();
+    const here = e.latlng, now = fixTime(e.pos);
     if (!W.bike) { W.bike = [+here.lat.toFixed(6), +here.lng.toFixed(6)]; store(); draw(); paintStatus(); return; }
     const prev = W.pts[W.pts.length - 1], ref = prev ? ll(prev) : ll(W.bike), d = here.distanceTo(ref);
     if (d >= 5) {

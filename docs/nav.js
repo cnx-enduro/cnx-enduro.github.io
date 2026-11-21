@@ -161,7 +161,7 @@ function startNavigate(o) {
   };
 
   const update = (ll, pos) => {
-    const now = pos ? pos.timestamp || Date.now() : Date.now();
+    const now = pos ? fixTime(pos) : Date.now();
     nav.last = ll; nav.acc = pos ? pos.coords.accuracy : null;
     nav.fixes.push({ t: now, ll });
     const n = locate(ll), km = kmOf(n);

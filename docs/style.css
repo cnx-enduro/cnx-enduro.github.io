@@ -664,3 +664,5 @@ body.walking .navmini, body.walking .navbig, body.walking .navahead, body.walkin
 .walkst.wide { width: auto; right: 62px; max-width: 420px; }
 .walkst.wide .wnav { margin-left: auto; }
 body.walkguide .navstop, body.walkguide .ridechip { visibility: hidden; }
+/* the big arrival box stops short of the right-hand buttons (map style + ☰), no overlap (Chu 11/22) */
+.navbig { right: 62px; }
