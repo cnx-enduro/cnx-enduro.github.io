@@ -1,16 +1,16 @@
 // Shared by index.html and editors.html.
 const COLORS = ["#4fc3f7", "#ffb74d", "#81c784", "#f06292", "#ba68c8", "#fff176", "#4db6ac", "#ff8a65", "#90caf9", "#e6ee9c"];
 
-// Hidden beta (Chu 11/21): ▶ Navigate, ⏺ Record and the green phone line show only on a phone that opened the site
-// with ?beta in the link (remembered on that phone; ?beta=off forgets it). Riders without it see nothing new.
-const CNX_BETA = (() => {
-  const m = location.search.match(/[?&]beta(=off)?\b/);
-  try {
-    if (m) { if (m[1]) localStorage.removeItem("cnx-beta"); else localStorage.setItem("cnx-beta", "1"); }
-    return !!(m ? !m[1] : localStorage.getItem("cnx-beta"));
-  } catch (e) { return !!(m && !m[1]); }
-})();
+// ▶ Navigate, ⏺ Record, 👥 Ride together and the green phone line: public since 21 Nov (Chu: "Don't need to be
+// beta"). Old ?beta links still work; the word is simply ignored.
+const CNX_BETA = true;
 
+// A short message near the top of the screen that goes away by itself (no tap needed).
+function cnxToast(html, ms = 3000) {
+  let t = document.querySelector(".cnxtoast");
+  if (!t) { t = document.createElement("div"); t.className = "cnxtoast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.innerHTML = html; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => { t.hidden = true; }, ms);
+}
 function colorFor(i) { return COLORS[i % COLORS.length]; }
 
 function esc(s) {
@@ -56,6 +56,7 @@ function baseMap(el, opts = {}) {
   if (opts.locate !== false) addRainLock(map);
   if (opts.offlineTrack) addOffline(map, { bases, layersCtl, track: opts.offlineTrack });  // sits above the lock
   if (opts.record && opts.locate !== false && CNX_BETA) addRecord(map);  // above the saved-map button
+  if (opts.record && opts.locate !== false && typeof addWalk === "function") addWalk(map);  // 🚶 above ⏺
   return map;
 }
 
@@ -102,6 +103,7 @@ function addLocate(map, whereText, routeBearing) {
     const now = (360 - map.getBearing()) % 360, diff = Math.abs(((h - now) + 540) % 360 - 180);
     if (diff < 4) return;  // ignore tiny wobbles
     map.setBearing(-h); cmpShow();
+    if (follow && last && map.cnxLead) map.panTo(aim(last), { animate: false });  // turning moves the dot: put it back low
   };
   const cmpFix = () => {  // called on every GPS fix
     if (!routeBearing) return;
@@ -125,6 +127,11 @@ function addLocate(map, whereText, routeBearing) {
       cmpBtn = box.querySelector("a");
       cmpBtn.addEventListener("click", e => {
         e.preventDefault();
+        if (stuck) {  // the tap wakes the compass (iPhone allows the restart only from a tap); the mode stays
+          if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function")
+            DeviceOrientationEvent.requestPermission().catch(() => {});
+          listen(); restartAt = Date.now(); turnAt = Date.now(); setStuck(false); return;
+        }
         if (watch === null || !last) return;  // grey: location is off or not found yet
         if (cmpMode === "north") { cmpMode = "route"; turnTo(heading); }
         else { cmpMode = "north"; map.setBearing(0); }
@@ -142,15 +149,21 @@ function addLocate(map, whereText, routeBearing) {
   };
   // Thin bright green line from the dot = where the phone points (its compass), whenever location is ON (Chu 11/21).
   // iPhone asks once ("Allow motion & orientation") when location is turned on; it must be asked straight from the tap.
-  let phoneDir = null, beam = null, beamRaf = 0;
+  // Riding (faster than walking): the line follows the way GPS says you're going, so the bike's metal can't freeze it.
+  // Stopped / on foot: the compass. iPhone's compass can stop sending (Chu 11/21, ~10× a ride): after 3 s of silence
+  // the site reconnects it by itself; still silent → the line fades (never a wrong line) and 🧭 pulses: one tap wakes it.
+  let phoneDir = null, beam = null, beamRaf = 0, gpsDir = null, gpsAt = 0, turnAt = 0, gotTurn = false, stuck = false, restartAt = 0, unsure = false, wakeTag = null, prevFix = null;
+  const dirNow = () => (gpsDir != null && Date.now() - gpsAt < 6000 && !map.cnxWalking) ? { d: gpsDir, gps: true } : { d: phoneDir, gps: false };
   const beamDraw = () => {
     cancelAnimationFrame(beamRaf);
     beamRaf = requestAnimationFrame(() => {
       if (!beam) return;
-      if (phoneDir == null || !last || watch === null) { beam.hidden = true; return; }
+      const { d, gps } = dirNow();
+      if (d == null || !last || watch === null) { beam.hidden = true; return; }
       const p = map.latLngToContainerPoint(last), b = map.getBearing ? map.getBearing() : 0;
       beam.style.left = p.x + "px"; beam.style.top = (p.y - 2000) + "px";
-      beam.style.transform = `rotate(${phoneDir + b}deg)`; beam.hidden = false;
+      beam.style.transform = `rotate(${d + b}deg)`; beam.hidden = false;
+      beam.classList.toggle("dim", !gps && (stuck || unsure));
     });
   };
   const onTurn = e => {
@@ -158,7 +171,30 @@ function addLocate(map, whereText, routeBearing) {
     if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;  // iPhone
     else if (e.absolute && e.alpha != null) h = (360 - e.alpha + ((screen.orientation && screen.orientation.angle) || 0)) % 360;  // Android
     if (h == null) return;
+    turnAt = Date.now(); gotTurn = true;
+    unsure = e.webkitCompassAccuracy != null && (e.webkitCompassAccuracy < 0 || e.webkitCompassAccuracy > 35);
+    if (stuck) setStuck(false);
     phoneDir = h; beamDraw();
+  };
+  const setStuck = on => {
+    stuck = on;
+    if (cmpBtn) cmpBtn.classList.toggle("wake", on);
+    if (!wakeTag) { wakeTag = document.createElement("div"); wakeTag.className = "cmpwake"; wakeTag.textContent = "Tap 🧭 to wake the compass"; map.getContainer().appendChild(wakeTag); }
+    wakeTag.hidden = !on; beamDraw();
+  };
+  const listen = () => { window.removeEventListener(turnEvent, onTurn); window.addEventListener(turnEvent, onTurn); };
+  setInterval(() => {  // the compass watchdog
+    if (watch === null || !gotTurn) return;
+    const quiet = Date.now() - turnAt;
+    if (quiet > 3000 && Date.now() - restartAt > 8000) { restartAt = Date.now(); listen(); }
+    else if (quiet > 6500 && !stuck) setStuck(true);
+  }, 1000);
+  const gpsFix = pos => {  // direction of travel from GPS, only while really moving
+    const c = pos.coords, now = pos.timestamp || Date.now(), here = L.latLng(c.latitude, c.longitude);
+    if (c.speed != null && c.speed >= 2.2 && c.heading != null && !isNaN(c.heading)) { gpsDir = c.heading; gpsAt = now; }
+    else if (prevFix && now - prevFix.t <= 6000 && here.distanceTo(prevFix.ll) >= 12 && here.distanceTo(prevFix.ll) / ((now - prevFix.t) / 1000) >= 2.2) {
+      gpsDir = bearingTo(prevFix.ll, here); gpsAt = now; }
+    if (!prevFix || here.distanceTo(prevFix.ll) >= 5 || now - prevFix.t > 6000) prevFix = { ll: here, t: now };
   };
   const turnEvent = "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
   const beamStart = () => {
@@ -166,9 +202,9 @@ function addLocate(map, whereText, routeBearing) {
     // (newer Chrome asks too; listen either way: a phone that says no simply sends nothing)
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function")
       DeviceOrientationEvent.requestPermission().catch(() => {});
-    window.addEventListener(turnEvent, onTurn);
+    listen();
   };
-  const beamStop = () => { window.removeEventListener(turnEvent, onTurn); phoneDir = null; beamDraw(); };
+  const beamStop = () => { window.removeEventListener(turnEvent, onTurn); phoneDir = null; gotTurn = false; if (stuck) setStuck(false); beamDraw(); };
   map.on("move zoom rotate viewreset resize", beamDraw);
   const label = () => (whereText && last ? whereText(last) : "");
   const setLabel = () => {
@@ -211,6 +247,7 @@ function addLocate(map, whereText, routeBearing) {
       e.preventDefault();
       if (watch !== null) return stop();
       show(true); follow = true; say("Finding you…");
+      if (routeBearing) cmpMode = "route";  // track up by default (Chu 11/21: 95% of the time); 🧭 switches
       if (CNX_BETA) beamStart();  // straight from the tap (iPhone's compass question needs that)
       let first = true;
       // No timeout: in the hills the GPS can drop for a while; the watch keeps going and the dot
@@ -226,6 +263,7 @@ function addLocate(map, whereText, routeBearing) {
           dot.setLatLng(last); ring.setLatLng(last).setRadius(acc);
         }
         say("");
+        gpsFix(pos);
         map.fire("whereupdate", { latlng: last, pos });  // pos: time, accuracy and height, for Navigate and Record
         cmpFix();  // the page can mark the rider elsewhere too (the height chart)
         beamDraw();
@@ -247,83 +285,94 @@ function addLocate(map, whereText, routeBearing) {
   map.cnxLocate = {
     on: () => { if (watch === null && btn) btn.click(); },
     isOn: () => watch !== null,
+    where: () => last,
     routeUp: () => { if (!routeBearing) return; cmpMode = "route"; if (last) turnTo(heading); cmpShow(); },
   };
 }
 
 // 🔒 Rain lock, bottom left: one tap and the screen ignores every touch (rain drops make phones tap and scroll
-// by themselves). The map keeps following the rider and the screen stays awake. To unlock, hold the lock
-// for 2 s (a ring fills up); a quick tap or a drop does nothing. The phone's own buttons and gestures still work.
-const UNLOCK_HOLD_MS = 2000;
+// by themselves). The map keeps following the rider and the screen stays awake. To unlock: slide the 🔒 from the
+// left edge into the circle in the middle (Chu 11/21: a 2 s hold could happen by itself in a pocket; a slide can't).
+// Let go before the circle = it springs back. 👖 Pocket screen (ride.js) is the same lock on black.
+// The phone's Back button while locked stays on the page and points at the slide (Android "Back" used to leave the
+// site with no signal and lose the ride).
 function addRainLock(map) {
-  let locked = false, wake = null, timer = null, cover = null, btn = null, sign = null, justUnlocked = 0;
+  let locked = false, wake = null, cover = null, btn = null, knob = null, hint = null, hintT = null, ourState = false;
   const holdScreen = async () => {
     if (!locked || wake || !("wakeLock" in navigator)) return;
     try { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } catch (e) { wake = null; }
   };
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
-  const swallow = e => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); };
+  const flash = () => { hint.classList.add("flash"); clearTimeout(hintT); hintT = setTimeout(() => hint.classList.remove("flash"), 1400); };
   const setLocked = on => {
+    if (locked === on) return;
     locked = on;
     document.body.classList.toggle("rainlocked", on);
-    if (!on) document.body.classList.remove("pocket");  // 👖 pocket screen (ride.js) ends with the unlock
+    if (!on) document.body.classList.remove("pocket");
     cover.hidden = !on;
     btn.classList.toggle("on", on);
-    sign.textContent = on ? "Hold 2 s to unlock" : "";
-    sign.hidden = !on;
-    const t = on ? "Screen locked. Hold for 2 seconds to unlock" : "Lock the screen (rain)";
+    const t = on ? "Screen locked. Slide the lock into the circle to unlock" : "Lock the screen (rain)";
     btn.title = t; btn.setAttribute("aria-label", t); btn.setAttribute("aria-pressed", String(on));
-    if (on) holdScreen(); else if (wake) { wake.release().catch(() => {}); wake = null; }
+    if (on) {
+      holdScreen();
+      try { history.pushState({ cnxLock: 1 }, ""); ourState = true; } catch (e) {}
+    } else {
+      if (wake) { wake.release().catch(() => {}); wake = null; }
+      if (ourState && history.state && history.state.cnxLock) { ourState = false; try { history.back(); } catch (e) {} }
+      ourState = false;
+    }
   };
-  const cancel = () => { clearTimeout(timer); timer = null; btn.classList.remove("holding"); };
-  // Finger (touch) and mouse handled apart: touch events don't get cut short by the phone's own long-press
-  // menu, and the finger lifting after the 2 s hold must not count as a new tap (or it locks straight back).
-  const press = e => {
-    if (e.cancelable) e.preventDefault();
+  window.addEventListener("popstate", () => {  // Back while locked: stay, show how to unlock
     if (!locked) return;
-    btn.classList.add("holding");
-    timer = setTimeout(() => { cancel(); justUnlocked = Date.now(); setLocked(false); }, UNLOCK_HOLD_MS);
-  };
-  const lift = e => {
-    if (e.cancelable) e.preventDefault();
-    if (timer) return cancel();  // let go too early: stays locked
-    if (!locked && Date.now() - justUnlocked > 800) setLocked(true);
-  };
-  // The cover sits over the whole page and eats every touch, click, scroll and pinch.
+    try { history.pushState({ cnxLock: 1 }, ""); ourState = true; } catch (e) {}
+    flash();
+  });
+  const swallow = e => { if (e.target.closest && e.target.closest(".rl-knob")) return; if (e.cancelable) e.preventDefault(); e.stopPropagation(); };
   cover = document.createElement("div");
   cover.className = "raincover"; cover.hidden = true;
-  ["touchmove", "pointerdown", "pointerup", "click", "dblclick", "wheel", "contextmenu", "gesturestart"]
+  cover.innerHTML = `<div class="rl-slide"><div class="rl-ring"></div><div class="rl-arr">› › ›</div>
+    <div class="rl-knob" role="slider" aria-label="Slide to unlock">🔒</div><p class="rl-hint">Slide 🔒 to the circle to unlock</p></div>`;
+  ["touchstart", "touchmove", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click", "dblclick", "wheel", "contextmenu", "gesturestart"]
     .forEach(ev => cover.addEventListener(ev, swallow, { passive: false }));
-  // On phones the cover can end up on top of the lock button itself, so a press that lands on the cover
-  // where the button is counts as pressing the button.
-  const onBtn = e => { const p = e.changedTouches ? e.changedTouches[0] : e, r = btn.getBoundingClientRect();
-    return p.clientX >= r.left - 6 && p.clientX <= r.right + 6 && p.clientY >= r.top - 6 && p.clientY <= r.bottom + 6; };
-  cover.addEventListener("touchstart", e => { swallow(e); if (onBtn(e)) press(e); }, { passive: false });
-  cover.addEventListener("mousedown", e => { swallow(e); if (e.button === 0 && onBtn(e)) press(e); });
-  cover.addEventListener("touchend", e => { swallow(e); if (timer) cancel(); }, { passive: false });
-  cover.addEventListener("mouseup", e => { swallow(e); if (timer) cancel(); });
-  cover.addEventListener("touchcancel", cancel);
   document.body.appendChild(cover);
+  knob = cover.querySelector(".rl-knob"); hint = cover.querySelector(".rl-hint");
+  const ring = cover.querySelector(".rl-ring");
+  // the slide: finger down on the knob, follow it sideways, unlock if let go inside the circle
+  let x0 = null, pid = null;
+  const knobAt = dx => { knob.style.transform = `translateX(${Math.max(0, dx)}px)`; };
+  const inRing = () => { const k = knob.getBoundingClientRect(), r = ring.getBoundingClientRect();
+    const kx = k.left + k.width / 2, ky = k.top + k.height / 2, rx = r.left + r.width / 2, ry = r.top + r.height / 2;
+    return Math.hypot(kx - rx, ky - ry) <= r.width / 2; };
+  knob.addEventListener("pointerdown", e => {
+    e.preventDefault(); e.stopPropagation(); x0 = e.clientX; pid = e.pointerId;
+    try { knob.setPointerCapture(pid); } catch (er) {}
+    knob.style.transition = "none"; ring.classList.add("near");
+  });
+  knob.addEventListener("pointermove", e => {
+    if (x0 == null || e.pointerId !== pid) return; e.preventDefault();
+    const max = ring.getBoundingClientRect().right - knob.getBoundingClientRect().width / 2 - (knob.getBoundingClientRect().left - (parseFloat((knob.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0)) ;
+    knobAt(Math.min(e.clientX - x0, max)); ring.classList.toggle("in", inRing());
+  });
+  const drop = e => {
+    if (x0 == null || (e && e.pointerId !== pid)) return;
+    const ok = inRing(); x0 = null; pid = null;
+    knob.style.transition = ""; knobAt(0); ring.classList.remove("near", "in");
+    if (ok) setLocked(false); else flash();
+  };
+  knob.addEventListener("pointerup", drop); knob.addEventListener("pointercancel", drop);
   const ctl = L.control({ position: "bottomleft" });
   ctl.onAdd = () => {
     const box = L.DomUtil.create("div", "leaflet-bar rainlock");
-    box.innerHTML = `<a href="#" role="button" aria-pressed="false"><svg class="ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-13C4.7 21 4 20.3 4 19.5v-8C4 10.7 4.7 10 5.5 10H7zm2 0h6V8a3 3 0 0 0-6 0v2z" fill="currentColor"/></svg></a><span class="locksign" hidden></span>`;
-    L.DomEvent.disableClickPropagation(box);
-    L.DomEvent.disableScrollPropagation(box);
-    btn = box.querySelector("a"); sign = box.querySelector(".locksign");
-    btn.addEventListener("touchstart", press, { passive: false });
-    btn.addEventListener("touchend", lift, { passive: false });
-    btn.addEventListener("touchcancel", cancel);
-    btn.addEventListener("mousedown", e => { if (e.button === 0) press(e); });
-    btn.addEventListener("mouseup", e => { if (e.button === 0) lift(e); });
-    btn.addEventListener("mouseleave", cancel);
-    btn.addEventListener("click", e => { e.preventDefault(); if (e.detail === 0 && !locked) setLocked(true); });  // keyboard: Enter locks
-    btn.addEventListener("contextmenu", e => e.preventDefault());  // a long press must not open the phone's menu
-    setTimeout(() => setLocked(false), 0);
+    box.innerHTML = `<a href="#" role="button" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-13C4.7 21 4 20.3 4 19.5v-8C4 10.7 4.7 10 5.5 10H7zm2 0h6V8a3 3 0 0 0-6 0v2z" fill="currentColor"/></svg></a>`;
+    L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box);
+    btn = box.querySelector("a");
+    btn.addEventListener("click", e => { e.preventDefault(); if (locked) flash(); else setLocked(true); });
+    btn.addEventListener("contextmenu", e => e.preventDefault());
+    setTimeout(() => { locked = true; setLocked(false); }, 0);
     return box;
   };
   ctl.addTo(map);
-  map.cnxLock = { lock: () => { if (!locked) setLocked(true); } };
+  map.cnxLock = { lock: () => setLocked(true), unlock: () => setLocked(false), isOn: () => locked };
 }
 
 // 💾 Offline map, bottom left above the lock. On a track page one tap saves that track's map to the phone
@@ -443,8 +492,10 @@ function addOffline(map, o) {
     document.querySelectorAll("script[src], link[rel=stylesheet][href]").forEach(e => u.push(e.getAttribute("src") || e.getAttribute("href")));
     return [...new Set(u)].filter(x => !/^https?:/.test(x));
   };
-  const save = async t => {
-    if (navigator.onLine === false) return say("No signal. Save it where there's signal or Wi-Fi", 5000);
+  let saving = null;
+  const save = t => saving || (saving = save1(t).finally(() => { saving = null; }));
+  const save1 = async t => {
+    if (navigator.onLine === false) { say("No signal. Save it where there's signal or Wi-Fi", 5000); return "nosignal"; }
     busy = true; show("busy", "Saving…");
     try {
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
@@ -467,9 +518,11 @@ function addOffline(map, o) {
       await tiles.put(marker(t.id), new Response(JSON.stringify({ made: idx.made, tiles: list.length, bytes: idx.tracks[t.id].bytes })));
       busy = false; await refresh();
       say(`Saved ✓ ${t.name} works with no signal`, 5000);
+      return "done";
     } catch (e) {
       busy = false; await refresh();
       say("Couldn't save. Check the signal and try again", 6000);
+      return "failed";
     }
   };
   const remove = async t => {
@@ -483,13 +536,13 @@ function addOffline(map, o) {
     }
     await refresh(); say("Removed from the phone", 3000);
   };
-  // ▶ Navigate saves the open track's map by itself when there's signal.
+  // ▶ Navigate and 👥 Start / Join save the track's map by themselves (no question). Resolves when it's done:
+  // "saved" (it already was), "done" (just saved), "nosignal" or "failed".
   map.cnxOffline = {
     ensure: async t => {
       if (await savedRec(t.id).catch(() => null)) return "saved";
       if (navigator.onLine === false) return "nosignal";
-      if (!busy) save(t);
-      return "saving";
+      return save(t);
     },
   };
   const ctl = L.control({ position: "bottomleft" });
@@ -523,7 +576,7 @@ const REC_KEY = "cnx-rec-v1";
 function addRecord(map) {
   if (!("geolocation" in navigator)) return;
   let rec = null, on = false, casing = null, line = null, btn = null, sign = null, tick = null, sheet = null;
-  const store = () => { try { localStorage.setItem(REC_KEY, JSON.stringify(rec)); } catch (e) {} };
+  const store = () => { try { if (rec) rec.on = on; localStorage.setItem(REC_KEY, JSON.stringify(rec)); } catch (e) {} };
   const forget = () => { try { localStorage.removeItem(REC_KEY); } catch (e) {} };
   const loadRec = () => { try { const r = JSON.parse(localStorage.getItem(REC_KEY)); return r && Array.isArray(r.pts) ? r : null; } catch (e) { return null; } };
   const meters = pts => { let d = 0; for (let i = 1; i < pts.length; i++) d += L.latLng(pts[i - 1][0], pts[i - 1][1]).distanceTo([pts[i][0], pts[i][1]]); return d; };
@@ -610,7 +663,7 @@ function addRecord(map) {
       if (res !== "saved") return;
       rec = null; forget(); undraw(); closeSheet(); show();
     };
-    sheet.querySelector(".reckeep").onclick = () => { on = true; closeSheet(); map.cnxLocate && map.cnxLocate.on(); show(); };
+    sheet.querySelector(".reckeep").onclick = () => { on = true; store(); closeSheet(); map.cnxLocate && map.cnxLocate.on(); show(); };
     sheet.querySelector(".recdel").onclick = () => {
       if (!confirm("Delete this ride? It can't be brought back.")) return;
       rec = null; forget(); undraw(); closeSheet(); show();
@@ -624,9 +677,9 @@ function addRecord(map) {
     btn = box.querySelector("a"); sign = box.querySelector(".recsign");
     btn.addEventListener("click", e => {
       e.preventDefault();
-      if (on) { on = false; show(); openSheet(false); return; }
+      if (on) { on = false; store(); show(); openSheet(false); return; }
       if (rec && rec.pts.length) return openSheet(true);  // an unsaved ride is waiting
-      rec = { start: Date.now(), pts: [] }; on = true; store();
+      on = true; rec = { start: Date.now(), pts: [] }; store();
       map.cnxLocate && map.cnxLocate.on();
       show();
     });
@@ -634,10 +687,18 @@ function addRecord(map) {
     return box;
   };
   ctl.addTo(map);
-  // A ride left over from before a reload / closed tab: draw it and ask what to do with it.
+  // A reload / closed tab while recording: it just carries on (Chu 11/21: never ask; only ⏹ stops it).
+  // A ride that was stopped but not saved yet: draw it and ask what to do with it.
   const left = loadRec();
-  if (left && left.pts.length) { rec = left; draw(); setTimeout(() => openSheet(true), 600); }
+  if (left && left.on && Date.now() - left.start < 24 * 3600e3) {
+    rec = left; on = true; if (rec.pts.length) draw(); show();
+    setTimeout(() => { map.cnxLocate && map.cnxLocate.on(); show(); }, 300);
+  } else if (left && left.pts.length) { rec = left; draw(); setTimeout(() => openSheet(true), 600); }
   else if (left) forget();
+  map.cnxRecord = {
+    isOn: () => on,
+    gpx: () => rec && rec.pts.length ? { text: gpx(rec, rec.name || defaultName(rec)), file: (rec.name || defaultName(rec)).replace(/[\\/:*?"<>|]+/g, "-") + ".gpx" } : null,
+  };
 }
 
 // No-ride zones, on every map: Doi Suthep-Pui National Park striped red under the tracks, and a "No-ride zone"
@@ -722,4 +783,164 @@ function nearestOnLine(line, pt) {
     if (d < best.dist) best = { dist: d, i, f, lat: (y1 + f * dy) / ky, lon: (x1 + f * dx) / kx };
   }
   return best;
+}
+
+// 🚶 Walk (Chu 11/21): exploring the trail on foot. Tap 🚶 when the phone comes off the bike: the bike is pinned
+// where you stand, your steps are drawn as orange footprints, the top-left box says how far the bike is, and
+// "Find my bike" (bottom row) leads you back along your own steps, with a buzz + beep that gets faster from 100 m
+// (iPhone: beeps only, websites can't vibrate it). Works with no signal (GPS + the saved map). Kept in the phone
+// ("cnx-walk-v1"), so a refresh or leaving the site loses nothing. The phone's power button pauses the site: when
+// the screen is back on, the missing part is joined with a straight dashed line, so Find my bike still works.
+// Tap the orange 🚶 twice to end Walk; reaching the bike ends it by itself.
+const WALK_KEY = "cnx-walk-v1";
+const BIKE_SVG = `<svg class="bikeic" viewBox="0 0 48 30" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="6.5"/><circle cx="39" cy="21" r="6.5"/><path d="M9 21 18 12h11l10 9M18 12l4 9h7l-6-9M27 7h5l3 6M14 12h7"/></svg>`;
+function addWalk(map) {
+  if (!("geolocation" in navigator)) return;
+  let W = null, btn = null, guiding = false, endAsk = 0, buzzT = null, lastM = null, battery = null, layers = null;
+  const load = () => { try { const v = JSON.parse(localStorage.getItem(WALK_KEY)); return v && Date.now() - v.start < 24 * 3600e3 ? v : null; } catch (e) { return null; } };
+  const store = () => { try { W ? localStorage.setItem(WALK_KEY, JSON.stringify(W)) : localStorage.removeItem(WALK_KEY); } catch (e) {} };
+  const fmt = m => m >= 1000 ? (m / 1000).toFixed(1) + " km" : Math.max(5, Math.round(m / 5) * 5) + " m";
+  const status = document.createElement("div"); status.className = "walkst"; status.hidden = true;
+  const find = document.createElement("button"); find.type = "button"; find.className = "findbike"; find.hidden = true;
+  const warn = document.createElement("div"); warn.className = "walkwarn"; warn.hidden = true;
+  warn.innerHTML = `⚠ Don't turn the screen off<small>use 🔒 instead, so your steps keep recording</small>`;
+  [status, find, warn].forEach(el => { map.getContainer().appendChild(el); L.DomEvent.disableClickPropagation(el); L.DomEvent.disableScrollPropagation(el); });
+  if (navigator.getBattery) navigator.getBattery().then(b => { battery = b; }).catch(() => {});
+  const bikeIcon = () => L.divIcon({ className: "", iconSize: [44, 44], iconAnchor: [22, 22], html: `<div class="bikepin">${BIKE_SVG}</div>` });
+  const ll = p => L.latLng(p[0], p[1]);
+
+  // the way back: from where you are, back along your steps to the bike
+  const pathBack = here => {
+    const pts = W.pts;
+    if (!pts.length) return { path: [here, W.bike], m: here.distanceTo(W.bike) };
+    let bi = 0, bd = Infinity;
+    pts.forEach((p, i) => { const d = here.distanceTo(ll(p)); if (d < bd) { bd = d; bi = i; } });
+    const path = [here], back = [];
+    let m = bd;
+    for (let i = bi; i >= 0; i--) { back.push(ll(pts[i])); if (i > 0) m += ll(pts[i]).distanceTo(ll(pts[i - 1])); }
+    m += ll(pts[0]).distanceTo(W.bike);
+    return { path: [...path, ...back, ll(W.bike)], m };
+  };
+  const draw = () => {
+    if (!layers) return;
+    const solid = [[ll(W.bike)]], dashed = [];
+    W.pts.forEach(p => {
+      const cur = solid[solid.length - 1];
+      if (p[3]) { dashed.push([cur[cur.length - 1], ll(p)]); solid.push([ll(p)]); } else cur.push(ll(p));
+    });
+    layers.steps.setLatLngs(solid); layers.gaps.setLatLngs(dashed);
+    layers.feet.clearLayers();
+    let acc = 0;
+    const from = Math.max(1, W.pts.length - 400);
+    for (let i = from; i < W.pts.length; i++) {
+      acc += ll(W.pts[i - 1]).distanceTo(ll(W.pts[i]));
+      if (acc >= 22 && !W.pts[i][3]) { acc = 0; L.marker(ll(W.pts[i]), { interactive: false, keyboard: false, icon: L.divIcon({ className: "", iconSize: [18, 18], iconAnchor: [9, 9], html: '<span class="foot">👣</span>' }) }).addTo(layers.feet); }
+    }
+    if (W.bike) { if (!layers.bike) layers.bike = L.marker(W.bike, { icon: bikeIcon(), zIndexOffset: 950, interactive: false }).addTo(layers.g); else layers.bike.setLatLng(W.bike); }
+  };
+  const paintStatus = () => {
+    if (!W) return;
+    const bat = battery && battery.level != null && !battery.charging && battery.level < 0.3 ? Math.round(battery.level * 100) : null;
+    status.classList.toggle("batlow", bat != null && bat < 15);
+    status.innerHTML = `${BIKE_SVG}<span><b>${lastM == null ? "…" : fmt(lastM)}</b><small>${bat != null ? "🔋 " + bat + "% · " : ""}to your bike</small></span>` +
+      (guiding && document.body.classList.contains("navmode") ? `<button type="button" class="wnav">▶ Navigate</button>` : "");
+    const nb = status.querySelector(".wnav"); if (nb) nb.onclick = () => end(true);
+    find.innerHTML = `${BIKE_SVG}<span>${guiding ? "Finding your bike…" : bat != null && bat < 15 ? "🔋 " + bat + "% · Find my bike" : "Find my bike"}</span>`;
+    find.classList.toggle("on", guiding); find.classList.toggle("batlow", bat != null && bat < 15);
+  };
+  const tick = () => {  // parking-sensor buzz: from 100 m, faster as you get closer
+    clearTimeout(buzzT); buzzT = null;
+    if (!W || !guiding || lastM == null || lastM > 100) return;
+    try { navigator.vibrate && navigator.vibrate(lastM < 30 ? 60 : 90); } catch (e) {}
+    if (map.cnxBeep) map.cnxBeep(1, 990, 0.07);
+    buzzT = setTimeout(tick, Math.max(250, Math.min(2000, lastM * 18)));
+  };
+  const update = here => {
+    if (!W || !W.bike) return;
+    const pb = pathBack(here);
+    lastM = pb.m;
+    const straight = here.distanceTo(W.bike);
+    if (straight > (W.maxAway || 0)) { W.maxAway = Math.round(straight); }
+    if (guiding) { layers.guideEdge.setLatLngs(pb.path); layers.guide.setLatLngs(pb.path); if (!buzzT && lastM <= 100) tick(); }
+    paintStatus();
+    if (straight <= 15 && (guiding || (W.maxAway || 0) > 40)) arrive();
+  };
+  const arrive = () => {
+    try { navigator.vibrate && navigator.vibrate(700); } catch (e) {}
+    if (map.cnxBeep) map.cnxBeep(1, 660, 0.6);
+    if (typeof cnxToast === "function") cnxToast(`<span class="tbike">${BIKE_SVG}</span>✓ You're at your bike<small>Walk off${document.body.classList.contains("navmode") ? ". Navigate carries on." : "."}</small>`, 4000);
+    end(false);
+  };
+  map.on("whereupdate", e => {
+    if (!W || !e.latlng) return;
+    const c = e.pos && e.pos.coords;
+    if (c && c.accuracy > 40) return;  // a wild fix under trees: skip
+    const here = e.latlng, now = (e.pos && e.pos.timestamp) || Date.now();
+    if (!W.bike) { W.bike = [+here.lat.toFixed(6), +here.lng.toFixed(6)]; store(); draw(); paintStatus(); return; }
+    const prev = W.pts[W.pts.length - 1], ref = prev ? ll(prev) : ll(W.bike), d = here.distanceTo(ref);
+    if (d >= 5) {
+      const gap = prev && now - prev[2] > 20000 && d > 25 ? 1 : 0;  // the screen was off: join with a dashed line
+      W.pts.push([+here.lat.toFixed(6), +here.lng.toFixed(6), now, gap]);
+      if (W.pts.length > 5000) W.pts.splice(0, W.pts.length - 5000);
+      store(); draw();
+    }
+    update(here);
+  });
+  const show = () => {
+    map.cnxWalking = true; document.body.classList.add("walking");
+    if (!layers) {
+      const g = L.featureGroup().addTo(map);
+      layers = { g,
+        guideEdge: L.polyline([], { color: "#fff", weight: 11, opacity: 0.9, interactive: false }).addTo(g),
+        guide: L.polyline([], { color: "#1a73ff", weight: 7, interactive: false }).addTo(g),
+        steps: L.polyline([], { color: "#ff8a1f", weight: 4, dashArray: "2 8", lineCap: "round", interactive: false }).addTo(g),
+        gaps: L.polyline([], { color: "#ff8a1f", weight: 3, dashArray: "10 8", opacity: 0.9, interactive: false }).addTo(g),
+        feet: L.layerGroup().addTo(g), bike: null };
+    }
+    status.hidden = false; find.hidden = false; if (btn) { btn.classList.add("on"); btn.title = "Walk on. Tap twice to end"; }
+    draw(); paintStatus(); map.fire("walkchange", { on: true });
+  };
+  const start = () => {
+    if (map.cnxUnlockSound) map.cnxUnlockSound();
+    if (map.cnxLocate) map.cnxLocate.on();
+    const here = map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where();
+    W = { start: Date.now(), bike: here ? [+here.lat.toFixed(6), +here.lng.toFixed(6)] : null, pts: [], maxAway: 0 };
+    guiding = false; lastM = W.bike ? 0 : null; store(); show();
+    warn.hidden = false; clearTimeout(warn._t); warn._t = setTimeout(() => { warn.hidden = true; }, 5000);
+  };
+  function end() {
+    W = null; guiding = false; lastM = null; store(); clearTimeout(buzzT); buzzT = null;
+    if (layers) { layers.g.remove(); layers = null; }
+    map.cnxWalking = false; document.body.classList.remove("walking");
+    status.hidden = true; find.hidden = true; warn.hidden = true;
+    if (btn) { btn.classList.remove("on"); btn.title = "Walk: exploring on foot. Pins your bike"; }
+    map.fire("walkchange", { on: false });
+  }
+  find.onclick = () => {
+    if (!W) return;
+    if (map.cnxUnlockSound) map.cnxUnlockSound();
+    guiding = !guiding;
+    if (!guiding) { clearTimeout(buzzT); buzzT = null; layers.guide.setLatLngs([]); layers.guideEdge.setLatLngs([]); }
+    const here = map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where();
+    if (here) { update(here); if (guiding) map.fitBounds(L.latLngBounds([here, ll(W.bike)]).pad(0.3), { animate: true }); }
+    paintStatus();
+  };
+  const ctl = L.control({ position: "bottomleft" });
+  ctl.onAdd = () => {
+    const box = L.DomUtil.create("div", "leaflet-bar walkbtn");
+    box.innerHTML = `<a href="#" role="button" title="Walk: exploring on foot. Pins your bike" aria-label="Walk: exploring on foot. Pins your bike">🚶</a>`;
+    L.DomEvent.disableClickPropagation(box);
+    btn = box.querySelector("a");
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      if (!W) return start();
+      if (Date.now() - endAsk < 3000) { end(); if (typeof cnxToast === "function") cnxToast("🚶 Walk ended", 2500); return; }
+      endAsk = Date.now(); if (typeof cnxToast === "function") cnxToast("Tap 🚶 again to end Walk", 3000);
+    });
+    return box;
+  };
+  ctl.addTo(map);
+  const left = load();  // a refresh or coming back to the site: still walking, steps and bike kept
+  if (left) { W = left; show(); setTimeout(() => { if (map.cnxLocate) map.cnxLocate.on(); }, 350); }
+  map.cnxWalk = { isOn: () => !!W, end, _state: () => W, _guide: () => guiding };
 }

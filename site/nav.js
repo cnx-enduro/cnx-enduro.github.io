@@ -60,21 +60,23 @@ function startNavigate(o) {
     <button type="button" class="navmini" aria-label="Arrival time. Tap for more"><b class="nm-eta">🏁 --:--</b>
       <span class="nm-row"><span class="nm-bar"><i></i></span>${SUN(16)}<i class="nm-dot"></i></span></button>
     <div class="navbig" hidden>
-      <div class="nb-row"><button type="button" class="nb-x" aria-label="Stop navigating">✕</button>
-        <button type="button" class="nb-eta" aria-label="Make this box small"><small>Arrive</small><b>🏁 --:--</b></button>
-        <button type="button" class="nb-sun" aria-label="Daylight">${SUN(26)}<span><small>Dark</small><b class="nb-dark">--:--</b></span><i class="nb-dot">✓</i></button></div>
+      <div class="nb-row"><span class="nb-eta"><small>Arrive</small><b>🏁 --:--</b></span>
+        <span class="nb-sun">${SUN(26)}<span><small>Dark</small><b class="nb-dark">--:--</b></span><i class="nb-dot">✓</i></span></div>
       <div class="nb-bar"><i></i></div><div class="nb-foot"><b class="nb-pct">0%</b><span><b class="nb-left">${t.km} km</b> to go</span></div>
     </div>
-    <button type="button" class="navstop" aria-label="Stop navigating" title="Stop navigating"><i></i></button>
+    <button type="button" class="navstop" aria-label="Stop navigating" title="Stop navigating"><i></i><span>NAV</span></button>
+    <button type="button" class="navmenu" aria-label="Menu" title="Menu">☰</button>
     <div class="navsun" hidden><button type="button" class="ns-x" aria-label="Close">✕</button><div class="ns-body"></div></div>
     <div class="navahead"></div>
     <div class="navoff" hidden></div>
     <div class="navglow" hidden></div>
-    <p class="navtoast" hidden></p>`;
+    <p class="navtoast" hidden></p>
+    <div class="navdark" hidden></div><div class="navwarn" hidden></div><p class="navmapmsg" hidden></p>`;
   box.appendChild(ui);
   L.DomEvent.disableClickPropagation(ui); L.DomEvent.disableScrollPropagation(ui);
   const q = s => ui.querySelector(s);
   const mini = q(".navmini"), big = q(".navbig"), sunBox = q(".navsun"), aheadBox = q(".navahead"), offBox = q(".navoff"), glow = q(".navglow"), toast = q(".navtoast");
+  const darkMsg = q(".navdark"), darkGlow = q(".navwarn"), mapMsg = q(".navmapmsg");
   let smallT = null, toastT = null;
   const say = (text, ms = 6000) => { toast.textContent = text; toast.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { toast.hidden = true; }, ms); };
   const setBig = on => {
@@ -82,12 +84,13 @@ function startNavigate(o) {
     if (on) smallT = setTimeout(() => { if (sunBox.hidden) setBig(false); }, NAV.SMALL_AFTER_MS);
     else sunBox.hidden = true;
   };
+  // Chu 11/21: the box always starts small; tap = big, tap anywhere on it = small (also by itself after 8 s).
+  // Nothing in it stops Navigate any more (its ✕ used to, and riders read ✕ as "close"): only ■ NAV stops.
   mini.onclick = () => setBig(true);
-  q(".nb-eta").onclick = () => setBig(false);
-  q(".nb-x").onclick = () => stop(true);
-  q(".navstop").onclick = () => stop(true);  // always in sight next to the small box (Chu 11/21: no way to stop before)
-  q(".nb-sun").onclick = () => { sunBox.hidden = !sunBox.hidden; clearTimeout(smallT); if (sunBox.hidden) setBig(true); };
-  q(".ns-x").onclick = () => { sunBox.hidden = true; setBig(true); };
+  big.onclick = () => setBig(false);
+  q(".navstop").onclick = () => stop(true);
+  q(".navmenu").onclick = () => o.onMenu && o.onMenu();
+  q(".ns-x").onclick = () => { sunBox.hidden = true; };
   map.on("click", closeSun);
   function closeSun() { if (!sunBox.hidden) { sunBox.hidden = true; setBig(true); } }
 
@@ -118,7 +121,10 @@ function startNavigate(o) {
   map.on("zoomend", drawChevrons);
 
   // ---- the ride's state ----
-  const nav = { i: null, km: 0, n: null, joined: false, offSince: null, off: false, fixes: [], strayPts: [], redShown: false, last: null, acc: null };
+  const nav = { i: null, km: 0, n: null, joined: false, offSince: null, off: false, fixes: [], strayPts: [], redShown: false, last: null, acc: null, warnAt: 0 };
+  if (o.restore && o.restore.track === t.id) Object.assign(nav, { i: o.restore.i ?? null, km: o.restore.km || 0, joined: !!o.restore.joined, warnAt: o.restore.warnAt || 0 });
+  const saveState = () => { try { localStorage.setItem("cnx-nav", JSON.stringify({ track: t.id, i: nav.i, km: nav.km, joined: nav.joined, warnAt: nav.warnAt, at: Date.now(), paused: false })); } catch (e) {} };
+  let saveT = 0;
   const notesKmh = () => {  // the track notes' pace: "70km (6 hours)" / "(5-6 hours)" (slower one) / "full day" = 8 h
     const f = o.length || "", m = f.match(/(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*hours?/i);
     const h = m ? parseFloat(m[2] || m[1]) : /full day/i.test(f) ? 8 : t.km / 12;
@@ -174,11 +180,12 @@ function startNavigate(o) {
       if (!nav.strayPts.length) nav.strayPts.push([n.lat, n.lon]);
       nav.strayPts.push([ll.lat, ll.lng]);
       if (goodGps && nav.offSince == null) nav.offSince = now;
-      if (nav.joined && nav.offSince != null && now - nav.offSince >= NAV.OFF_S * 1000) nav.off = true;
+      if (nav.joined && nav.offSince != null && now - nav.offSince >= NAV.OFF_S * 1000 && !map.cnxWalking) nav.off = true;
     }
+    if (map.cnxWalking) { nav.off = false; nav.offSince = null; }  // 🚶 on foot: no OFF TRACK alarm
     stray.setLatLngs(nav.off ? nav.strayPts : []);
     const lead = !nav.joined && n.dist > NAV.OFF_M;  // riding to the track: arrow, no warning
-    if (nav.off || lead) {
+    if ((nav.off || lead) && !map.cnxWalking) {
       const a = map.latLngToContainerPoint(ll), b = map.latLngToContainerPoint([n.lat, n.lon]), left = b.x < a.x;
       offBox.innerHTML = (nav.off ? `<span class="no-lbl">⚠ OFF TRACK</span>` : "") +
         `<span class="no-go">${ARROW(left)}${dist(n.dist)}</span><span class="no-sub">${nav.off ? "back to the track" : "to the track"}</span>`;
@@ -195,12 +202,14 @@ function startNavigate(o) {
     const arrive = new Date(now + hours * 3.6e6);
     const dark = sunsetAt(new Date(now), ll.lat, ll.lng), spare = (dark - arrive) / 60000;
     const state = spare >= 30 ? "ok" : spare >= 0 ? "amber" : "red";
-    q(".nm-eta").textContent = `🏁 ${hhmm(arrive)}`; q(".nb-eta b").textContent = `🏁 ${hhmm(arrive)}`;
+    const onTrack = nav.joined;  // before reaching the track: no arrival, no %, no sun advice (Chu 11/21, 14 km from home said "99%")
+    q(".nm-eta").textContent = onTrack ? `🏁 ${hhmm(arrive)}` : "🏁 --:--"; q(".nb-eta b").textContent = onTrack ? `🏁 ${hhmm(arrive)}` : "🏁 --:--";
     q(".nm-bar i").style.width = q(".nb-bar i").style.width = pct + "%";
     q(".nb-pct").textContent = pct + "%"; q(".nb-left").textContent = `${kmLeft < 10 ? kmLeft.toFixed(1) : Math.round(kmLeft)} km`;
     q(".nb-dark").textContent = hhmm(dark);
     q(".nb-dot").textContent = state === "ok" ? "✓" : "!";
-    ui.dataset.sun = state;
+    ui.dataset.sun = onTrack ? state : "ok";
+    if (!onTrack) { q(".nm-bar i").style.width = q(".nb-bar i").style.width = "0%"; q(".nb-pct").textContent = "–"; }
     // sun box: dark at / you arrive / turn back by (back to the start = km ridden at the same speed)
     let back = "";
     if (state === "red") {
@@ -214,7 +223,20 @@ function startNavigate(o) {
     q(".ns-body").innerHTML = `<div class="ns-l"><span>${SUN(24)}</span>Dark at <b>${hhmm(dark)}</b></div>
       <div class="ns-l"><span>🏁</span>You arrive ≈ <b>${hhmm(arrive)}</b></div>${back}` +
       (bat != null ? `<div class="ns-tip">🔋 ${bat}%${bat < 40 ? " · plug in your power bank" : ""}</div>` : "");
-    if (state === "red" && !nav.redShown) { nav.redShown = true; setBig(true); sunBox.hidden = false; clearTimeout(smallT); }
+    // Dark before you arrive: orange edges flash 3× + buzz/beep + a 6 s message, nothing to tap; again every 30 min
+    // while still late (Chu 11/21; orange = late, red = off track). The old sun window never opens by itself.
+    if (onTrack && state === "red" && now - nav.warnAt >= 30 * 60000) {
+      nav.warnAt = now;
+      darkMsg.innerHTML = `⚠ Dark ${hhmm(dark)} · you arrive ≈ ${hhmm(arrive)}`; darkMsg.hidden = false;
+      darkGlow.hidden = false; darkGlow.classList.remove("go"); void darkGlow.offsetWidth; darkGlow.classList.add("go");
+      setTimeout(() => { darkMsg.hidden = true; darkGlow.hidden = true; }, 6000);
+      try { navigator.vibrate && navigator.vibrate([300, 700, 300, 700, 300]); } catch (e) {}
+      if (o.beep) o.beep(3);
+    }
+    if (o.battery && o.battery.level != null && !o.battery.charging && o.battery.level < 0.3) {
+      mini.dataset.bat = Math.round(o.battery.level * 100) + "%"; mini.classList.toggle("batlow", o.battery.level < 0.15);
+    } else { delete mini.dataset.bat; mini.classList.remove("batlow"); }
+    if (now - saveT > 5000) { saveT = now; saveState(); }
     // stops and laterite ahead (nearest one of each kind), from 2 km, in 100 m steps
     const next = kind => ahead.filter(a => (kind === "laterite" ? a.kind === "laterite" : a.kind !== "laterite") && a.to >= nav.km && a.from - nav.km <= NAV.AHEAD_KM)
       .sort((a, b) => a.from - b.from)[0];
@@ -239,20 +261,31 @@ function startNavigate(o) {
 
   // ---- go ----
   document.body.classList.add("navmode");
-  map.cnxLead = 0.22;
+  map.cnxLead = 0.29;  // your dot 79% down the screen: more of the way ahead (Chu 11/21)
   loc.on(); loc.routeUp();
-  if (map.cnxOffline) map.cnxOffline.ensure({ id: t.id, name: t.name, file: t.file }).then(r => {
-    if (r === "nosignal") say("No signal, and this track's map isn't saved. Save it before your next ride.", 8000);
-  }).catch(() => {});
+  // Offline map: saved by itself, no question (Chu 11/21). "✓ Offline map saved" for 3 s; a failure stays up
+  // as "⚠ Offline map not saved" and keeps retrying every minute while there's signal.
+  const mapSay = (text, ms, bad) => { mapMsg.textContent = text; mapMsg.hidden = false; mapMsg.classList.toggle("bad", !!bad); if (ms) setTimeout(() => { mapMsg.hidden = true; }, ms); };
+  let mapRetry = null;
+  const ensureMap = () => {
+    if (!map.cnxOffline) return;
+    map.cnxOffline.ensure({ id: t.id, name: t.name, file: t.file }).then(r => {
+      if (r === "saved" || r === "done") { clearInterval(mapRetry); mapRetry = null; if (r === "done" || !ensureMap.told) mapSay("✓ Offline map saved", 3000); ensureMap.told = true; }
+      else if (r === "nosignal" || r === "failed") { mapSay("⚠ Offline map not saved", 0, true); if (!mapRetry) mapRetry = setInterval(() => { if (navigator.onLine !== false) ensureMap(); }, 60000); }
+    }).catch(() => {});
+  };
+  ensureMap();
   drawChevrons();
   if (o.youAt) update(o.youAt, null);
 
-  function stop(fromButton) {
+  function stop(fromButton, keep) {
     map.off("whereupdate", onWhere); map.off("zoomend", drawChevrons); map.off("click", closeSun);
-    clearTimeout(smallT); clearTimeout(toastT);
+    clearTimeout(smallT); clearTimeout(toastT); clearInterval(mapRetry);
+    if (keep) saveState(); else try { localStorage.removeItem("cnx-nav"); } catch (e) {}
     g.remove(); if (pin) pin.remove(); ui.remove();
     document.body.classList.remove("navmode"); map.cnxLead = 0;
     if (fromButton && o.onExit) o.onExit();
   }
-  return { stop: () => stop(false), _nav: nav, _update: update };
+  // pause = leave the map view but keep the ride's state (☰ → Back to track page, another page): ▶ Back to Navigate
+  return { stop: () => stop(false), pause: () => { saveState(); stop(false, true); }, _nav: nav, _update: update };
 }

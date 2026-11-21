@@ -1,4 +1,4 @@
-// 👥 Ride together (Chu 11/22, hidden beta): riders on one track share their spot with a 4-digit group code.
+// 👥 Ride together (Chu 11/22; public 11/21 evening): riders on one track share their spot with a 4-digit group code.
 // - Track page: purple "👥 Ride together" under ▶ Navigate → Start a ride (leader 🚩, gets the code + QR + link)
 //   or Join a ride (type the code; the leader's link / QR skips that). Joining starts ▶ Navigate, so the screen
 //   stays on (a website can't send from a locked phone). No mount? 🔒 rain lock, then the pocket.
@@ -14,15 +14,20 @@
 //   signal comes back ("⏳ Waiting for signal…").
 // - End: the leader's End ride wipes the whole group; every group switches off by itself after 8 h.
 // Server: Firebase Realtime Database (free plan, project cnx-enduro-ride), rules in firebase/database.rules.json.
-// Firebase is only downloaded when someone taps Ride together.
+// Firebase is only downloaded when someone taps Ride together; sw.js keeps a copy so it opens with no signal.
+// No signal (Chu 11/21, Android in the hills): the ride is kept in the phone, a refresh or reopening the site puts
+// you straight back in with no internet, 👥 turns grey with 📵, and it all reconnects by itself.
+// Leader status (🍜 Lunch · ⏸ Waiting · 🥵 Suffer) shows in purple on everyone's map. 🚶 Walk shows on your dot.
 const RIDE = { SEND_MS: 10000, STALE_MS: 120000, SPREAD_M: 2000, SPREAD_OK_M: 1500, HOURS: 8, FB: "13.2.0" };
 const RIDE_COLORS = ["#f5a524", "#22c55e", "#ec4899", "#06b6d4", "#ef4444", "#a855f7", "#eab308", "#14b8a6", "#f97316", "#84cc16"];
 
 function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [lat, lng]), loadQr(), siteUrl }
   const $ = id => document.getElementById(id);
   let fb = null, me = null, g = null;  // g = the group we're in: { code, track, leader, ends }
-  let riders = {}, marks = {}, mode = "all", last = null, lastSent = 0, sendT = null, online = true, sosMine = false;
-  let waitShown = false, sosSeen = {}, unsub = [], audio = null, waitMine = false;
+  let riders = {}, marks = {}, mode = "all", last = null, lastSent = 0, sendT = null, online = false, sosMine = false;  // online: until the server says so
+  let waitShown = false, sosSeen = {}, unsub = [], audio = null, waitMine = false, offAt = Date.now(), status = null;
+  const ridersCache = { get: () => { try { return JSON.parse(localStorage.getItem("cnx-ride-riders") || "{}"); } catch (e) { return {}; } },
+    set: v => { try { localStorage.setItem("cnx-ride-riders", JSON.stringify(v)); } catch (e) {} } };
   const store = { get: () => { try { return JSON.parse(localStorage.getItem("cnx-ride") || "null"); } catch (e) { return null; } },
     set: v => { try { v ? localStorage.setItem("cnx-ride", JSON.stringify(v)) : localStorage.removeItem("cnx-ride"); } catch (e) {} } };
   const myName = { get: () => { try { return localStorage.getItem("cnx-ride-name") || ""; } catch (e) { return ""; } },
@@ -38,9 +43,14 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     const [A, U, D] = await Promise.all(["firebase-app.js", "firebase-auth.js", "firebase-database.js"].map(f => import(base + f)));
     const app = A.initializeApp(window.CNX_FIREBASE);
     const auth = U.getAuth(app);
+    // the phone remembers who it is: with no signal we carry on as the same rider (signing in needs signal)
+    try { await Promise.race([auth.authStateReady(), new Promise(r => setTimeout(r, 4000))]); } catch (e) {}
     const cred = auth.currentUser ? { user: auth.currentUser } : await U.signInAnonymously(auth);
     const db = D.getDatabase(app);
-    D.onValue(D.ref(db, ".info/connected"), s => { online = !!s.val(); paintSos(); });
+    D.onValue(D.ref(db, ".info/connected"), s => {
+      online = !!s.val(); if (!online) offAt = Date.now();
+      paint(); paintSos(); setTimeout(paint, 5200);
+    });
     fb = { D, db, uid: cred.user.uid, r: p => D.ref(db, p) };
     me = fb.uid;
     return fb;
@@ -111,6 +121,7 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
       if (!code) throw new Error("no code");
       await enter({ code, track: t.id, leader: me, ends }, name, "lead");
       showCode();
+      saveMap(t);
     } catch (e) { say("Couldn't start. Check your signal and try again.", true); }
   }
 
@@ -129,15 +140,23 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     } catch (e) { say("Couldn't join. Check your signal and try again.", true); }
   }
 
-  async function enter(grp, name, role) {
+  async function enter(grp, name, role, again) {
     g = grp; store.set({ ...grp, name, role });
     const D = fb.D, base = `groups/${g.code}`;
-    const mine = { n: name, lat: 0, lng: 0, t: D.serverTimestamp(), ...(role ? { role } : {}) };
+    // back in after a reload: keep the last spot the group saw until the GPS is back (never "nowhere")
+    const mine = { n: name, ...(again ? {} : { lat: 0, lng: 0 }), t: D.serverTimestamp(), ...(role ? { role } : {}), ...(h.map.cnxWalking ? { walk: true } : {}) };
     if (last) Object.assign(mine, { lat: last.lat, lng: last.lng });
-    await D.update(fb.r(`${base}/riders/${me}`), mine);
-    unsub.push(D.onValue(fb.r(`${base}/riders`), s => { riders = s.val() || {}; paint(); },
-      () => ended("Ride ended")));
-    unsub.push(D.onValue(fb.r(`${base}/meta`), s => { if (!s.exists()) ended("Ride ended"); }, () => ended("Ride ended")));
+    riders = ridersCache.get();  // where everyone was last seen, until the server answers (no signal after a refresh)
+    D.update(fb.r(`${base}/riders/${me}`), mine).catch(() => {});  // sent when there's signal; never wait for it
+    unsub.push(D.onValue(fb.r(`${base}/riders`), s => {
+      const v = s.val() || {};
+      riders = online ? v : { ...riders, ...v };  // offline the phone only knows its own spot: keep the others' last spot
+      ridersCache.set(riders); paint();
+    }, () => ended("Ride ended")));
+    unsub.push(D.onValue(fb.r(`${base}/meta`), s => {
+      if (!s.exists()) return ended("Ride ended");
+      status = (s.val() || {}).status || null; paintStatus();
+    }, () => ended("Ride ended")));
     sendT = setInterval(() => send(true), RIDE.SEND_MS);
     h.map.on("whereupdate", onWhere);
     document.body.classList.add("inride");
@@ -157,8 +176,8 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     unsub.forEach(u => { try { u(); } catch (e) {} }); unsub = [];
     clearInterval(sendT); h.map.off("whereupdate", onWhere);
     Object.values(marks).forEach(m => m.remove()); marks = {}; riders = {}; g = null; sosMine = false; waitShown = false;
-    store.set(null); document.body.classList.remove("inride");
-    chip.hidden = true; banner.hidden = true; wait.hidden = true;
+    store.set(null); ridersCache.set({}); document.body.classList.remove("inride"); status = null;
+    chip.hidden = true; banner.hidden = true; wait.hidden = true; stat.hidden = true;
   }
   function ended(msg) {
     if (!g) return;
@@ -178,7 +197,7 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
 
   // ---- after Start: the code to share ----
   function showCode() {
-    const url = `${h.siteUrl()}?beta&ride=${g.code}#${g.track}`;
+    const url = `${h.siteUrl()}?ride=${g.code}#${g.track}`;
     open(`<h2>🚩 Your ride code</h2><div class="rs-big">${[...g.code].map(d => `<span>${d}</span>`).join("")}</div>
       <div class="rs-qr"></div>
       <button class="rs-b p" data-go="share" type="button">📤 Send to the group chat</button>
@@ -206,8 +225,11 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
   };
   function openList() {
     if (!g) return openChoose();
-    const meM = along(riders[me] || {}) ?? null, lead = g.leader === me;
-    const rows = Object.entries(riders).map(([id, r]) => ({ id, r, m: along(r) })).sort((a, b) => (b.m ?? -1) - (a.m ?? -1));
+    const meM = along(riders[me] || {}) ?? null, lead = g.leader === me, tr = h.current();
+    const rows = Object.entries(riders).filter(([id]) => id !== me).map(([id, r]) => ({ id, r, m: along(r) })).sort((a, b) => (b.m ?? -1) - (a.m ?? -1));
+    const meRow = `<div class="rs-row me"><i style="background:#2f7cf6">📍</i><span class="n">Me ${lead ? "🚩" : ""}${(riders[me] || {}).role === "sweep" ? "🧹" : ""}${sosMine ? "🆘" : ""}</span>` +
+      `<span class="d">${meM != null ? "km " + (meM / 1000).toFixed(1) : ""}<small>${meM != null && tr ? "of " + tr.km : ""}</small></span></div>`;
+    const STAT = [["lunch", "🍜", "Lunch"], ["wait", "⏸", "Waiting"], ["suffer", "🥵", "Suffer"]];
     const row = ({ id, r, m }) => {
       const you = id === me, st = !you && isStale(r), d = m != null && meM != null ? m - meM : null;
       const badge = (r.role === "lead" ? "🚩" : "") + (r.role === "sweep" ? "🧹" : "") + (r.sos ? "🆘" : "");
@@ -216,8 +238,10 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
         <span class="n">${esc(you ? "You" : r.n)} ${badge}</span><span class="d">${right}</span></button>`;
     };
     const mineR = riders[me] || {};
-    open(`<h2>👥 Ride ${g.code} · ${rows.length} rider${rows.length === 1 ? "" : "s"}</h2><div class="rs-list">${rows.map(row).join("")}</div>
-      <p class="rs-l" style="margin:10px 0 -4px">Show on the map</p><div class="rs-seg">${[["all", "👥", "Everyone"], ["last", "🧹", "Sweeper"], ["hide", "🙈", "Nobody"]].map(([k, i, t]) =>
+    open(`<h2>👥 Ride ${g.code} · ${rows.length + 1} rider${rows.length ? "s" : ""}</h2><div class="rs-list">${meRow}${rows.map(row).join("")}</div>
+      ${lead ? `<p class="rs-l" style="margin:10px 0 -4px">Tell the group</p><div class="rs-seg stat">${STAT.map(([k, i, t]) =>
+        `<button type="button" data-stat="${k}" class="${status && status.s === k ? "on" : ""}"><b>${i}</b>${t}</button>`).join("")}</div>` : ""}
+      <p class="rs-l" style="margin:10px 0 -4px">Show on my map</p><div class="rs-seg">${[["all", "👥", "Everyone"], ["last", "🧹", "Sweeper"], ["hide", "🙈", "Nobody"]].map(([k, i, t]) =>
         `<button type="button" data-mode="${k}" class="${mode === k ? "on" : ""}"><b>${i}</b>${t}</button>`).join("")}</div>
       <div class="rs-two"><button type="button" class="rs-b w sm" data-go="wait">${waitMine ? "✓ Found you" : "😕 I lost you guys"}</button>
         <button type="button" class="rs-b r sm rs-sos" data-go="sos">${sosMine ? "✓ I'm OK now" : "🆘 Hold 2 s for help"}</button></div>
@@ -230,6 +254,12 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
       const r = riders[b.dataset.id]; if (r && r.lat) { close(); h.map.panTo([r.lat, r.lng]); }
     });
     box.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { mode = b.dataset.mode; paint(); openList(); });
+    box.querySelectorAll("[data-stat]").forEach(b => b.onclick = () => {  // tap = everyone sees it; tap again = off
+      const k = b.dataset.stat, off = status && status.s === k;
+      status = off ? null : { s: k, t: Date.now() }; paintStatus();
+      fb.D.set(fb.r(`groups/${g.code}/meta/status`), off ? null : { s: k, t: fb.D.serverTimestamp() }).catch(() => {});
+      openList();
+    });
     const sw = box.querySelector("[data-go=sweep]");
     if (sw) sw.onclick = () => { fb.D.update(fb.r(`groups/${g.code}/riders/${me}`), { role: mineR.role === "sweep" ? null : "sweep" }).then(openList).catch(() => {}); };
     holdButton(box.querySelector("[data-go=sos]"), () => setSos(!sosMine), sosMine);
@@ -272,26 +302,45 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
   h.map.getContainer().appendChild(wait);
   const banner = document.createElement("div"); banner.className = "ridesos"; banner.hidden = true;
   h.map.getContainer().appendChild(banner);
-  [chip, wait, banner].forEach(el => { L.DomEvent.disableClickPropagation(el); L.DomEvent.disableScrollPropagation(el); });
+  const stat = document.createElement("div"); stat.className = "ridestat"; stat.hidden = true;
+  h.map.getContainer().appendChild(stat);
+  [chip, wait, banner, stat].forEach(el => { L.DomEvent.disableClickPropagation(el); L.DomEvent.disableScrollPropagation(el); });
+  function paintStatus() {
+    if (!g || !status || !status.s) { stat.hidden = true; document.body.classList.remove("hasridestat"); return; }
+    const S = { lunch: "🍜 Lunch", wait: "⏸ Waiting", suffer: "🥵 Suffer" }[status.s]; if (!S) { stat.hidden = true; return; }
+    const who = (riders[g.leader] || {}).n || "Leader", ago = status.t ? Math.round((Date.now() - status.t) / 60000) : 0;
+    stat.innerHTML = `🚩 ${esc(who)}: ${S}<small>${ago < 1 ? "now" : ago + " min ago"}</small>`;
+    stat.hidden = false; document.body.classList.add("hasridestat");
+  }
+  // 💾 the track's map saved by itself when you start or join (no question; Chu 11/21)
+  function saveMap(t) {
+    if (!t || !h.map.cnxOffline) return;
+    h.map.cnxOffline.ensure({ id: t.id, name: t.name, file: t.file }).then(r => {
+      if (r === "done" || r === "saved") cnxToast("✓ Offline map saved", 3000);
+      else if (r === "failed" || r === "nosignal") cnxToast("⚠ Offline map not saved", 4000);
+    }).catch(() => {});
+  }
+  h.map.on("walkchange", e => { if (g && fb) fb.D.update(fb.r(`groups/${g.code}/riders/${me}`), { walk: e.on ? true : null }).catch(() => {}); });
 
   function paint() {
     if (!g) return;
-    const n = Object.keys(riders).length;
-    chip.innerHTML = `👥 ${mode === "last" ? "🧹" : mode === "hide" ? "🙈" : n}`;
+    const n = Object.keys(riders).length, off = !online && Date.now() - offAt > 5000;
+    chip.innerHTML = `👥 ${off ? "📵" : mode === "last" ? "🧹" : mode === "hide" ? "🙈" : n}`;
+    chip.classList.toggle("off", off);
     chip.setAttribute("aria-label", `Ride ${g.code}: ${n} riders. Tap for the list`);
     const show = mode === "hide" ? [] : mode === "last" ? [lastRider()].filter(id => id && id !== me) : Object.keys(riders).filter(id => id !== me);
     for (const id of Object.keys(marks)) if (!show.includes(id) && !(riders[id] && riders[id].sos)) { marks[id].remove(); delete marks[id]; }
     const all = new Set([...show, ...Object.keys(riders).filter(id => id !== me && riders[id].sos)]);  // 🆘 shows in every mode
     for (const id of all) {
       const r = riders[id]; if (!r || !r.lat) continue;
-      const st = isStale(r), tag = st ? `${r.n} · ${mins(Date.now() - r.t)}` : r.n;
+      const st = isStale(r), tag = (r.walk ? "🚶 " : "") + (st ? `${r.n} · ${mins(Date.now() - r.t)}` : r.n);
       const html = `<div class="rd${st ? " stale" : ""}${r.sos ? " sos" : ""}"><i style="background:${colorOf(id)}">${esc((r.n || "?")[0].toUpperCase())}` +
         `${r.role === "lead" ? "<em>🚩</em>" : r.role === "sweep" ? "<em>🧹</em>" : ""}</i><b>${esc(tag)}</b></div>`;
       if (!marks[id]) marks[id] = L.marker([r.lat, r.lng], { interactive: false, zIndexOffset: 800, icon: L.divIcon({ className: "", iconSize: [90, 44], iconAnchor: [45, 12], html }) }).addTo(h.map);
       else { marks[id].setLatLng([r.lat, r.lng]); if (marks[id]._html !== html) marks[id].setIcon(L.divIcon({ className: "", iconSize: [90, 44], iconAnchor: [45, 12], html })); }
       marks[id]._html = html;
     }
-    paintWait(); paintSos();
+    paintWait(); paintSos(); paintStatus();
   }
   function paintWait() {  // leader only: last rider too far back
     if (!g || g.leader !== me) { wait.hidden = true; return; }
@@ -350,14 +399,14 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     store.set(null);
   }
   async function rejoin(s) {
-    try {
-      await connect();
-      const m = (await fb.D.get(fb.r(`groups/${s.code}/meta`))).val();
-      if (!m) return store.set(null);
-      await enter({ code: s.code, track: m.track, leader: m.leader, ends: m.ends }, s.name, s.role);
-    } catch (e) { store.set(null); }
+    try { await connect(); } catch (e) { setTimeout(() => rejoin(s), 15000); return; }  // first time ever with no signal: try again
+    // with signal: check the ride still exists; with no signal: carry on with what the phone remembers
+    const m = await Promise.race([fb.D.get(fb.r(`groups/${s.code}/meta`)).then(x => ({ v: x.val() }), () => null), new Promise(r => setTimeout(r, 4000, null))]);
+    if (m && !m.v) return store.set(null);  // the server says the ride is over
+    const v = (m && m.v) || s;
+    await enter({ code: s.code, track: v.track, leader: v.leader, ends: v.ends }, s.name, s.role, true);
   }
   resume();
 
-  return { open: openChoose, inRide: () => !!g };
+  return { open: openChoose, inRide: () => !!g, _dbg: () => ({ riders, marks: Object.keys(marks), g, me, online, mode }) };
 }

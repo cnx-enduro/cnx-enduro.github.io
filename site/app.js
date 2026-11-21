@@ -420,13 +420,22 @@
   function go(id) { location.hash = id ? "#" + id : ""; }
 
   // ▶ Navigate (nav.js): the map fills the phone screen, surface colours off, the route drawn blue / grey.
-  // ✕ in its box brings the normal track page back.
+  // ■ NAV stops it. Leaving it any other way (☰ → Back to track page, another page, a refresh, Android Back) only
+  // pauses it: its state stays in the phone ("cnx-nav") and the blue "▶ Back to Navigate" bar brings it back.
   let nav = null;
-  const endNav = () => { if (nav) { nav.stop(); nav = null; } wrap.style.height = ""; };
-  function startNav(t) {
+  const navState = () => { try { const v = JSON.parse(localStorage.getItem("cnx-nav") || "null"); return v && Date.now() - v.at < 12 * 3600e3 ? v : null; } catch (e) { return null; } };
+  const markPaused = () => { const v = navState(); if (v) try { localStorage.setItem("cnx-nav", JSON.stringify({ ...v, paused: true })); } catch (e) {} };
+  const pauseNav = () => { if (nav) { nav.pause(); nav = null; markPaused(); } wrap.style.height = ""; backBar(); };
+  let beepCtx = null;
+  const unlockSound = () => { try { beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)(); beepCtx.resume(); } catch (e) {} };
+  const beep = (n = 1, hz = 880, len = 0.25) => { try { if (!beepCtx) return; for (let k = 0; k < n; k++) { const o = beepCtx.createOscillator(), v = beepCtx.createGain();
+    o.frequency.value = hz; v.gain.value = 0.3; o.connect(v); v.connect(beepCtx.destination); o.start(beepCtx.currentTime + k * 0.5); o.stop(beepCtx.currentTime + k * 0.5 + len); } } catch (e) {} };
+  map.cnxBeep = beep; map.cnxUnlockSound = unlockSound;
+  function startNav(t, restore) {
     if (nav) return;
-    const o = { map, t, kmOf: kmAlong(t), length: field(t, "length"), youAt,
-      onExit: () => { nav = null; wrap.style.height = ""; showTrack(t); } };
+    unlockSound();
+    const o = { map, t, kmOf: kmAlong(t), length: field(t, "length"), youAt, restore, beep, onMenu: openMenu,
+      onExit: () => { nav = null; wrap.style.height = ""; showTrack(t); backBar(); } };
     if (navigator.getBattery) navigator.getBattery().then(b => { o.battery = b; }).catch(() => {});
     if (phone.matches) { window.scrollTo({ top: 0 }); wrap.style.height = "100svh"; }
     if (surfaceLayer) map.removeLayer(surfaceLayer);
@@ -436,7 +445,121 @@
     nav = startNavigate(o);  // straight from the tap: the iPhone compass question needs it
     setTimeout(() => map.invalidateSize(), 260);
     if (/[?&]cnxtest\b/.test(location.search)) window.__cnx.nav = nav;
+    backBar(); armBack();
   }
+  function resumeNav() {
+    const v = navState(), t = v && tracks.find(x => x.id === v.track);
+    if (!t) { backBar(); return; }
+    if (!current || current.id !== t.id) { pendingResume = v; go(t.id); return; }
+    startNav(t, v);
+  }
+  let pendingResume = null;
+
+  // Blue "▶ Back to Navigate" bar on every page while a Navigate is paused (Chu 11/21).
+  const bar = document.createElement("button");
+  bar.type = "button"; bar.className = "navbackbar"; bar.hidden = true;
+  bar.onclick = () => resumeNav();
+  document.body.appendChild(bar);
+  function backBar() {
+    const v = navState(), t = v && v.paused && !nav && tracks.find(x => x.id === v.track);
+    bar.hidden = !t; document.body.classList.toggle("hasbackbar", !!t);
+    if (t) bar.innerHTML = `▶ Back to Navigate <small>${esc(t.id)} · ${esc(t.name)}</small>`;
+  }
+
+  // ☰ Menu in Navigate (Chu 11/21, in his order). Navigate keeps running behind every row.
+  const menu = document.createElement("div");
+  menu.className = "ridesheet navmenusheet"; menu.hidden = true;
+  menu.innerHTML = `<div class="rs-dim"></div><div class="rs-box"></div>`;
+  document.body.appendChild(menu);
+  const mbox = menu.querySelector(".rs-box");
+  const closeMenu = () => { menu.hidden = true; mbox.innerHTML = ""; };
+  menu.querySelector(".rs-dim").onclick = closeMenu;
+  const here = () => (map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where()) || youAt;
+  const camIn = document.createElement("input");
+  camIn.type = "file"; camIn.accept = "image/*"; camIn.setAttribute("capture", "environment"); camIn.hidden = true;
+  document.body.appendChild(camIn);
+  const gpxIn = document.createElement("input");
+  gpxIn.type = "file"; gpxIn.accept = ".gpx,application/gpx+xml"; gpxIn.hidden = true;
+  document.body.appendChild(gpxIn);
+  const shareFile = async (blob, name) => {
+    const file = new File([blob], name, { type: "application/gpx+xml" });
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; } } catch (e) { if (e.name === "AbortError") return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  };
+  function openMenu() {
+    const t = current;
+    mbox.innerHTML = `<button class="rs-x" type="button" aria-label="Close">✕</button><h2>☰ Menu</h2>
+      <button class="mrow" data-m="page" type="button"><i>⬅</i><span>Back to track page<small>Navigate keeps running</small></span></button>
+      <button class="mrow" data-m="cam" type="button"><i>📷</i><span>Camera</span></button>
+      <button class="mrow" data-m="gpx" type="button"><i>📤</i><span>Share GPX</span></button>
+      <button class="mrow" data-m="loc" type="button"><i>📍</i><span>Send my location</span></button>
+      <div class="mrow"><i>💬</i><span>Apps</span><span class="mapps"><a href="whatsapp://send" style="background:#25d366">WA</a><a href="fb-messenger://" style="background:#0084ff">M</a><a href="line://" style="background:#06c755">LINE</a></span></div>
+      <a class="mrow" href="tel:1669"><i>📞</i><span>1669 <small class="inl">emergency</small></span></a>
+      <p class="rs-small">Navigate keeps running. Come back here when done.</p>`;
+    menu.hidden = false;
+    mbox.querySelector(".rs-x").onclick = closeMenu;
+    mbox.querySelector("[data-m=page]").onclick = () => { closeMenu(); const tt = current; pauseNav(); if (tt) showTrack(tt); backBar(); };
+    mbox.querySelector("[data-m=cam]").onclick = () => { closeMenu(); camIn.value = ""; camIn.click(); };
+    mbox.querySelector("[data-m=loc]").onclick = async () => {
+      closeMenu(); const ll = here();
+      if (!ll) return cnxToast("Waiting for GPS…", 3000);
+      const url = `https://www.google.com/maps?q=${ll.lat.toFixed(6)},${ll.lng.toFixed(6)}`;
+      try { if (navigator.share) return await navigator.share({ title: "My location", text: "📍 I'm here:", url }); } catch (e) { if (e.name === "AbortError") return; }
+      try { await navigator.clipboard.writeText(`📍 I'm here: ${url}`); cnxToast("Location copied. Paste it in the chat.", 4000); } catch (e) { cnxToast(url, 8000); }
+    };
+    mbox.querySelector("[data-m=gpx]").onclick = () => {
+      const rec = map.cnxRecord && map.cnxRecord.gpx();
+      mbox.innerHTML = `<button class="rs-x" type="button" aria-label="Close">✕</button><h2>📤 Share GPX</h2>
+        <button class="rs-b s mchoice" data-g="rec" type="button" ${rec ? "" : "disabled"}><i>⏺</i><span>My ride so far<small>${rec ? "recording keeps going" : "nothing recorded yet: tap ⏺ on the map"}</small></span></button>
+        ${t ? `<button class="rs-b s mchoice" data-g="trk" type="button"><i>🛤</i><span>This track (${esc(t.id)})<small>for a friend to load</small></span></button>` : ""}
+        <button class="rs-b s mchoice" data-g="file" type="button"><i>📂</i><span>From my phone<small>pick any GPX file</small></span></button>
+        <p class="rs-small">Then: WhatsApp · Messenger · LINE · AirDrop · Files</p>`;
+      mbox.querySelector(".rs-x").onclick = closeMenu;
+      const r = mbox.querySelector("[data-g=rec]"); if (r && rec) r.onclick = () => { closeMenu(); shareFile(new Blob([rec.text], { type: "application/gpx+xml" }), rec.file); };
+      const k = mbox.querySelector("[data-g=trk]"); if (k) k.onclick = async () => {
+        closeMenu();
+        try { const b = await (await fetch(`gpx/${encodeURIComponent(t.file)}`)).blob(); shareFile(b, t.file); } catch (e) { cnxToast("Couldn't open the track file", 4000); }
+      };
+      mbox.querySelector("[data-g=file]").onclick = () => { closeMenu(); gpxIn.value = ""; gpxIn.click(); };
+    };
+  }
+  gpxIn.onchange = () => { const f = gpxIn.files && gpxIn.files[0]; if (f) shareFile(f, f.name); };
+  // 📷 Camera: the photo goes straight into this track's report, the spot marked where you're standing.
+  camIn.onchange = () => {
+    const f = camIn.files && camIn.files[0], t = current; if (!f || !t) return;
+    pauseNav(); showTrack(t);
+    setTimeout(() => {
+      const box = $("sendbox"); if (!box) return;
+      box.open = true;
+      const ph = $("sendForm").querySelector("input[name=photo]");
+      try { const dt = new DataTransfer(); dt.items.add(f); ph.files = dt.files; } catch (e) {}
+      setTimeout(() => { if ($("spotGps")) $("spotGps").click(); box.scrollIntoView({ behavior: "smooth", block: "start" }); }, 350);
+    }, 300);
+  };
+
+  // Android Back (Chu 11/21: one tap and the whole ride was gone): while Navigate or 🚶 Walk runs, a spare step in
+  // the history takes the first Back and the page stays; leaving the site asks "Leave site?" (Android Chrome);
+  // and if someone leaves anyway, coming back brings Navigate, Walk, the ride and the recording back.
+  const busy = () => !!nav || !!map.cnxWalking;
+  function armBack() {
+    if (!busy() || document.body.classList.contains("rainlocked")) return;
+    if (history.state && history.state.cnxTrap) return;
+    try { history.pushState({ cnxTrap: 1 }, ""); } catch (e) {}
+  }
+  document.addEventListener("click", armBack, true);
+  map.on("walkchange", armBack);
+  window.addEventListener("popstate", e => {
+    if (document.body.classList.contains("rainlocked")) return;  // the lock has its own Back
+    if (e.state && (e.state.cnxTrap || e.state.cnxLock)) return;
+    if (!busy() || location.hash.slice(1) !== (current ? current.id : location.hash.slice(1))) return;
+    try { history.pushState({ cnxTrap: 1 }, ""); } catch (er) {}
+    cnxToast(nav ? "To stop, tap ■ NAV" : "To end Walk, tap 🚶", 3000);
+  });
+  window.addEventListener("beforeunload", e => {
+    const rec = map.cnxRecord && map.cnxRecord.isOn();
+    if (busy() || rec || (ride && ride.inRide())) { e.preventDefault(); e.returnValue = ""; }
+  });
 
   function showOverview(id) {
     current = null;
@@ -643,6 +766,8 @@
       spotMap.on("click", e => setSpot(e.latlng));
     });
     $("spotGps").onclick = () => {
+      const known = map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where();  // location already on (Navigate): use it, instantly
+      if (known) { setSpot(known); spotMap.setView(known, 15); return; }
       if (!navigator.geolocation) { $("spotInfo").textContent = "This phone can't share its location here."; return; }
       $("spotInfo").textContent = "Finding you…";
       navigator.geolocation.getCurrentPosition(
@@ -653,6 +778,10 @@
     form.onsubmit = ev => { ev.preventDefault(); sendUpdate(t, form, spot, () => { spot = null; if (pin) { pin.remove(); pin = null; } $("spotInfo").className = "small muted"; $("spotInfo").textContent = "No spot marked yet."; }); };
   }
 
+  // 📤 Reports keep until there's signal (Chu 11/21: one got lost in the hills). Every report is kept in the phone
+  // first (IndexedDB "cnx-outbox"), then sent. No answer within 3 s (or no signal at all): "📤 Saved on your phone",
+  // the form clears, and it sends by itself when signal comes back (📤 badge on the map until then). Each report
+  // carries its own number (rid) so a late double send can be spotted.
   async function sendUpdate(t, form, spot, onSent) {
     const status = $("sendStatus");
     const btn = form.querySelector("button[type=submit]");
@@ -665,8 +794,10 @@
     btn.disabled = true;
     status.style.color = "";
     status.textContent = "Sending…";
+    let payload;
     try {
-      const payload = {
+      payload = {
+        rid: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), at: new Date().toISOString(),
         track: `${t.id} ${t.name}`, trackId: t.id,
         name: f.get("name"), contact: f.get("contact"), kind: f.get("kind"), note: f.get("note"),
         website: f.get("website"),
@@ -674,22 +805,63 @@
         gpx: hasGpx ? { name: gpx.name, type: "application/gpx+xml", data: await readDataUrl(gpx) } : null,
         photo: photo && photo.size ? await shrinkPhoto(photo) : null,
       };
-      // text/plain keeps this a "simple" request, so the browser skips the CORS preflight Apps Script can't answer
-      const r = await fetch(site.submitUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      // a sign-in or error page from Google comes back as HTML; say so plainly instead of "Unexpected token <"
-      const out = await r.json().catch(() => ({ ok: false, error: "the server didn't answer properly" }));
-      if (!out.ok) throw new Error(out.error || "Failed");
-      form.reset();
-      onSent();
-      status.style.color = "var(--ok)";
-      status.textContent = "Sent. Thank you! We'll take a look.";
-    } catch (e) {
-      status.style.color = "var(--warn)";
-      status.textContent = `Couldn't send: ${e.message}. Please try again, or post it in the group.`;
-    } finally {
-      btn.disabled = false;
+    } catch (e) { btn.disabled = false; status.style.color = "var(--warn)"; status.textContent = "Couldn't read the photo or GPX. Try another file."; return; }
+    const kept = await outbox.put(payload).then(() => true).catch(() => false);
+    const done = (msg, color) => {
+      form.reset(); onSent(); btn.disabled = false;
+      status.style.color = color; status.textContent = msg;
+      const v = navState(); if (v && v.paused && !nav) setTimeout(resumeNav, 2000);  // reporting from Navigate: back riding
+    };
+    if (navigator.onLine === false && kept) { done("📤 Saved on your phone. It sends by itself when there's signal.", "var(--ok)"); savedNote(); outboxBadge(); return; }
+    const sending = postReport(payload).then(async () => { await outbox.del(payload.rid).catch(() => {}); return "sent"; }, () => "fail");
+    const first = await Promise.race([sending, new Promise(r => setTimeout(r, 3000, "slow"))]);
+    if (first === "sent") { done("Sent. Thank you! We'll take a look.", "var(--ok)"); outboxBadge(); return; }
+    if (!kept) {  // this phone can't keep it: the old way, say it failed
+      const r = first === "slow" ? await sending : first;
+      if (r === "sent") return done("Sent. Thank you! We'll take a look.", "var(--ok)");
+      btn.disabled = false; status.style.color = "var(--warn)"; status.textContent = "Couldn't send. Please try again where there's signal.";
+      return;
     }
+    done("📤 Saved on your phone. It sends by itself when there's signal.", "var(--ok)"); savedNote(); outboxBadge();
+    sending.then(r => { if (r === "sent") { cnxToast("✓ Report sent", 3000); outboxBadge(); } });
   }
+  const savedNote = () => cnxToast("📤 Saved on your phone<small>No signal. It sends by itself when there's signal.</small>", 4000);
+  async function postReport(payload) {
+    // text/plain keeps this a "simple" request, so the browser skips the CORS preflight Apps Script can't answer
+    const r = await fetch(site.submitUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+    // a sign-in or error page from Google comes back as HTML
+    const out = await r.json().catch(() => ({ ok: false, error: "the server didn't answer properly" }));
+    if (!out.ok) throw new Error(out.error || "Failed");
+  }
+  const outbox = (() => {
+    const db = () => new Promise((ok, bad) => { const r = indexedDB.open("cnx-outbox", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("r", { keyPath: "rid" }); r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error); });
+    const run = async (mode, fn) => { const d = await db(); return new Promise((ok, bad) => {
+      const tx = d.transaction("r", mode), req = fn(tx.objectStore("r")); tx.oncomplete = () => ok(req && req.result); tx.onerror = () => bad(tx.error); }); };
+    return { put: p => run("readwrite", st => st.put(p)), del: id => run("readwrite", st => st.delete(id)), all: () => run("readonly", st => st.getAll()) };
+  })();
+  const badge = document.createElement("div");
+  badge.className = "outboxbadge"; badge.hidden = true; badge.title = "Reports waiting for signal";
+  document.querySelector("#map").appendChild(badge);
+  async function outboxBadge() {
+    const n = (await outbox.all().catch(() => [])).length;
+    badge.hidden = !n; badge.textContent = `📤 ${n}`;
+  }
+  let flushing = false;
+  async function outboxFlush() {
+    outboxBadge();
+    if (flushing || navigator.onLine === false || !site.submitUrl) return;
+    flushing = true;
+    try {
+      for (const p of await outbox.all().catch(() => [])) {
+        if (Date.now() - parseInt(p.rid.slice(0, -5), 36) < 4000) { setTimeout(outboxFlush, 4500); continue; }  // the form is still sending this one: look again soon
+        try { await postReport(p); await outbox.del(p.rid); cnxToast("✓ Report sent", 3000); } catch (e) { break; }
+      }
+    } finally { flushing = false; outboxBadge(); }
+  }
+  window.addEventListener("online", outboxFlush);
+  setInterval(outboxFlush, 30000);
+
 
   function drawProfile(t) {
     const box = $("profile");
@@ -762,24 +934,29 @@
     svg.addEventListener("pointerleave", leave);
   }
 
-  // 👥 Ride together (ride.js, hidden beta): needs the track page's map, Navigate and the km-along helper.
+  // 👥 Ride together (ride.js): needs the track page's map, Navigate and the km-along helper.
   const kmCache = {};
   const ride = CNX_BETA && window.CNX_FIREBASE && typeof setupRide === "function" ? setupRide({
-    map, current: () => current, navOn: () => !!nav, startNav: () => { if (current) startNav(current); },
+    map, current: () => current, navOn: () => !!nav, startNav: () => { if (current) startNav(current); }, beep, unlockSound,
     kmAt: (t, ll) => (kmCache[t.id] || (kmCache[t.id] = kmAlong(t)))(nearestOnLine(t.line, ll)),
     loadQr, siteUrl: () => site.siteUrl || location.origin + location.pathname,
   }) : null;
   if (/[?&]cnxtest\b/.test(location.search)) window.__cnx = Object.assign(window.__cnx || {}, { ride });
 
   function route() {
-    endNav();
+    pauseNav();
     const id = location.hash.slice(1);
     const t = tracks.find(t => t.id === id);
     if (t) showTrack(t);
     // an unknown or empty section (old #adventure links) falls back to the main page
     else showOverview(tracks.some(t => t.category === id) ? id : main.id);
+    if (t && pendingResume && pendingResume.track === t.id) { const v = pendingResume; pendingResume = null; setTimeout(() => startNav(t, v), 50); }
+    backBar();
   }
   window.addEventListener("hashchange", route);
   route();
+  // A refresh, a reload by the phone, or coming back after leaving the site: straight back into Navigate.
+  { const v = navState(); if (v && !v.paused && !nav) resumeNav(); else backBar(); }
+  outboxFlush();
 
 })();
