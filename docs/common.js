@@ -804,6 +804,9 @@ function addWalk(map) {
   const find = document.createElement("button"); find.type = "button"; find.className = "findbike"; find.hidden = true;
   const warn = document.createElement("div"); warn.className = "walkwarn"; warn.hidden = true;
   warn.innerHTML = `⚠ Don't turn the screen off<small>use 🔒 instead, so your steps keep recording</small>`;
+  // While Find my bike guides you, iPhone plays the beeps even with the silent switch on (iOS 17+ "playback");
+  // back to normal after, so it doesn't stop the rider's music the rest of the time.
+  const loud = on => { try { if (navigator.audioSession) navigator.audioSession.type = on ? "playback" : "auto"; } catch (e) {} };
   [status, find, warn].forEach(el => { map.getContainer().appendChild(el); L.DomEvent.disableClickPropagation(el); L.DomEvent.disableScrollPropagation(el); });
   if (navigator.getBattery) navigator.getBattery().then(b => { battery = b; }).catch(() => {});
   const bikeIcon = () => L.divIcon({ className: "", iconSize: [44, 44], iconAnchor: [22, 22], html: `<div class="bikepin">${BIKE_SVG}</div>` });
@@ -853,7 +856,7 @@ function addWalk(map) {
     clearTimeout(buzzT); buzzT = null;
     if (!W || !guiding || lastM == null || lastM > 100) return;
     try { navigator.vibrate && navigator.vibrate(lastM < 30 ? 60 : 90); } catch (e) {}
-    if (map.cnxBeep) map.cnxBeep(1, 990, 0.07);
+    if (map.cnxBeep) map.cnxBeep(1, 2600, 0.09, "square", 1);  // loudest, sharpest: the engine is off, this is how iPhones find the bike
     buzzT = setTimeout(tick, Math.max(250, Math.min(2000, lastM * 18)));
   };
   const update = here => {
@@ -868,7 +871,7 @@ function addWalk(map) {
   };
   const arrive = () => {
     try { navigator.vibrate && navigator.vibrate(700); } catch (e) {}
-    if (map.cnxBeep) map.cnxBeep(1, 660, 0.6);
+    if (map.cnxBeep) map.cnxBeep(1, 1800, 0.7, "square", 1);
     if (typeof cnxToast === "function") cnxToast(`<span class="tbike">${BIKE_SVG}</span>✓ You're at your bike<small>Walk off${document.body.classList.contains("navmode") ? ". Navigate carries on." : "."}</small>`, 4000);
     end(false);
   };
@@ -910,6 +913,7 @@ function addWalk(map) {
     warn.hidden = false; clearTimeout(warn._t); warn._t = setTimeout(() => { warn.hidden = true; }, 5000);
   };
   function end() {
+    if (guiding) setTimeout(() => loud(false), 1500);  // let the arrival beep finish first
     W = null; guiding = false; lastM = null; store(); clearTimeout(buzzT); buzzT = null;
     if (layers) { layers.g.remove(); layers = null; }
     map.cnxWalking = false; document.body.classList.remove("walking", "walkguide");
@@ -920,7 +924,7 @@ function addWalk(map) {
   find.onclick = () => {
     if (!W) return;
     if (map.cnxUnlockSound) map.cnxUnlockSound();
-    guiding = !guiding;
+    guiding = !guiding; loud(guiding);
     if (!guiding) { clearTimeout(buzzT); buzzT = null; layers.guide.setLatLngs([]); layers.guideEdge.setLatLngs([]); }
     const here = map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where();
     if (here) { update(here); if (guiding) map.fitBounds(L.latLngBounds([here, ll(W.bike)]).pad(0.3), { animate: true }); }

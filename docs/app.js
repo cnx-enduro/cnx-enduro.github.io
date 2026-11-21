@@ -428,8 +428,8 @@
   const pauseNav = () => { if (nav) { nav.pause(); nav = null; markPaused(); } wrap.style.height = ""; backBar(); };
   let beepCtx = null;
   const unlockSound = () => { try { beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)(); beepCtx.resume(); } catch (e) {} };
-  const beep = (n = 1, hz = 880, len = 0.25) => { try { if (!beepCtx) return; for (let k = 0; k < n; k++) { const o = beepCtx.createOscillator(), v = beepCtx.createGain();
-    o.frequency.value = hz; v.gain.value = 0.3; o.connect(v); v.connect(beepCtx.destination); o.start(beepCtx.currentTime + k * 0.5); o.stop(beepCtx.currentTime + k * 0.5 + len); } } catch (e) {} };
+  const beep = (n = 1, hz = 880, len = 0.25, wave = "sine", vol = 0.3) => { try { if (!beepCtx) return; for (let k = 0; k < n; k++) { const o = beepCtx.createOscillator(), v = beepCtx.createGain();
+    o.type = wave; o.frequency.value = hz; v.gain.value = vol; o.connect(v); v.connect(beepCtx.destination); o.start(beepCtx.currentTime + k * 0.5); o.stop(beepCtx.currentTime + k * 0.5 + len); } } catch (e) {} };
   map.cnxBeep = beep; map.cnxUnlockSound = unlockSound;
   function startNav(t, restore) {
     if (nav) return;
