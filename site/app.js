@@ -507,7 +507,7 @@
         <div class="chips">${t.flags.filter(f => f.kind !== "card").map(f => `<span class="chip ${f.level}">${flagText(f)}</span>`).join("")}</div>
       </div>
       <div class="actions">
-        ${CNX_BETA ? `<button class="btn navgo" id="navGo" type="button">▶ Navigate</button>` : ""}
+        ${CNX_BETA ? `<button class="btn navgo" id="navGo" type="button">▶ Navigate</button><button class="btn ridego" id="rideGo" type="button">👥 Ride together</button>` : ""}
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
         <button class="btn" id="copy">Copy link</button>
@@ -568,6 +568,7 @@
       catch { $("copy").textContent = "Copy failed"; }
     };
     if ($("navGo")) $("navGo").onclick = () => startNav(t);
+    if ($("rideGo")) $("rideGo").onclick = () => ride && ride.open();
     if ($("sendForm")) setupSendForm(t);
     document.querySelectorAll(".poirow").forEach(b => b.onclick = () => {  // a stop in the list → show it on the map
       const m = poiLayer.getLayers()[+b.dataset.i];
@@ -760,6 +761,15 @@
     svg.addEventListener("pointerdown", move);
     svg.addEventListener("pointerleave", leave);
   }
+
+  // 👥 Ride together (ride.js, hidden beta): needs the track page's map, Navigate and the km-along helper.
+  const kmCache = {};
+  const ride = CNX_BETA && window.CNX_FIREBASE && typeof setupRide === "function" ? setupRide({
+    map, current: () => current, navOn: () => !!nav, startNav: () => { if (current) startNav(current); },
+    kmAt: (t, ll) => (kmCache[t.id] || (kmCache[t.id] = kmAlong(t)))(nearestOnLine(t.line, ll)),
+    loadQr, siteUrl: () => site.siteUrl || location.origin + location.pathname,
+  }) : null;
+  if (/[?&]cnxtest\b/.test(location.search)) window.__cnx = Object.assign(window.__cnx || {}, { ride });
 
   function route() {
     endNav();

@@ -545,7 +545,7 @@ def main():
         path = os.path.join(OUT, page)
         with open(path, encoding="utf-8") as f:
             html = f.read()
-        for asset in ("style.css", "common.js", "nav.js", "app.js", "editors.js"):
+        for asset in ("style.css", "common.js", "nav.js", "ride.js", "firebase-config.js", "app.js", "editors.js"):
             with open(os.path.join(SRC, asset), "rb") as f:
                 v = hashlib.sha1(f.read()).hexdigest()[:8]
             html = html.replace(f'"{asset}"', f'"{asset}?v={v}"')

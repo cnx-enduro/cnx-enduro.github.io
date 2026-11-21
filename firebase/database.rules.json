@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "groups": {
+      "$code": {
+        ".read": "auth != null && data.child('meta/ends').val() > now && data.child('meta/ended').val() !== true",
+        ".write": "auth != null && (!data.exists() || data.child('meta/ends').val() < now || data.child('meta/leader').val() === auth.uid)",
+        "meta": {
+          ".validate": "newData.hasChildren(['leader', 'ends']) && newData.child('leader').val() === auth.uid && newData.child('ends').val() <= now + 8 * 3600 * 1000"
+        },
+        "riders": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('groups/' + $code + '/meta/ends').val() > now && root.child('groups/' + $code + '/meta/ended').val() !== true",
+            ".validate": "!newData.exists() || (newData.hasChildren(['n', 'lat', 'lng', 't']) && newData.child('n').isString() && newData.child('n').val().length <= 16 && newData.child('lat').isNumber() && newData.child('lng').isNumber())"
+          }
+        }
+      }
+    }
+  }
+}

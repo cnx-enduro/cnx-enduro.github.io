@@ -266,6 +266,7 @@ function addRainLock(map) {
   const setLocked = on => {
     locked = on;
     document.body.classList.toggle("rainlocked", on);
+    if (!on) document.body.classList.remove("pocket");  // 👖 pocket screen (ride.js) ends with the unlock
     cover.hidden = !on;
     btn.classList.toggle("on", on);
     sign.textContent = on ? "Hold 2 s to unlock" : "";
@@ -322,6 +323,7 @@ function addRainLock(map) {
     return box;
   };
   ctl.addTo(map);
+  map.cnxLock = { lock: () => { if (!locked) setLocked(true); } };
 }
 
 // 💾 Offline map, bottom left above the lock. On a track page one tap saves that track's map to the phone
