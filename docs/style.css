@@ -666,3 +666,5 @@ body.walking .navmini, body.walking .navbig, body.walking .navahead, body.walkin
 body.walkguide .navstop, body.walkguide .ridechip { visibility: hidden; }
 /* the big arrival box stops short of the right-hand buttons (map style + ☰), no overlap (Chu 11/22) */
 .navbig { right: 62px; }
+/* phones: no + / − zoom buttons (pinch zooms); the 🚶 Walk button sat on top of them on the short track-page map (Chu 11/22) */
+@media (max-width: 820px) { .leaflet-control-zoom { display: none !important; } }
