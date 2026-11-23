@@ -78,14 +78,14 @@
     };
     document.head.appendChild(s);
   }
-  // The total at the very end of the footer, kept quiet: tiny grey text that appears only once GoatCounter answers
-  // with a number above 0 (it refreshes every few hours). If it's slow or down, nothing shows.
+  // The total at the very end of the footer, kept quiet: tiny grey text that appears only once the total reaches 100
+  // (Chu 11/24: no tiny numbers). GoatCounter refreshes the total every few hours. If it's slow or down, nothing shows.
   if (site.footer) (async () => {
     const stop = new AbortController(); setTimeout(() => stop.abort(), 20000);
     try {
       const r = await fetch("https://cnx-enduro.goatcounter.com/counter/TOTAL.json", { signal: stop.signal });
       const v = Number(String((await r.json()).count).replace(/\D/g, ""));
-      if (v > 0) {
+      if (v >= 100) {
         const el = document.createElement("span");
         el.className = "visits"; el.textContent = `${v.toLocaleString("en-US")} visit${v === 1 ? "" : "s"}`;
         $("siteFoot").append(document.createElement("br"), el);
