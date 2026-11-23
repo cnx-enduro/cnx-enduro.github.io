@@ -62,22 +62,33 @@
     $("siteFoot").hidden = false;
   }
 
-  // Visitor number at the very end of the footer, kept quiet: tiny grey text that only appears once the free
-  // counting service (abacus.jasoncameron.dev, no sign-up) answers; if it's slow or down, nothing shows.
-  // A visit counts once per browser session and only on the real site, so reloads and test copies don't add.
-  // No cookies, nothing personal: the service just keeps one number.
+  // Visitor count (GoatCounter, free account "cnx-enduro", owner Chu; stats at https://cnx-enduro.goatcounter.com).
+  // Counting happens only on the real site, never on test copies or test robots. The list and every track page
+  // are counted separately, so the stats show which tracks riders open. No cookies, nothing personal.
+  const liveSite = location.hostname === "cnx-enduro.github.io" && !navigator.webdriver;
+  if (liveSite) {
+    const page = () => location.pathname + location.hash;
+    window.goatcounter = { no_onload: true };
+    const s = document.createElement("script");
+    s.async = true; s.src = "https://gc.zgo.at/count.js";
+    s.dataset.goatcounter = "https://cnx-enduro.goatcounter.com/count";
+    s.onload = () => {
+      try { window.goatcounter.count({ path: page() }); } catch (e) {}
+      window.addEventListener("hashchange", () => { try { window.goatcounter.count({ path: page() }); } catch (e) {} });
+    };
+    document.head.appendChild(s);
+  }
+  // The total at the very end of the footer, kept quiet: tiny grey text that appears only once GoatCounter answers
+  // with a number above 0 (it refreshes every few hours). If it's slow or down, nothing shows.
   if (site.footer) (async () => {
-    const live = location.hostname === "cnx-enduro.github.io";
-    let first = false;
-    try { first = live && !sessionStorage.getItem("counted"); if (first) sessionStorage.setItem("counted", "1"); } catch (e) {}
     const stop = new AbortController(); setTimeout(() => stop.abort(), 20000);
     try {
-      const r = await fetch(`https://abacus.jasoncameron.dev/${first ? "hit" : "get"}/cnx-enduro-github-io/visits`, { signal: stop.signal });
-      const v = (await r.json()).value;
-      if (Number.isFinite(v)) {
-        const s = document.createElement("span");
-        s.className = "visits"; s.textContent = `${v.toLocaleString("en-US")} visit${v === 1 ? "" : "s"}`;
-        $("siteFoot").append(document.createElement("br"), s);
+      const r = await fetch("https://cnx-enduro.goatcounter.com/counter/TOTAL.json", { signal: stop.signal });
+      const v = Number(String((await r.json()).count).replace(/\D/g, ""));
+      if (v > 0) {
+        const el = document.createElement("span");
+        el.className = "visits"; el.textContent = `${v.toLocaleString("en-US")} visit${v === 1 ? "" : "s"}`;
+        $("siteFoot").append(document.createElement("br"), el);
       }
     } catch (e) {}
   })();
