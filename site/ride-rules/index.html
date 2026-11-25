@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Group ride rules | Chiang Mai Enduro Riders</title>
+<meta name="description" content="Group ride rules for Chiang Mai Enduro Riders.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
+<!-- Group ride rules: Pavel's slides "Group-Ride-Rules_v1.pptx" (25 Nov 2026), word for word; illustrations are his (site/img/ride/). -->
+<style>
+
+:root { --bg:#0b0c0e; --surface:#15171b; --surface-2:#1d2026; --line:#2a2e35; --text:#ecedef; --muted:#9aa0a9; --accent:#f5a524; color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#f6f6f4; --surface:#fff; --surface-2:#f0f0ed; --line:#deded9; --text:#17181a; --muted:#5d636b; --accent:#b86e00; color-scheme: light; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 18px 16px 32px; }
+.back { display: inline-block; color: var(--accent); text-decoration: none; margin: 0 0 14px; }
+h1 { font-size: clamp(26px, 6vw, 36px); margin: 0 0 4px; line-height: 1.15; }
+.group { color: var(--muted); font-weight: 600; margin: 0 0 12px; }
+.intro { font-size: 17px; margin: 0 0 18px; }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.jump a { text-decoration: none; color: var(--text); background: var(--surface); border: 1px solid var(--line); font-weight: 700; font-size: 15px; padding: 8px 12px; border-radius: 10px; }
+section { margin: 0 0 30px; scroll-margin-top: 12px; }
+h2 { font-size: clamp(22px, 5vw, 28px); margin: 0 0 12px; }
+.rule { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 8px; }
+.num { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #111; font-weight: 800; font-size: 19px; display: grid; place-items: center; }
+.rule b, .row b { display: block; font-size: 17px; line-height: 1.3; }
+.rule span, .row span { display: block; color: var(--muted); font-size: 15px; line-height: 1.45; margin-top: 3px; }
+.rule a { color: var(--accent); }
+.hl { color: var(--accent); font-weight: 800; }
+.strikes { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin: 0 0 8px; }
+.strike { border-radius: 10px; padding: 14px; text-align: center; font-weight: 800; font-size: 17px; }
+.strike small { display: block; font-weight: 600; font-size: 13px; opacity: .85; margin-bottom: 2px; }
+.s1 { background: #3a2c08; color: #ffd36b; border: 1px solid #6b5212; }
+.s2 { background: #3a0d0d; color: #ff8a8a; border: 1px solid #7a1c1c; }
+.arrow { color: var(--muted); font-size: 22px; }
+.rows { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 2px 14px; }
+.row { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row i { font-style: normal; font-size: 22px; line-height: 1.2; text-align: center; }
+.leadlink { text-decoration: none; color: var(--text); border-color: var(--accent); }
+.leadlink .num { background: var(--surface-2); font-size: 20px; }
+.thanks { margin: 14px 0 0; font-weight: 600; }
+footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 14px; }
+@media (max-width: 520px) { .rule b, .row b { font-size: 16px; } .strike { font-size: 16px; padding: 12px 8px; } }
+
+/* pictures (tools/rules-graphics.py) */
+.ico { position: relative; width: 52px; height: 52px; border-radius: 12px; background: #2a2110; color: var(--accent); display: grid; place-items: center; }
+.ico svg { width: 34px; height: 34px; }
+.ico .n { position: absolute; top: -7px; left: -7px; min-width: 22px; height: 22px; border-radius: 11px; background: var(--accent); color: #111; font-size: 13px; font-weight: 800; display: grid; place-items: center; padding: 0 5px; }
+.rule { grid-template-columns: 52px 1fr; gap: 14px; }
+.row { grid-template-columns: 44px 1fr; }
+.row .ico { width: 44px; height: 44px; border-radius: 10px; }
+.row .ico svg { width: 28px; height: 28px; }
+.fig { display: block; width: 100%; height: auto; margin: 10px 0 2px; }
+.cards { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; }
+.ycard, .rcard { width: 54px; height: 74px; border-radius: 6px; transform: rotate(-8deg); box-shadow: 0 4px 10px rgba(0,0,0,.5); }
+.ycard { background: #f5c518; } .rcard { background: #e5484d; }
+.cards b { font-size: 18px; } .cards small { display: block; color: var(--muted); font-size: 14px; font-weight: 600; }
+.tiles4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 4px; }
+.tiles4 div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.tiles4 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
+@media (max-width: 520px) { .tiles4 { grid-template-columns: repeat(2, 1fr); } }
+
+.lead { font-size: 17px; margin: 0 0 18px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.card b { display: block; font-size: 17px; line-height: 1.3; }
+.card span { display: block; color: var(--muted); font-size: 15px; margin-top: 3px; }
+.card small { display: block; color: var(--accent); font-weight: 800; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+.pic { padding: 0; overflow: hidden; }
+.pic img { display: block; width: 100%; height: auto; background: #eef2ee; }
+.pic div { padding: 10px 12px 12px; }
+.warn { background: #3a0d0d; color: #ffb4b4; border: 1px solid #7a1c1c; border-radius: 10px; padding: 12px 14px; font-weight: 700; margin-top: 8px; }
+.note { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-weight: 700; margin-top: 8px; }
+.big { background: #2a2110; border: 1px solid #6b5212; color: #ffd36b; border-radius: 10px; padding: 16px; font-weight: 800; font-size: 19px; margin: 0 0 8px; }
+.tiles5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.tiles5 div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.25; }
+.tiles5 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
+.formation { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 4px 0 10px; font-size: 12px; font-weight: 800; color: var(--muted); }
+.formation span { text-align: center; }
+.formation i { display: block; font-style: normal; font-size: 22px; }
+.formation hr { flex: 1; border: 0; border-top: 2px dashed var(--line); margin: 0; }
+ul.plain { margin: 6px 0 0; padding-left: 18px; color: var(--muted); }
+@media (max-width: 720px) { .grid4 { grid-template-columns: repeat(2, 1fr); } .grid3 { grid-template-columns: 1fr; } .tiles5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../">← All tracks</a>
+<h1>Group ride rules</h1>
+<p class="group">Chiang Mai Enduro Riders</p>
+<p class="lead">Every person joining a ride organized in the Chiang Mai Enduro Riders group agrees to these rules.</p>
+<nav class="jump"><a href="#disclaimer">⚠️ Disclaimer</a><a href="#before">🧰 Before the ride</a><a href="#group">👥 Riding as a group</a><a href="#corner-man">↪️ Corner man</a><a href="#signals">✋ Hand signals</a><a href="#locals">🏡 Locals</a><a href="../rules/">📜 Community rules</a></nav>
+
+<section id="disclaimer">
+<h2>Disclaimer</h2>
+<div class="grid2">
+<div class="card"><b>A group of friends</b><span>Chiang Mai Enduro Riders is only a group of friends who ride together — not a business, organisation or guide service.</span></div>
+<div class="card"><b>No money and no services</b><span>No professional services are provided in the group and no money changes hands.</span></div>
+<div class="card"><b>Your safety is on you</b><span>Ride leaders, group admins and other riders are not responsible for your safety or for any legal consequences of the rides.</span></div>
+<div class="card"><b>No guarantees</b><span>No GPS track is represented by us as safe or legal. Group information is recreational only, not safety or legal advice.</span></div>
+</div>
+<div class="warn">Enduro riding is dangerous: you join our rides at your own risk.</div>
+</section>
+
+<section id="pace">
+<h2>The golden rule: ride your own pace</h2>
+<div class="big">The group adjusts to your speed, not the other way round.</div>
+<div class="grid2">
+<div class="card"><b>Ride within your ability</b><span>Do not try to keep up with the group beyond your skill level.</span></div>
+<div class="card"><b>Too difficult?</b><span>Slow down, take the easier line, walk the bike, or ask for help. We’ve all been there.</span></div>
+</div>
+</section>
+
+<section id="before">
+<h2>Before the ride: arrive ready</h2>
+<div class="grid3">
+<div class="card"><small>Meeting point</small><b>Be on time</b><span>10–15 min late is OK, longer holds up the group</span></div>
+<div class="card"><small>Meeting point</small><b>Full tank</b><span>Fill up at the meeting point.</span></div>
+<div class="card"><small>Meeting point</small><b>Water and snacks</b><span>Carry at least 3 L of water and snacks</span></div>
+</div>
+<p style="margin:14px 0 8px;font-weight:700">Full protective gear, always</p>
+<div class="tiles5"><div><i>🪖</i>Helmet and goggles</div><div><i>🥾</i>High boots</div><div><i>🧤</i>Gloves</div><div><i>🦵</i>Knee guards</div><div><i>🦺</i>Chest protection</div></div>
+</section>
+
+<section id="bike">
+<h2>Before the ride: your bike</h2>
+<div class="grid3">
+<div class="card"><b>CRF or lighter</b><span>Heavier bikes only for very experienced off-road riders</span></div>
+<div class="card"><b>Check your bike</b><ul class="plain"><li>No leaks</li><li>Brakes working</li><li>Chain tension correct: a loose chain can come off and break your engine</li></ul></div>
+<div class="card"><b>Must have</b><ul class="plain"><li>Hand guards (save your levers when you crash)</li><li>Off-road tyres (50/50, or full enduro for L3-L4)</li><li>Basic tools</li><li>First aid kit</li></ul></div>
+</div>
+<div class="note">Recommended: rim locks · pull strap · tow line</div>
+</section>
+
+<section id="group">
+<h2>Riding as a group: roles and formation</h2>
+<div class="formation" aria-label="Sweep at the back, riders in the middle, lead at the front"><span><i>🛡️</i>SWEEP · BACK</span><hr><span><i>🏍️</i></span><hr><span><i>🏍️</i>RIDERS</span><hr><span><i>🏍️</i></span><hr><span><i>🚩</i>LEAD · FRONT</span></div>
+<div class="grid3">
+<div class="card"><small>Experienced</small><b>Sweep</b><span>Rides last, never passes anyone, helps with breakdowns and crashes</span></div>
+<div class="card"><small>Everyone else</small><b>Riders</b><span>Follow the rules, look after the rider in front, wait for the rider behind</span></div>
+<div class="card"><small>Experienced</small><b>Lead</b><span>Navigates, sets the pace for the slowest rider, decides stops and route changes</span></div>
+</div>
+<div class="grid2" style="margin-top:8px">
+<div class="warn" style="margin:0">Never pass the lead<br><span style="font-weight:600">Keep the leader's pace</span></div>
+<div class="warn" style="margin:0">Never fall behind the sweep<br><span style="font-weight:600">If you stop, the sweep stops with you</span></div>
+</div>
+</section>
+
+<section id="help">
+<h2>Help the rider in front</h2>
+<div class="grid2">
+<div class="card"><b>Look out for the buddy in front</b><ul class="plain"><li>They fall? Help lift the bike</li><li>Stuck on a hard section? Help push</li><li>Need more hands? Call the riders behind you</li></ul></div>
+<div class="card"><b>Don't lose the rider behind you</b><span>Out of sight? Slow down until they catch up.</span></div>
+</div>
+</section>
+
+<section id="speak">
+<h2>Speak up</h2>
+<div class="big">Fatigue causes most crashes.</div>
+<div class="grid3">
+<div class="card"><b>Pace or terrain too much?</b><span>Tell the lead — they'll adjust.</span></div>
+<div class="card"><b>Tired, hurt or out of your depth?</b><span>Say so.</span></div>
+<div class="card"><b>Slowing down or ending early is fine.</b></div>
+</div>
+</section>
+
+<section id="spacing">
+<h2>Spacing and stopping</h2>
+<div class="big">Keep a safe gap — leave room to stop if the rider ahead falls.</div>
+<div class="grid3">
+<div class="card"><b>More gap</b><span>On descents, in mud and in dust.</span></div>
+<div class="card"><b>No tailgating</b><span>Never ride on someone's rear wheel.</span></div>
+<div class="card"><b>Stopping?</b><span>Pull fully off the line — never on a blind corner or behind a crest.</span></div>
+</div>
+</section>
+
+<section id="corner-man">
+<h2>“Corner man” signal</h2>
+<p class="lead">Before every junction — given on the move: no stopping, no turning round.</p>
+<div class="grid3">
+<div class="card pic"><img src="../img/ride/cm_goggles.png" alt="The lead touches two fingers to the goggles" loading="lazy"><div><small>01 · Lead</small><b>Two fingers to the goggles</b><span>“Eyes on…” Left hand, keep riding.</span></div></div>
+<div class="card pic"><img src="../img/ride/cm_point.png" alt="The lead holds two fingers up" loading="lazy"><div><small>02 · Lead</small><b>Two fingers up</b><span>“…watch where I go.” Then the lead takes the turn.</span></div></div>
+<div class="card pic"><img src="../img/ride/cm_thumb.png" alt="The rider behind the lead gives a thumbs up" loading="lazy"><div><small>03 · Rider behind the lead</small><b>Thumbs up</b><span>“Got it, I’ll stop here.” Not passed down the line.</span></div></div>
+</div>
+<div class="note">No thumbs-up? The lead slows down and repeats the signal, and stops if needed.</div>
+<h2 style="margin-top:22px">“Corner man” step by step</h2>
+<div class="grid4">
+<div class="card pic"><img src="../img/ride/map1.png" alt="Step 1: the lead signals, rider 2 gives a thumbs up" loading="lazy"><div><small>01</small><b>Signal</b><span>Lead gives the V. Rider 2 gives a thumbs up.</span></div></div>
+<div class="card pic"><img src="../img/ride/map2.png" alt="Step 2: the corner man parks off the line and points the way" loading="lazy"><div><small>02</small><b>Stop and point</b><span>Park off the line. Point the way, arm level.</span></div></div>
+<div class="card pic"><img src="../img/ride/map3.png" alt="Step 3: the corner man waits for the sweep" loading="lazy"><div><small>03</small><b>Wait for sweep</b><span>Let every rider pass. Stay until the sweep.</span></div></div>
+<div class="card pic"><img src="../img/ride/map4.png" alt="Step 4: the corner man rejoins in front of the sweep" loading="lazy"><div><small>04</small><b>Rejoin</b><span>Ride on in front of the sweep.</span></div></div>
+</div>
+<div class="note">Next junction: the new rider behind the lead becomes the corner man.</div>
+</section>
+
+<section id="signals">
+<h2>Hand signals</h2>
+<div class="grid4">
+<div class="card pic"><img src="../img/ride/sig_hazard.png" alt="Arm pointing down to one side" loading="lazy"><div><b>Hazard on that side</b><span>Arm pointing down, left or right (rock, hole, root)</span></div></div>
+<div class="card pic"><img src="../img/ride/sig_slow.png" alt="Palm down, waving up and down" loading="lazy"><div><b>Slow down</b><span>Palm down, waving up and down</span></div></div>
+<div class="card pic"><img src="../img/ride/sig_stop.png" alt="Arm raised, palm open" loading="lazy"><div><b>Stopping</b><span>Arm raised, palm open</span></div></div>
+<div class="card pic"><img src="../img/ride/sig_help.png" alt="Hand tapping the top of the helmet" loading="lazy"><div><b>Rider needs help / group should stop</b><span>Hand tapping top of helmet</span></div></div>
+</div>
+<div class="note">Pass every signal down the line to the rider behind you.</div>
+</section>
+
+<section id="locals">
+<h2>Respect the locals</h2>
+<div class="grid2">
+<div class="card"><b>Ride gently</b><ul class="plain"><li><strong>ALWAYS slow down near villages, farms, people and animals.</strong> Walking pace, low throttle, low noise</li><li>Leave gates as you found them</li><li>No littering: pack out everything you bring in</li></ul></div>
+<div class="card"><b>Be friendly, never argue</b><ul class="plain"><li>Wave, nod, and smile</li><li><strong>Never argue with locals or rangers.</strong> If they confront you, stay polite, apologise and leave.</li></ul></div>
+</div>
+<div class="note">Their goodwill keeps our trails open</div>
+</section>
+
+<section id="attitude">
+<h2>Team play, not a race</h2>
+<div class="big">Leave your ego at the start.</div>
+<div class="grid3">
+<div class="card"><b>No drama, no negativity, no disrespecting other riders</b></div>
+<div class="card"><b>Respect the lead's calls on route and pace</b></div>
+<div class="card"><b>If you have any negative feedback give it in private</b></div>
+</div>
+<p class="thanks">Have fun on the trails!</p>
+</section>
+
+<section id="leaders"><a class="rule leadlink" href="../leaders/"><div class="num">🧭</div><div><b>Leading a ride?</b><span>Rules for group leaders: navigation, the meeting point, the corner man, breaks. Read them before you lead →</span></div></a></section>
+<footer>Last updated November 2026</footer>
+</main>
+</body>
+</html>
