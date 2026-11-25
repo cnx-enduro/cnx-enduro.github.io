@@ -87,11 +87,16 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 ul.plain { margin: 6px 0 0; padding-left: 18px; color: var(--muted); }
 @media (max-width: 720px) { .grid4 { grid-template-columns: repeat(2, 1fr); } .grid3 { grid-template-columns: 1fr; } .tiles5 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+
+.rtabs { display: flex; gap: 6px; margin: 0 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.rtabs a { padding: 10px 12px; min-height: 44px; text-decoration: none; color: var(--muted); font-weight: 800; font-size: 15px; border-bottom: 3px solid transparent; white-space: nowrap; }
+.rtabs a.on { color: var(--text); border-bottom-color: var(--accent); }
 </style>
 </head>
 <body>
 <main>
 <a class="back" href="../">← All tracks</a>
+<nav class="rtabs" aria-label="Rules"><a href="../rules/">Community</a><a href="../ride-rules/" class=on aria-current=page>Group ride</a><a href="../leaders/">Ride leaders</a><a href="../sharing/">Sharing GPX</a></nav>
 <h1>Group ride rules</h1>
 <p class="group">Chiang Mai Enduro Riders</p>
 <p class="lead">Every person joining a ride organized in the Chiang Mai Enduro Riders group agrees to these rules.</p>

@@ -34,14 +34,14 @@
     d.open = open; b.classList.toggle("on", open); b.setAttribute("aria-expanded", String(open));
   }));
   // Navigate tip (site.json navTip): how the site's own ▶ Navigate works.
-  if (site.navTip) {
+  if (site.navTip && $("navTip")) {
     const g = $("navTip");
     g.querySelector("summary").textContent = site.navTip.title;
     g.querySelector("div").innerHTML = `<div class="brows">${site.navTip.rows.map(iconRow).join("")}</div>`;
     g.hidden = false;
   }
   // Tip for groups: share live location in an app the riders already have (site.json groupTip).
-  if (site.groupTip) {
+  if (site.groupTip && $("groupTip")) {
     const g = $("groupTip");
     g.querySelector("summary").textContent = site.groupTip.title;
     const more = site.groupTip.more;  // other apps tucked behind a small "Other apps" button (Chu 11/25: Ride together is the one option shown)

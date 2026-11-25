@@ -80,11 +80,16 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 .cmkey { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 0; font-size: 13px; font-weight: 700; color: var(--muted); }
 .cmkey i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 .cmplay { font: inherit; font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+
+.rtabs { display: flex; gap: 6px; margin: 0 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.rtabs a { padding: 10px 12px; min-height: 44px; text-decoration: none; color: var(--muted); font-weight: 800; font-size: 15px; border-bottom: 3px solid transparent; white-space: nowrap; }
+.rtabs a.on { color: var(--text); border-bottom-color: var(--accent); }
 </style>
 </head>
 <body>
 <main>
 <a class="back" href="../">← All tracks</a>
+<nav class="rtabs" aria-label="Rules"><a href="../rules/">Community</a><a href="../ride-rules/">Group ride</a><a href="../leaders/" class=on aria-current=page>Ride leaders</a><a href="../sharing/">Sharing GPX</a></nav>
 <h1>Leading a beginner enduro ride</h1>
 <p class="group">Chiang Mai Enduro Riders · rules for group leaders</p>
 <p class="intro">Rules for group leaders, in the order you'll need them.</p>

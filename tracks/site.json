@@ -7,7 +7,7 @@
     "rows": [
       {
         "icon": "park",
-        "bold": "No off-road riding in Doi Suthep or Hang Dong",
+        "bold": "No off-road riding in Doi Suthep",
         "text": "Restricted areas. Red stripes on the map = Doi Suthep-Pui National Park. Ride these tracks instead.",
         "red": true
       },
@@ -23,7 +23,7 @@
       }
     ]
   },
-  "restricted": "Please ride these community tracks instead of Doi Suthep or Hang Dong, which are restricted areas.",
+  "restricted": "Please ride these community tracks instead of Doi Suthep, which is a restricted area.",
   "noRide": "Red striped area on the map: Doi Suthep-Pui National Park. No off-road riding there.",
   "shareNotice": "The GPX files are for the local enduro community and shouldn't be reshared or published on other public sites.",
   "riskNotice": "Ride at your own risk. Tracks change with weather, landslides and logging, and may cross private land. Check conditions and ride with others.",
