@@ -936,3 +936,9 @@ html.paper .rl-rings.in { --c: #1e9e4a; }
 html.paper .phonebeam { background:
   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='70'%3E%3Cpath d='M7 28 12.5 38H1.5z' fill='%2339ff14'/%3E%3C/svg%3E") center bottom / 14px 70px repeat-y,
   linear-gradient(#39ff14, #39ff14) center / 1.5px 100% no-repeat; }
+/* Chu 11/26 (second video): a fixed double ring in the middle, thin rings growing OUT from it on a loop */
+.rl-rings i:nth-child(n) { width: 260px; height: 260px; border-width: 2px; animation: rlgrow 1.8s ease-out infinite; }
+.rl-rings i:nth-child(2) { animation-delay: .6s; } .rl-rings i:nth-child(3) { animation-delay: 1.2s; }
+@keyframes rlgrow { 0% { transform: translate(-50%, -50%) scale(.22); opacity: 0; } 15% { opacity: .9; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+.rl-rings b { width: 50px; height: 50px; border-width: 4px; outline: 2px solid var(--c); outline-offset: 4px; background: none !important; }
+.rl-rings.in i { animation-play-state: running; }
