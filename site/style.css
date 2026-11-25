@@ -748,3 +748,33 @@ body.walkguide .navstop, body.walkguide .ridechip { visibility: hidden; }
 .lvfold .lvf-t { font-family: Futura, "Avenir Next", -apple-system, sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 700; }
 /* "Recent updates" stays quiet: grey, not gold (Chu 11/25) */
 .updates > summary.section, .updates > summary.section::marker { color: var(--muted); }
+
+/* ===== PAPER look, test only: html.paper (?beta). Dark ink on light paper: easiest to read in strong sun ===== */
+.papertag { display: none; }
+html.paper {
+  --bg: #f3eee3; --surface: #fbf8f1; --surface-2: #efe8da; --line: #d9cfbb; --text: #16140f; --muted: #5e574a;
+  --accent: #8a5a00; --accent-ink: #fff; --gold: #8a5a00; color-scheme: light;
+}
+html.paper body { background: var(--bg); color: var(--text); }
+html.paper .top { background: #fbf8f1; border-bottom-color: #d9cfbb; }
+html.paper .top h1 { font-family: "Iowan Old Style", "Palatino", Georgia, serif; text-transform: none; letter-spacing: 0; font-size: 20px; font-weight: 700; }
+html.paper .toplinks a { font-family: "Iowan Old Style", "Palatino", Georgia, serif; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 600; color: #16140f; border-bottom: 1px solid #c9bea6; }
+html.paper .toplinks a[href="rules/"] { color: #8a5a00; }
+html.paper .papertag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: #16140f; padding: 4px 9px; border-radius: 6px; text-decoration: none; }
+html.paper .section, html.paper #listHead { font-family: "Iowan Old Style", "Palatino", Georgia, serif; text-transform: uppercase; letter-spacing: .12em; color: #5e574a; }
+html.paper #list .card, html.paper .lvfold > summary { background: #fbf8f1; border-color: #d9cfbb; }
+html.paper #list .card:hover, html.paper #list .card.hl { background: #f6f0e3; border-color: #16140f; }
+html.paper #list .card h3 { font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 17px; }
+html.paper #list .card .num { color: #8a5a00; }
+html.paper .readfirst { background: #fbf3dc; border-color: #d8b864; color: #5a3d00; }
+html.paper .lvfold .lvf-t, html.paper .readfirst b { font-family: "Iowan Old Style", "Palatino", Georgia, serif; text-transform: none; letter-spacing: 0; font-size: 15px; }
+html.paper .btn { background: #fbf8f1; color: #16140f; border-color: #cfc4ad; }
+/* map: soft paper tones instead of the dimmed dark map */
+html.paper .leaflet-tile-pane { filter: grayscale(.7) sepia(.22) contrast(1.06) brightness(1.03) !important; }
+html.paper .leaflet-container { background: #efe8da; }
+/* level colours on paper: L1 in black ink, L2 in blue (track lines, badges, swatches) */
+html.paper path[stroke="#1e9e4a"] { stroke: #16140f; }
+html.paper path[stroke="#1f5fbf"] { stroke: #1446c8; }
+html.paper [style*="#1e9e4a"] { background-color: #16140f !important; }
+html.paper [style*="#1f5fbf"] { background-color: #1446c8 !important; }
+html.paper .l1tag { background: #16140f; }
