@@ -264,9 +264,9 @@
   tracks.forEach((t, i) => {
     const lv = site.colorBy === "level" && levelOf(t);
     t.color = (lv && (lv.map || lv.c)) || colorFor(i);
-    // Paper test (?beta): L1 in black ink, L2 in blue, with a light paper edge instead of the dark one
+    // Paper test (?beta): L1 stays green, L2 deeper blue, with a light paper edge instead of the dark one
     const paper = document.documentElement.classList.contains("paper");
-    if (paper && lv) t.color = { L1: "#16140f", L2: "#1446c8" }[lv.l] || t.color;
+    if (paper && lv) t.color = { L2: "#1446c8" }[lv.l] || t.color;  // L1 stays green
     const casing = L.polyline(t.line, paper ? { color: "#fbf8f1", weight: 8, opacity: 0.9, interactive: false } : { color: "#000", weight: 7, opacity: 0.55, interactive: false });
     const line = L.polyline(t.line, { color: t.color, weight: 4, opacity: 0.95 });
     const start = L.marker(t.start, { icon: L.divIcon({ className: "tstart", iconSize: [24, 24], iconAnchor: [12, 12],

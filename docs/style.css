@@ -772,9 +772,6 @@ html.paper .btn { background: #fbf8f1; color: #16140f; border-color: #cfc4ad; }
 /* map: soft paper tones instead of the dimmed dark map */
 html.paper .leaflet-tile-pane { filter: grayscale(.7) sepia(.22) contrast(1.06) brightness(1.03) !important; }
 html.paper .leaflet-container { background: #efe8da; }
-/* level colours on paper: L1 in black ink, L2 in blue (track lines, badges, swatches) */
-html.paper path[stroke="#1e9e4a"] { stroke: #16140f; }
+/* level colours on paper: L1 stays green (Chu 11/26), L2 in a deeper blue */
 html.paper path[stroke="#1f5fbf"] { stroke: #1446c8; }
-html.paper [style*="#1e9e4a"] { background-color: #16140f !important; }
 html.paper [style*="#1f5fbf"] { background-color: #1446c8 !important; }
-html.paper .l1tag { background: #16140f; }
