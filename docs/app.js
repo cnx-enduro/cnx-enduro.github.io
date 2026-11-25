@@ -350,7 +350,8 @@
     const l = (site.trackLevels || {})[t.id], d = l && ((site.beforeRide || {}).levels || []).find(x => x.l === l);
     if (!d) return "";
     const st = `class="lvtag" style="background:${esc(d.c)};color:${esc(d.t)}"`;
-    return link ? `<a ${st} href="difficulty/#${l.toLowerCase()}" title="${esc(l + " " + d.name)}: see the difficulty page">${esc(l)} ${esc(d.name)} →</a>` : `<span ${st}>${esc(l)} ${esc(d.name)}</span>`;
+    // Just the code, "L1" (Chu 11/26); the name stays in the hover text
+    return link ? `<a ${st} href="difficulty/#${l.toLowerCase()}" title="${esc(l + " " + d.name)}: see the difficulty page">${esc(l)} →</a>` : `<span ${st} title="${esc(l + " " + d.name)}">${esc(l)}</span>`;
   };
   const card = t => `
     <li><button class="card" data-id="${t.id}">
