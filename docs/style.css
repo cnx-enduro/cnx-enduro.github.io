@@ -751,7 +751,7 @@ body.walkguide .navstop, body.walkguide .ridechip { visibility: hidden; }
 
 /* ===== PAPER look, test only: html.paper (?beta). Dark ink on light paper: easiest to read in strong sun ===== */
 .papertag { display: none; }
-html.paper {
+html:root.paper:not([data-theme="x"]) {  /* strong enough to beat the phone light/dark theme rules */
   --bg: #f3eee3; --surface: #fbf8f1; --surface-2: #efe8da; --line: #d9cfbb; --text: #16140f; --muted: #5e574a;
   --accent: #8a5a00; --accent-ink: #fff; --gold: #8a5a00; color-scheme: light;
 }
