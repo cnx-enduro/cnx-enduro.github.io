@@ -48,16 +48,16 @@ Map labels: km 18: Reservoir; km 25: Reservoir; km 41.4: Viewpoint
 03-2of5-Hang-Dong-Mae-Khanin-river-loop.gpx
 ----------------------------------------------------
 Difficulty: 2/5.
-Notes: if wet, beware of the slippery downhill section from km 3 to km 5.8 (pig skin, laterite). A beautiful Hmong valley with farms at km 14.4. Then 40+ easy-to-medium river crossings starting at km 21.
+Notes: if wet, beware of the slippery downhill section from km 3 to km 5.8 (pig skin, laterite). A beautiful Hmong valley with farms at km 13.4. Then 40+ easy-to-medium river crossings starting at km 20.
 
 Terrain: 50% paved (tarmac, nice and twisty), 50% double (dirt, rivers).
-Length: 43km (5 hours).
+Length: 42km (5 hours).
 Wet conditions: potentially problematic. 3km of a very slippery downhill section with pig skin (laterite). And during the rainy season, the rivers might be uncrossable (depending on the water level).
 Up/downhills: mostly flat, with a couple of gentle up/downhills.
 Shaded: 40% shaded.
 
-Legal: river section (from km 20 to km 30) is closed during smoke season, so you might be stopped by rangers.
-Map labels: km 14.4: Hmong valley; km 21-30: 40+ river crossings
+Legal: river section (from km 19 to km 29) is closed during smoke season, so you might be stopped by rangers.
+Map labels: km 13.4: Hmong valley; km 20-29: 40+ river crossings
 Tags: Rainy season: bring a spare spark plug and know how to clear a flooded engine
 Card tags: 🌧️ Hard in rainy season
 
