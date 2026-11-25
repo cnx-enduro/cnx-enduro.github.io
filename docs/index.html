@@ -8,7 +8,7 @@
 <meta name="description" content="Beginner-friendly enduro GPX routes around Chiang Mai, with notes and downloads.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.min.css">
-<link rel="stylesheet" href="style.css?v=63eef98e">
+<link rel="stylesheet" href="style.css?v=124903f0">
 </head>
 <body>
 <header class="top">
@@ -17,7 +17,7 @@
     <p id="subtitle" class="muted"></p>
   </div>
   <nav class="toplinks" id="topLinks" aria-label="Rules and guides">
-    <a href="rules/">Rules</a><a href="difficulty/">Levels</a><a href="navigate/">Navigate</a><a href="ride-together/">Ride together</a>
+    <a href="rules/">Rules</a><a href="difficulty/">Levels</a><a href="navigate/">Navigate</a><a href="ride-together/">Ride together</a><a href="#" id="siteShare">Share</a>
   </nav>
   <nav class="secnav" id="secNav" aria-label="Sections" hidden>
     <div class="seg" id="secTabs"></div>
@@ -70,10 +70,15 @@
   </aside>
 </main>
 <dialog class="qrbox" id="qrBox" aria-labelledby="qrTitle">
-  <h2 id="qrTitle">Scan to open on a phone</h2>
+  <h2 id="qrTitle">Share this track</h2>
   <p class="qrtrack" id="qrTrackName" hidden></p>
   <div class="qrimg" id="qrImg"></div>
   <p class="muted small" id="qrUrl"></p>
+  <p class="muted small qrhint">Standing together? Let them scan the code.</p>
+  <div class="qracts">
+    <button class="btn" id="qrCopy" type="button">Copy link</button>
+    <button class="btn" id="qrSend" type="button" hidden>Send in a chat</button>
+  </div>
   <button class="btn" id="qrClose" type="button">Close</button>
 </dialog>
 
@@ -83,6 +88,6 @@
 <script src="nav.js?v=f4df8a0f"></script>
 <script src="firebase-config.js?v=6fb37bcf"></script>
 <script src="ride.js?v=831f43ee"></script>
-<script src="app.js?v=0854864f"></script>
+<script src="app.js?v=b8d117c1"></script>
 </body>
 </html>

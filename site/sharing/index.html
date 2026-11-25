@@ -7,7 +7,7 @@
 <title>Sharing GPX | Chiang Mai Enduro Riders</title>
 <meta name="description" content="How to share GPX responsibly.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
-<!-- Sharing GPX (Chu 11/25: 4th Rules tab): Jul's guide, word for word, drawn from site.json shareGuide. -->
+<!-- Sharing GPX in flow design (Chu 11/25): Jul's guide word for word from site.json shareGuide; everything shown, nothing folded. -->
 <style>
 
 :root { --bg:#0b0c0e; --surface:#15171b; --surface-2:#1d2026; --line:#2a2e35; --text:#ecedef; --muted:#9aa0a9; --accent:#f5a524; color-scheme: dark; }
@@ -61,76 +61,158 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 .tiles4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 4px; }
 .tiles4 div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--text); }
 .tiles4 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
+.tiles5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0 4px; }
+.tiles5 div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.tiles5 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
+@media (max-width: 520px) { .tiles5 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) { .tiles4 { grid-template-columns: repeat(2, 1fr); } }
 
-.lead { font-size: 17px; margin: 0 0 18px; }
-.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
-.card b { display: block; font-size: 17px; line-height: 1.3; }
-.card span { display: block; color: var(--muted); font-size: 15px; margin-top: 3px; }
-.card small { display: block; color: var(--accent); font-weight: 800; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
-.pic { padding: 0; overflow: hidden; }
-.pic img { display: block; width: 100%; height: auto; background: #eef2ee; }
-.pic div { padding: 10px 12px 12px; }
-.warn { background: #3a0d0d; color: #ffb4b4; border: 1px solid #7a1c1c; border-radius: 10px; padding: 12px 14px; font-weight: 700; margin-top: 8px; }
-.note { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-weight: 700; margin-top: 8px; }
-.big { background: #2a2110; border: 1px solid #6b5212; color: #ffd36b; border-radius: 10px; padding: 16px; font-weight: 800; font-size: 19px; margin: 0 0 8px; }
-.tiles5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.tiles5 div { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.25; }
-.tiles5 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
-.formation { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 4px 0 10px; font-size: 12px; font-weight: 800; color: var(--muted); }
-.formation span { text-align: center; }
-.formation i { display: block; font-style: normal; font-size: 22px; }
-.formation hr { flex: 1; border: 0; border-top: 2px dashed var(--line); margin: 0; }
-ul.plain { margin: 6px 0 0; padding-left: 18px; color: var(--muted); }
-@media (max-width: 720px) { .grid4 { grid-template-columns: repeat(2, 1fr); } .grid3 { grid-template-columns: 1fr; } .tiles5 { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
 
 .rtabs { display: flex; gap: 6px; margin: 0 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
 .rtabs a { padding: 10px 12px; min-height: 44px; text-decoration: none; color: var(--muted); font-weight: 800; font-size: 15px; border-bottom: 3px solid transparent; white-space: nowrap; }
 .rtabs a.on { color: var(--text); border-bottom-color: var(--accent); }
-/* Sharing GPX (moved here from the home page, Chu 11/25): drawn from site.json shareGuide via data/tracks.json */
-.share { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
-.share .bhead { font-weight: 700; font-size: 16px; margin: 0 0 4px; }
-.share .nrow { display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 9px 0; border-top: 1px solid var(--line); }
-.share .nrow:first-of-type { border-top: 0; }
-.share .nic { font-size: 18px; line-height: 1.3; text-align: center; }
-.share .nrow b { display: block; font-size: 15px; line-height: 1.35; }
-.share .nrow b + span { display: block; font-size: 14px; color: var(--muted); line-height: 1.45; margin-top: 1px; }
-.share details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
-.share summary { cursor: pointer; font-weight: 700; color: var(--accent); min-height: 32px; }
-.share ol { padding-left: 22px; } .share li { margin: 6px 0; }
-.share img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 10px 0 2px; }
-.muted { color: var(--muted); }
+
+/* ===== Ascension client-site look, TEST (Chu 11/25) + Simplify: point = title, short stacked lines, pictures first, no icons in text, nothing folded ===== */
+:root { --bg:#0b0b0d; --surface:#131317; --line:#232327; --text:#f2efe9; --muted:rgba(242,239,233,.66); --accent:#21b8ad; --gold:#e8c468; --red:#ff3b30; color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#0b0b0d; --surface:#131317; --line:#232327; --text:#f2efe9; --muted:rgba(242,239,233,.66); --accent:#21b8ad; color-scheme: dark; } }
+body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: var(--bg); }
+main { max-width: 1100px; padding-top: 0; }
+.fut, h1, h2, .back, .card b, .strike small, .chips span, footer { font-family: Futura, "Avenir Next", -apple-system, sans-serif; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.back { display: inline-block; margin: 16px 0 0; color: rgba(242,239,233,.5); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; text-decoration: none; }
+/* hero: photo fading into black, one red line on the right */
+.hero { position: relative; display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; min-height: 420px; margin: 8px 0 18px; }
+.hero img { width: 100%; height: 460px; object-fit: cover; object-position: center 30%; -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent 100%), linear-gradient(180deg, #000 70%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #000 55%, transparent 100%); }
+.hero .q { padding: 0 8px 0 24px; text-align: right; }
+.hero .q p { margin: 0; color: var(--red); font-family: Futura, "Avenir Next", sans-serif; font-weight: 500; font-size: clamp(22px, 3vw, 34px); line-height: 1.25; }
+.hero .q b { display: block; margin-top: 18px; color: var(--text); font-size: 15px; }
+.hero .q small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+/* the four rule books as tall photo cards */
+.cards4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 54px; }
+.card { position: relative; aspect-ratio: 9 / 14; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 10px 22%; text-align: center; background: #000; }
+.card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; filter: grayscale(.35); transition: opacity .2s; }
+.card:hover img { opacity: .7; }
+.card.on { border-color: var(--gold); }
+.card .n { position: absolute; top: 16px; left: 0; right: 0; font-size: 15px; letter-spacing: .12em; color: var(--text); }
+.card svg { position: relative; width: 46px; height: 46px; stroke: var(--gold); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 14px; }
+.card b { position: relative; text-transform: uppercase; letter-spacing: .12em; font-size: 14px; font-weight: 700; line-height: 1.3; }
+/* page title = the point */
+h1 { font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(28px, 5vw, 44px); margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 17px; margin: 0 0 30px; max-width: 640px; }
+h2 { font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(17px, 2.6vw, 22px); margin: 0 0 16px; }
+section { margin: 0 0 50px; }
+/* rules: number + one bold line + the rest, stacked */
+.rule, .row { display: grid; grid-template-columns: 44px 1fr; gap: 16px; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 18px 0; margin: 0; }
+.rows { background: none; border: 0; padding: 0; }
+.row { grid-template-columns: 1fr; }
+.rn { color: var(--gold); font-size: 15px; letter-spacing: .1em; padding-top: 2px; }
+.rule b, .row b { font-size: 19px; font-weight: 600; line-height: 1.3; }
+.rule span, .row span { color: var(--muted); font-size: 16px; margin-top: 4px; }
+.rule a { color: var(--accent); }
+.hl { color: var(--accent); }
+.disc { border-top: 1px solid var(--line); padding-top: 18px; }
+.disc b { display: block; font-size: 21px; font-weight: 600; line-height: 1.3; max-width: 760px; }
+.disc span { display: block; color: var(--muted); font-size: 16px; margin-top: 8px; max-width: 760px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chips span { border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; color: var(--text); }
+.strikes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.strike { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; font-size: 20px; font-weight: 600; text-align: left; color: var(--text); }
+.strike small { display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.strike.s2 small { color: var(--red); }
+.thanks { color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding: 14px 0 28px; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; color: rgba(242,239,233,.4); }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; min-height: 0; }
+  .hero img { height: 360px; -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%); mask-image: linear-gradient(180deg, #000 60%, transparent 100%); }
+  .hero .q { text-align: left; padding: 0; margin-top: -40px; position: relative; }
+  .cards4 { grid-template-columns: repeat(2, 1fr); }
+  .card { aspect-ratio: 3 / 4; }
+}
+
+/* makeover 2 (Chu 11/25): numbered panels like the Ascension "How it works" page */
+main > * { min-width: 0; }
+.disc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; }
+.disc b { font-size: 20px; }
+.disc .hl { color: var(--red); }
+.rl { display: block; font-style: normal; font-family: Futura, "Avenir Next", -apple-system, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: 15px; color: var(--text); margin: 0 0 10px; }
+.rl.gold { color: var(--gold); font-size: 12px; letter-spacing: .18em; }
+.rulesgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rulesgrid .rule { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; min-width: 0; }
+.rulesgrid .rule:last-child { grid-column: 1 / -1; }
+.rulesgrid .rn { font-size: 22px; color: var(--gold); letter-spacing: .08em; padding: 0; }
+.rulesgrid .rule > div { min-width: 0; }
+.rulesgrid .rule b { font-size: 16px; font-weight: 500; line-height: 1.45; color: var(--text); }
+.rulesgrid .rule span { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.rulesgrid .rule a { overflow-wrap: anywhere; }
+@media (max-width: 760px) { .rulesgrid { grid-template-columns: 1fr; } }
+
+/* makeover 3: every corner in flow design */
+.remember .rule:last-child { grid-column: auto; }
+.strike { display: flex; flex-direction: column; gap: 6px; padding: 22px 24px; }
+.strike small { margin: 0; }
+.s1 { border-color: rgba(232,196,104,.35) !important; } .s2 { border-color: rgba(255,59,48,.4) !important; }
+.thanks { margin: 22px 0 0; font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .16em; font-size: 12px; font-weight: 700; color: var(--gold); }
+h2 { color: var(--text); padding-top: 6px; }
+section + section { border-top: 0; }
+footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back:hover { color: var(--text); }
+
+.rulesgrid .rule:last-child { grid-column: auto; }
+.chips span { display: inline-block !important; border: 1px solid rgba(242,239,233,.28) !important; color: var(--text) !important; font-size: 11px !important; margin: 0 !important; }
+
+/* sharing page */
+.post { max-width: 680px; }
+.post p { font-size: 17px; line-height: 1.7; color: rgba(242,239,233,.86); margin: 0 0 18px; }
+.post .by { font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .18em; font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 14px; }
+.post ol { list-style: none; counter-reset: r; padding: 0; margin: 6px 0 24px; display: grid; gap: 10px; }
+.post li { counter-increment: r; display: grid; grid-template-columns: 44px 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; font-size: 16px; line-height: 1.6; }
+.post li::before { content: counter(r, decimal-leading-zero); font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--gold); font-size: 18px; }
+.post .end { font-family: Futura, "Avenir Next", sans-serif; color: var(--red); font-size: 22px; font-weight: 500; line-height: 1.3; margin: 26px 0 18px; }
+.post img { display: block; width: 100%; border-radius: 12px; margin: 8px 0 0; }
+.post figcaption { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+/* tiles everywhere (Chu 11/25): each section opens with a photo band; its points are dark tiles with a gold number */
+.band { position: relative; height: 190px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); margin: 0 0 12px; display: flex; align-items: flex-end; background: var(--surface); }
+.band img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; filter: grayscale(.35); }
+.band::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11,11,13,.92) 0%, rgba(11,11,13,.5) 55%, rgba(11,11,13,.15) 100%); }
+.band h2 { position: relative; z-index: 1; margin: 0; padding: 0 24px 22px; font-size: clamp(20px, 3.4vw, 28px); }
+.band .bn { position: absolute; z-index: 1; top: 18px; left: 24px; color: var(--gold); font-size: 14px; letter-spacing: .12em; }
+.rulesgrid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important; }
+.rulesgrid .rule { align-items: center; text-align: center; justify-content: flex-start; min-height: 200px; padding: 24px 20px !important; background: linear-gradient(180deg, #16161b, #0f0f12) !important; }
+.rulesgrid .rule .rn { width: 44px; height: 44px; border: 1px solid var(--gold); border-radius: 50%; display: grid; place-items: center; font-size: 15px !important; margin: 0 auto 4px; }
+.rulesgrid .rule .rl { font-size: 14px; }
+.rulesgrid .rule:last-child { grid-column: auto !important; }
 </style>
 </head>
 <body>
 <main>
 <a class="back" href="../">← All tracks</a>
-<nav class="rtabs" aria-label="Rules"><a href="../rules/">Community</a><a href="../ride-rules/">Group ride</a><a href="../leaders/">Ride leaders</a><a href="../sharing/" class=on aria-current=page>Sharing GPX</a></nav>
-<section id="sharing">
-<h1 id="shareTitle">How to share GPX responsibly 🗺️</h1>
-<div class="share" id="shareBox"><p class="muted">Loading…</p></div>
-</section>
-
+<div class="hero"><img src="../img/rules/hero_sharing.jpg" alt="A rider on a steep rocky trail"><div class="q"><p id="heroLine">Share the easy stuff, keep the rest off the internet</p><b>Jul</b><small>How to share GPX responsibly</small></div></div>
+<nav class="cards4" aria-label="Rules"><a class="card" href="../rules/"><img src="../img/rules/c1.jpg" alt="" loading="lazy"><span class="n mono">01</span><svg viewBox="0 0 48 48"><path d="M6 10h24v15H16l-7 6v-6H6z"/><path d="M34 18h8v14h-3v5l-6-5H22v-4"/></svg><b>Community</b></a><a class="card" href="../ride-rules/"><img src="../img/rules/c2.jpg" alt="" loading="lazy"><span class="n mono">02</span><svg viewBox="0 0 48 48"><circle cx="12" cy="34" r="6"/><circle cx="36" cy="34" r="6"/><path d="M12 34l7-11h10l7 11M19 23l-3-6M29 23l4-8h5"/></svg><b>Group ride</b></a><a class="card" href="../leaders/"><img src="../img/rules/c3.jpg" alt="" loading="lazy"><span class="n mono">03</span><svg viewBox="0 0 48 48"><path d="M12 42V6"/><path d="M12 8h24l-6 8 6 8H12"/></svg><b>Ride leaders</b></a><a class="card on" href="../sharing/" aria-current=page><img src="../img/rules/c4.jpg" alt="" loading="lazy"><span class="n mono">04</span><svg viewBox="0 0 48 48"><path d="M6 12l12-5 12 5 12-5v29l-12 5-12-5-12 5z"/><path d="M18 7v29M30 12v29"/></svg><b>Sharing GPX</b></a></nav>
+<h1>Sharing GPX</h1>
+<p class="lead" id="lead">Four rules before you post a track.</p>
+<section><div class="rulesgrid" id="sumGrid"></div></section>
+<section><div class="band"><img src="../img/rules/b_l0-1.jpg" alt="" loading="lazy"><span class="bn mono">01</span><h2>Jul's full post</h2></div><div class="post" id="post"><p class="muted">Loading…</p></div></section>
 <footer>Last updated November 2026</footer>
 </main>
 <script>
-// Sharing GPX guide: same words as before (site.json shareGuide), drawn here so there's one source.
+// Jul's guide, word for word (site.json shareGuide via data/tracks.json). Flow design: summary as numbered panels, the full post open below.
 (async () => {
-  const box = document.getElementById("shareBox"), esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const post = document.getElementById("post");
   try {
     const sg = (await (await fetch("../data/tracks.json")).json()).site.shareGuide;
-    if (!sg) { document.getElementById("sharing").hidden = true; return; }
-    document.getElementById("shareTitle").textContent = sg.title;
+    const sm = sg.summary || { rows: [] };
+    if (sm.head) document.getElementById("heroLine").textContent = sm.head.replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, "").trim();
+    document.getElementById("lead").textContent = sm.rows.length === 4 ? "Four rules before you post a track." : `${sm.rows.length} rules before you post a track.`;
+    document.getElementById("sumGrid").innerHTML = sm.rows.map((r, i) => `<div class="rule"><span class="rn mono">${String(i + 1).padStart(2, "0")}</span><div><i class="rl">${esc(r.bold)}</i><span>${esc(r.text || "")}</span></div></div>`).join("");
     const ps = a => (a || []).map(x => `<p>${esc(x)}</p>`).join("");
-    const row = r => `<div class="nrow"><span class="nic" aria-hidden="true">${esc(r.icon || "")}</span><span><b>${esc(r.bold)}</b>${r.text ? `<span>${esc(r.text)}</span>` : ""}</span></div>`;
-    const full = (sg.byline ? `<p class="muted">${esc(sg.byline)}</p>` : "") + ps(sg.intro) + (sg.rules ? `<ol>${sg.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ol>` : "") + ps(sg.outro) +
-      (sg.photo ? `<img src="../${esc(sg.photo)}" alt="${esc(sg.photoAlt || "")}" loading="lazy">` : "");
-    box.innerHTML = sg.summary ? `<p class="bhead">${esc(sg.summary.head)}</p>${sg.summary.rows.map(row).join("")}<details><summary>${esc(sg.summary.more)}</summary>${full}</details>` : full;
-  } catch (e) { box.innerHTML = `<p class="muted">Couldn't load the guide. Check your connection and reload.</p>`; }
+    const outro = sg.outro || [], last = outro.length ? outro[outro.length - 1] : "";
+    post.innerHTML = (sg.byline ? `<div class="by">${esc(sg.byline)}</div>` : "") + ps(sg.intro) +
+      (sg.rules ? `<ol>${sg.rules.map(r => `<li><span>${esc(r)}</span></li>`).join("")}</ol>` : "") +
+      ps(outro.slice(0, -1)) + (last ? `<p class="end">${esc(last)}</p>` : "") +
+      (sg.photo ? `<figure style="margin:0"><img src="../${esc(sg.photo)}" alt="${esc(sg.photoAlt || "")}" loading="lazy"><figcaption>${esc(sg.photoAlt || "")}</figcaption></figure>` : "");
+  } catch (e) { post.innerHTML = `<p class="muted">Couldn't load the guide. Check your connection and reload.</p>`; }
 })();
 </script>
 </body>

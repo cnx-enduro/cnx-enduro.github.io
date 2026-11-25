@@ -49,13 +49,121 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
   .photos { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 8px -16px 0; padding: 0 16px 6px; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; }
   .photos img { flex: 0 0 80%; width: 80%; scroll-snap-align: start; }
 }
+/* ===== Ascension client-site look, TEST (Chu 11/25) + Simplify: point = title, short stacked lines, pictures first, no icons in text, nothing folded ===== */
+:root { --bg:#0b0b0d; --surface:#131317; --line:#232327; --text:#f2efe9; --muted:rgba(242,239,233,.66); --accent:#21b8ad; --gold:#e8c468; --red:#ff3b30; color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#0b0b0d; --surface:#131317; --line:#232327; --text:#f2efe9; --muted:rgba(242,239,233,.66); --accent:#21b8ad; color-scheme: dark; } }
+body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: var(--bg); }
+main { max-width: 1100px; padding-top: 0; }
+.fut, h1, h2, .back, .card b, .strike small, .chips span, footer { font-family: Futura, "Avenir Next", -apple-system, sans-serif; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.back { display: inline-block; margin: 16px 0 0; color: rgba(242,239,233,.5); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; text-decoration: none; }
+/* hero: photo fading into black, one red line on the right */
+.hero { position: relative; display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; min-height: 420px; margin: 8px 0 18px; }
+.hero img { width: 100%; height: 460px; object-fit: cover; object-position: center 30%; -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent 100%), linear-gradient(180deg, #000 70%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #000 55%, transparent 100%); }
+.hero .q { padding: 0 8px 0 24px; text-align: right; }
+.hero .q p { margin: 0; color: var(--red); font-family: Futura, "Avenir Next", sans-serif; font-weight: 500; font-size: clamp(22px, 3vw, 34px); line-height: 1.25; }
+.hero .q b { display: block; margin-top: 18px; color: var(--text); font-size: 15px; }
+.hero .q small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+/* the four rule books as tall photo cards */
+.cards4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 54px; }
+.card { position: relative; aspect-ratio: 9 / 14; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 10px 22%; text-align: center; background: #000; }
+.card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; filter: grayscale(.35); transition: opacity .2s; }
+.card:hover img { opacity: .7; }
+.card.on { border-color: var(--gold); }
+.card .n { position: absolute; top: 16px; left: 0; right: 0; font-size: 15px; letter-spacing: .12em; color: var(--text); }
+.card svg { position: relative; width: 46px; height: 46px; stroke: var(--gold); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 14px; }
+.card b { position: relative; text-transform: uppercase; letter-spacing: .12em; font-size: 14px; font-weight: 700; line-height: 1.3; }
+/* page title = the point */
+h1 { font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(28px, 5vw, 44px); margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 17px; margin: 0 0 30px; max-width: 640px; }
+h2 { font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(17px, 2.6vw, 22px); margin: 0 0 16px; }
+section { margin: 0 0 50px; }
+/* rules: number + one bold line + the rest, stacked */
+.rule, .row { display: grid; grid-template-columns: 44px 1fr; gap: 16px; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 18px 0; margin: 0; }
+.rows { background: none; border: 0; padding: 0; }
+.row { grid-template-columns: 1fr; }
+.rn { color: var(--gold); font-size: 15px; letter-spacing: .1em; padding-top: 2px; }
+.rule b, .row b { font-size: 19px; font-weight: 600; line-height: 1.3; }
+.rule span, .row span { color: var(--muted); font-size: 16px; margin-top: 4px; }
+.rule a { color: var(--accent); }
+.hl { color: var(--accent); }
+.disc { border-top: 1px solid var(--line); padding-top: 18px; }
+.disc b { display: block; font-size: 21px; font-weight: 600; line-height: 1.3; max-width: 760px; }
+.disc span { display: block; color: var(--muted); font-size: 16px; margin-top: 8px; max-width: 760px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chips span { border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; color: var(--text); }
+.strikes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.strike { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; font-size: 20px; font-weight: 600; text-align: left; color: var(--text); }
+.strike small { display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.strike.s2 small { color: var(--red); }
+.thanks { color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding: 14px 0 28px; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; color: rgba(242,239,233,.4); }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; min-height: 0; }
+  .hero img { height: 360px; -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%); mask-image: linear-gradient(180deg, #000 60%, transparent 100%); }
+  .hero .q { text-align: left; padding: 0; margin-top: -40px; position: relative; }
+  .cards4 { grid-template-columns: repeat(2, 1fr); }
+  .card { aspect-ratio: 3 / 4; }
+}
+
+/* makeover 2 (Chu 11/25): numbered panels like the Ascension "How it works" page */
+main > * { min-width: 0; }
+.disc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; }
+.disc b { font-size: 20px; }
+.disc .hl { color: var(--red); }
+.rl { display: block; font-style: normal; font-family: Futura, "Avenir Next", -apple-system, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: 15px; color: var(--text); margin: 0 0 10px; }
+.rl.gold { color: var(--gold); font-size: 12px; letter-spacing: .18em; }
+.rulesgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rulesgrid .rule { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; min-width: 0; }
+.rulesgrid .rule:last-child { grid-column: 1 / -1; }
+.rulesgrid .rn { font-size: 22px; color: var(--gold); letter-spacing: .08em; padding: 0; }
+.rulesgrid .rule > div { min-width: 0; }
+.rulesgrid .rule b { font-size: 16px; font-weight: 500; line-height: 1.45; color: var(--text); }
+.rulesgrid .rule span { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.rulesgrid .rule a { overflow-wrap: anywhere; }
+@media (max-width: 760px) { .rulesgrid { grid-template-columns: 1fr; } }
+
+/* makeover 3: every corner in flow design */
+.remember .rule:last-child { grid-column: auto; }
+.strike { display: flex; flex-direction: column; gap: 6px; padding: 22px 24px; }
+.strike small { margin: 0; }
+.s1 { border-color: rgba(232,196,104,.35) !important; } .s2 { border-color: rgba(255,59,48,.4) !important; }
+.thanks { margin: 22px 0 0; font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .16em; font-size: 12px; font-weight: 700; color: var(--gold); }
+h2 { color: var(--text); padding-top: 6px; }
+section + section { border-top: 0; }
+footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back:hover { color: var(--text); }
+
+.rulesgrid .rule:last-child { grid-column: auto; }
+.chips span { display: inline-block !important; border: 1px solid rgba(242,239,233,.28) !important; color: var(--text) !important; font-size: 11px !important; margin: 0 !important; }
+
+/* Levels in flow design (Chu 11/25) */
+.intro { color: var(--muted); font-size: 17px; margin: 0 0 22px; }
+.levels-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.levels-nav a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: none !important; color: var(--text) !important;
+  font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; text-decoration: none; }
+.levels-nav a::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--c); border: 1px solid rgba(242,239,233,.35); }
+.rules { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 44px; background: none; border: 0; padding: 0; }
+.rules p { margin: 0; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font-size: 15px; color: var(--text); }
+.level { background: none; border: 0; border-top: 1px solid var(--line); padding: 30px 0 0; margin: 0 0 40px; }
+.level .head { display: grid; grid-template-columns: 64px 1fr; gap: 18px; align-items: start; margin-bottom: 18px; }
+.level .badge { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: var(--t); border: 1px solid rgba(242,239,233,.3);
+  font-family: Futura, "Avenir Next", sans-serif; font-weight: 700; letter-spacing: .06em; font-size: 17px; }
+.level h2 { margin: 2px 0 6px; }
+.level .tagline { font-size: 18px; color: var(--text); margin: 0 0 14px; }
+.level dl { display: grid; grid-template-columns: 90px 1fr; gap: 8px 14px; margin: 0; }
+.level dt { font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; color: var(--gold); padding-top: 3px; }
+.level dd { margin: 0; color: var(--muted); font-size: 15px; }
+.level .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.level .photos img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
+@media (max-width: 560px) { .level .photos { grid-template-columns: repeat(3, 70%); overflow-x: auto; scroll-snap-type: x mandatory; } .level .photos img { scroll-snap-align: start; } .level dl { grid-template-columns: 1fr; gap: 2px; } .level dd { margin-bottom: 8px; } }
 </style>
 </head>
 <body>
 <main>
 <a class="back" href="../">← All tracks</a>
+<div class="hero"><img src="../img/rules/hero_levels.jpg" alt="A rider lifting a dirt bike stuck in mud"><div class="q"><p>Join rides at or below your level.</p><b>Chiang Mai Enduro Riders</b><small>Difficulty levels</small></div></div>
 <h1>Difficulty levels</h1>
-<p class="group">Chiang Mai Enduro Riders</p>
 <p class="intro">Every ride is announced with a level. Join rides at or below your level.</p>
 <nav class="levels-nav"><a href="#l0" style="--c:#c4c4c4;--t:#1a1a1a">L0 Paved</a><a href="#l1" style="--c:#1e9e4a;--t:#fff">L1 Easy</a><a href="#l2" style="--c:#1f5fbf;--t:#fff">L2 Narrow</a><a href="#l3" style="--c:#d32f2f;--t:#fff">L3 Steep</a><a href="#l4" style="--c:#111111;--t:#fff">L4 Technical</a></nav>
 <div class="rules"><p>Rally/ADV: max L1.</p><p>Dual sport (CRF): max L3.</p><p>50/50 tyres: max L2.</p><p>Leader can make exceptions.</p><p>Wet: one level harder.</p></div>

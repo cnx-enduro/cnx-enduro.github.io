@@ -84,26 +84,141 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 .rtabs { display: flex; gap: 6px; margin: 0 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
 .rtabs a { padding: 10px 12px; min-height: 44px; text-decoration: none; color: var(--muted); font-weight: 800; font-size: 15px; border-bottom: 3px solid transparent; white-space: nowrap; }
 .rtabs a.on { color: var(--text); border-bottom-color: var(--accent); }
+/* ===== Ascension client-site look, TEST (Chu 11/25) + Simplify: point = title, short stacked lines, pictures first, no icons in text, nothing folded ===== */
+:root { --bg:#0b0b0d; --surface:#131317; --line:#232327; --text:#f2efe9; --muted:rgba(242,239,233,.66); --accent:#21b8ad; --gold:#e8c468; --red:#ff3b30; color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#0b0b0d; --surface:#131317; --line:#232327; --text:#f2efe9; --muted:rgba(242,239,233,.66); --accent:#21b8ad; color-scheme: dark; } }
+body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: var(--bg); }
+main { max-width: 1100px; padding-top: 0; }
+.fut, h1, h2, .back, .card b, .strike small, .chips span, footer { font-family: Futura, "Avenir Next", -apple-system, sans-serif; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.back { display: inline-block; margin: 16px 0 0; color: rgba(242,239,233,.5); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; text-decoration: none; }
+/* hero: photo fading into black, one red line on the right */
+.hero { position: relative; display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; min-height: 420px; margin: 8px 0 18px; }
+.hero img { width: 100%; height: 460px; object-fit: cover; object-position: center 30%; -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent 100%), linear-gradient(180deg, #000 70%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #000 55%, transparent 100%); }
+.hero .q { padding: 0 8px 0 24px; text-align: right; }
+.hero .q p { margin: 0; color: var(--red); font-family: Futura, "Avenir Next", sans-serif; font-weight: 500; font-size: clamp(22px, 3vw, 34px); line-height: 1.25; }
+.hero .q b { display: block; margin-top: 18px; color: var(--text); font-size: 15px; }
+.hero .q small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+/* the four rule books as tall photo cards */
+.cards4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 54px; }
+.card { position: relative; aspect-ratio: 9 / 14; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 10px 22%; text-align: center; background: #000; }
+.card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; filter: grayscale(.35); transition: opacity .2s; }
+.card:hover img { opacity: .7; }
+.card.on { border-color: var(--gold); }
+.card .n { position: absolute; top: 16px; left: 0; right: 0; font-size: 15px; letter-spacing: .12em; color: var(--text); }
+.card svg { position: relative; width: 46px; height: 46px; stroke: var(--gold); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 14px; }
+.card b { position: relative; text-transform: uppercase; letter-spacing: .12em; font-size: 14px; font-weight: 700; line-height: 1.3; }
+/* page title = the point */
+h1 { font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(28px, 5vw, 44px); margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 17px; margin: 0 0 30px; max-width: 640px; }
+h2 { font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: clamp(17px, 2.6vw, 22px); margin: 0 0 16px; }
+section { margin: 0 0 50px; }
+/* rules: number + one bold line + the rest, stacked */
+.rule, .row { display: grid; grid-template-columns: 44px 1fr; gap: 16px; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 18px 0; margin: 0; }
+.rows { background: none; border: 0; padding: 0; }
+.row { grid-template-columns: 1fr; }
+.rn { color: var(--gold); font-size: 15px; letter-spacing: .1em; padding-top: 2px; }
+.rule b, .row b { font-size: 19px; font-weight: 600; line-height: 1.3; }
+.rule span, .row span { color: var(--muted); font-size: 16px; margin-top: 4px; }
+.rule a { color: var(--accent); }
+.hl { color: var(--accent); }
+.disc { border-top: 1px solid var(--line); padding-top: 18px; }
+.disc b { display: block; font-size: 21px; font-weight: 600; line-height: 1.3; max-width: 760px; }
+.disc span { display: block; color: var(--muted); font-size: 16px; margin-top: 8px; max-width: 760px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chips span { border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; color: var(--text); }
+.strikes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.strike { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; font-size: 20px; font-weight: 600; text-align: left; color: var(--text); }
+.strike small { display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.strike.s2 small { color: var(--red); }
+.thanks { color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding: 14px 0 28px; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; color: rgba(242,239,233,.4); }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; min-height: 0; }
+  .hero img { height: 360px; -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%); mask-image: linear-gradient(180deg, #000 60%, transparent 100%); }
+  .hero .q { text-align: left; padding: 0; margin-top: -40px; position: relative; }
+  .cards4 { grid-template-columns: repeat(2, 1fr); }
+  .card { aspect-ratio: 3 / 4; }
+}
+
+/* makeover 2 (Chu 11/25): numbered panels like the Ascension "How it works" page */
+main > * { min-width: 0; }
+.disc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; }
+.disc b { font-size: 20px; }
+.disc .hl { color: var(--red); }
+.rl { display: block; font-style: normal; font-family: Futura, "Avenir Next", -apple-system, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: 15px; color: var(--text); margin: 0 0 10px; }
+.rl.gold { color: var(--gold); font-size: 12px; letter-spacing: .18em; }
+.rulesgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rulesgrid .rule { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; min-width: 0; }
+.rulesgrid .rule:last-child { grid-column: 1 / -1; }
+.rulesgrid .rn { font-size: 22px; color: var(--gold); letter-spacing: .08em; padding: 0; }
+.rulesgrid .rule > div { min-width: 0; }
+.rulesgrid .rule b { font-size: 16px; font-weight: 500; line-height: 1.45; color: var(--text); }
+.rulesgrid .rule span { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.rulesgrid .rule a { overflow-wrap: anywhere; }
+@media (max-width: 760px) { .rulesgrid { grid-template-columns: 1fr; } }
+
+/* makeover 3: every corner in flow design */
+.remember .rule:last-child { grid-column: auto; }
+.strike { display: flex; flex-direction: column; gap: 6px; padding: 22px 24px; }
+.strike small { margin: 0; }
+.s1 { border-color: rgba(232,196,104,.35) !important; } .s2 { border-color: rgba(255,59,48,.4) !important; }
+.thanks { margin: 22px 0 0; font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .16em; font-size: 12px; font-weight: 700; color: var(--gold); }
+h2 { color: var(--text); padding-top: 6px; }
+section + section { border-top: 0; }
+footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back:hover { color: var(--text); }
+
+.rulesgrid .rule:last-child { grid-column: auto; }
+.chips span { display: inline-block !important; border: 1px solid rgba(242,239,233,.28) !important; color: var(--text) !important; font-size: 11px !important; margin: 0 !important; }
+
+.key { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 12px 0 0; }
+.key > b { display: block; font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .14em; font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+.rule ul, .key ul { color: var(--muted); padding-left: 18px; } .rule li, .key li { margin: 6px 0; line-height: 1.5; }
+.rule strong, .key strong { color: var(--text); }
+.rule > div { min-width: 0; }
+.credit { color: var(--muted); font-size: 14px; }
+.cmanim, .fig { max-width: 640px; }
+
+/* tiles everywhere (Chu 11/25): each section opens with a photo band; its points are dark tiles with a gold number */
+.band { position: relative; height: 190px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); margin: 0 0 12px; display: flex; align-items: flex-end; background: var(--surface); }
+.band img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; filter: grayscale(.35); }
+.band::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11,11,13,.92) 0%, rgba(11,11,13,.5) 55%, rgba(11,11,13,.15) 100%); }
+.band h2 { position: relative; z-index: 1; margin: 0; padding: 0 24px 22px; font-size: clamp(20px, 3.4vw, 28px); }
+.band .bn { position: absolute; z-index: 1; top: 18px; left: 24px; color: var(--gold); font-size: 14px; letter-spacing: .12em; }
+.rulesgrid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important; }
+.rulesgrid .rule { align-items: center; text-align: center; justify-content: flex-start; min-height: 200px; padding: 24px 20px !important; background: linear-gradient(180deg, #16161b, #0f0f12) !important; }
+.rulesgrid .rule .rn { width: 44px; height: 44px; border: 1px solid var(--gold); border-radius: 50%; display: grid; place-items: center; font-size: 15px !important; margin: 0 auto 4px; }
+.rulesgrid .rule .rl { font-size: 14px; }
+.rulesgrid .rule:last-child { grid-column: auto !important; }
+
+.ldwrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 40px; }
+.ldwrap > .rule { display: flex !important; flex-direction: column; gap: 10px; background: linear-gradient(180deg, #16161b, #0f0f12); border: 1px solid var(--line) !important; border-radius: 12px; padding: 22px 22px !important; margin: 0 !important; min-width: 0; }
+.ldwrap > .rule .rn { width: 44px; height: 44px; border: 1px solid var(--gold); border-radius: 50%; display: grid; place-items: center; font-size: 15px; }
+.ldwrap > .rule b { font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 15px; font-weight: 700; }
+.ldwrap > .rule.wide { grid-column: 1 / -1; }
+@media (max-width: 760px) { .ldwrap { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <main>
 <a class="back" href="../">← All tracks</a>
-<nav class="rtabs" aria-label="Rules"><a href="../rules/">Community</a><a href="../ride-rules/">Group ride</a><a href="../leaders/" class=on aria-current=page>Ride leaders</a><a href="../sharing/">Sharing GPX</a></nav>
+<div class="hero"><img src="../img/rules/hero_leaders.jpg" alt="A dirt trail through the forest"><div class="q"><p>Lead for them, not for you.</p><b>Chiang Mai Enduro Riders</b><small>Rules for ride leaders</small></div></div>
+<nav class="cards4" aria-label="Rules"><a class="card" href="../rules/"><img src="../img/rules/c1.jpg" alt="" loading="lazy"><span class="n mono">01</span><svg viewBox="0 0 48 48"><path d="M6 10h24v15H16l-7 6v-6H6z"/><path d="M34 18h8v14h-3v5l-6-5H22v-4"/></svg><b>Community</b></a><a class="card" href="../ride-rules/"><img src="../img/rules/c2.jpg" alt="" loading="lazy"><span class="n mono">02</span><svg viewBox="0 0 48 48"><circle cx="12" cy="34" r="6"/><circle cx="36" cy="34" r="6"/><path d="M12 34l7-11h10l7 11M19 23l-3-6M29 23l4-8h5"/></svg><b>Group ride</b></a><a class="card on" href="../leaders/"><img src="../img/rules/c3.jpg" alt="" loading="lazy"><span class="n mono">03</span><svg viewBox="0 0 48 48"><path d="M12 42V6"/><path d="M12 8h24l-6 8 6 8H12"/></svg><b>Ride leaders</b></a><a class="card" href="../sharing/"><img src="../img/rules/c4.jpg" alt="" loading="lazy"><span class="n mono">04</span><svg viewBox="0 0 48 48"><path d="M6 12l12-5 12 5 12-5v29l-12 5-12-5-12 5z"/><path d="M18 7v29M30 12v29"/></svg><b>Sharing GPX</b></a></nav>
 <h1>Leading a beginner enduro ride</h1>
 <p class="group">Chiang Mai Enduro Riders · rules for group leaders</p>
 <p class="intro">Rules for group leaders, in the order you'll need them.</p>
-<nav class="jump"><a href="#mindset">🧠 Mindset</a><a href="#before">📱 Before</a><a href="#meeting">⛽ Meeting point</a><a href="#start">🚦 Trail start</a><a href="#trail">🏍️ On the trail</a><a href="#end">🍻 End</a></nav>
-<div class="stage" id="mindset"><i>🧠</i><h2>Mindset</h2></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 42V6l18 6-18 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="34" r="3.5" fill="currentColor"/><circle cx="36" cy="38" r="3.5" fill="currentColor"/><circle cx="20" cy="38" r="3.5" fill="currentColor"/></svg><span class="n">1</span></div><div><b>Lead for them, not for you</b><p>Leading a group is community service. Your goal shifts from “I want to have fun riding” to “I want everyone else to have fun riding.” You won't ride as fast or as freely as you'd like; the reward is the teamwork and getting past obstacles together.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="10" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="38" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 36l6 6 14-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">2</span></div><div><b>Never lose a rider</b><p>Your goal is to complete the ride without losing any rider. As a leader you have to <strong>ALWAYS wait for the whole group on every intersection</strong> (or leave a corner man there, see the <a href="#corner-man">“corner man” rule</a> below) and make sure everyone sees which way you went.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M34 42V18a10 10 0 0 0-20 0v8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 20l6 7 6-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">3</span></div><div><b>If you lose a rider</b><p>Ask the group to take a break where they are and go back looking for the lost rider, following the GPS track in reverse.</p></div></div>
-<div class="stage" id="before"><i>📱</i><h2>Before the ride</h2></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="12" y="4" width="22" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 38h6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 13v14M16 22l7-4 7 4M19 29l4-2 4 2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">4</span></div><div><b>Master offline navigation</b><ul><li><strong>If you can't reliably follow the GPS track you can't lead.</strong></li><li>Fit a sturdy phone holder to your handlebar and a USB charger to your bike, or your phone's battery may die mid-ride.</li><li>Install a GPS navigation app that works offline and supports OpenStreetMap (e.g., Gaia GPS on iPhone, Locus Map on Android).</li><li>A few days before the ride, create a short test track around your neighborhood, put your phone in flight mode to simulate no signal, and ride it until you can follow it reliably.</li><li>The day before the ride, load the ride's GPS track and check that it shows up and navigation starts.</li><li>If you have a spare phone take it with you and have the same GPS app and track already installed there.</li></ul></div></div>
-<div class="stage" id="meeting"><i>⛽</i><h2>At the meeting point</h2></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 10v6l4 3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 42l13-14 8 8 7-8 12 14z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">5</span></div><div><b>Brief the group on ride difficulty</b><p>Tell the whole group how long the ride will take and how difficult it will be. Mention all the expected difficulties like terrain, uphills or obstacles. Everyone should know what they are signing up to.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="7" width="30" height="36" rx="3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 4h12v6H18z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 21l3 3 5-5M15 33l3 3 5-5M28 22h6M28 34h6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">6</span></div><div><b>Check the whole group</b><p>Check that every rider has:</p><div class="tiles4"><div><i>⛽</i>100% full tank</div><div><i>💧</i>food + 3 L water</div><div><i>🏍️</i>CRF or lighter</div><div><i>🪖</i>minimum gear</div></div><ul><li>100% full tank of gas</li><li>food and at least 3 liters of water</li><li>the recommended bike: a CRF or lighter with 50/50 or 100% enduro tyres (heavier bikes like 701 are allowed only for riders with a lot of off-road experience)</li><li>the minimum gear: high boots, knee protection, helmet and gloves</li></ul><p><strong>Anyone who doesn't meet these requirements can't join.</strong> Send them home because they put the whole ride at risk.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="8" cy="30" r="4" fill="currentColor"/><circle cx="20" cy="30" r="4" fill="currentColor"/><circle cx="32" cy="30" r="4" fill="currentColor"/><path d="M40 33V21" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M36 15a6 6 0 0 1 8 0M33 11a11 11 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">7</span></div><div><b>Find the sweeping rider</b><svg class="fig" viewBox="0 0 360 96" role="img" aria-label="Leader first, sweeping rider last, a radio each">
+
+<div class="band" id="mindset"><img src="../img/rules/b_l0-1.jpg" alt="" loading="lazy"><span class="bn mono">01</span><h2>Mindset</h2></div>
+<div class="ldwrap"><div class="rule"><span class="rn mono">01</span><div><b>Lead for them, not for you</b><p>Leading a group is community service. Your goal shifts from “I want to have fun riding” to “I want everyone else to have fun riding.” You won't ride as fast or as freely as you'd like; the reward is the teamwork and getting past obstacles together.</p></div></div>
+<div class="rule"><span class="rn mono">02</span><div><b>Never lose a rider</b><p>Your goal is to complete the ride without losing any rider. As a leader you have to <strong>ALWAYS wait for the whole group on every intersection</strong> (or leave a corner man there, see the <a href="#corner-man">“corner man” rule</a> below) and make sure everyone sees which way you went.</p></div></div>
+<div class="rule"><span class="rn mono">03</span><div><b>If you lose a rider</b><p>Ask the group to take a break where they are and go back looking for the lost rider, following the GPS track in reverse.</p></div></div>
+</div><div class="band" id="before"><img src="../img/rules/b_l0-3.jpg" alt="" loading="lazy"><span class="bn mono">02</span><h2>Before the ride</h2></div>
+<div class="ldwrap"><div class="rule"><span class="rn mono">04</span><div><b>Master offline navigation</b><ul><li><strong>If you can't reliably follow the GPS track you can't lead.</strong></li><li>Fit a sturdy phone holder to your handlebar and a USB charger to your bike, or your phone's battery may die mid-ride.</li><li>Install a GPS navigation app that works offline and supports OpenStreetMap (e.g., Gaia GPS on iPhone, Locus Map on Android).</li><li>A few days before the ride, create a short test track around your neighborhood, put your phone in flight mode to simulate no signal, and ride it until you can follow it reliably.</li><li>The day before the ride, load the ride's GPS track and check that it shows up and navigation starts.</li><li>If you have a spare phone take it with you and have the same GPS app and track already installed there.</li></ul></div></div>
+</div><div class="band" id="meeting"><img src="../img/rules/b_l1-3.jpg" alt="" loading="lazy"><span class="bn mono">03</span><h2>At the meeting point</h2></div>
+<div class="ldwrap"><div class="rule"><span class="rn mono">05</span><div><b>Brief the group on ride difficulty</b><p>Tell the whole group how long the ride will take and how difficult it will be. Mention all the expected difficulties like terrain, uphills or obstacles. Everyone should know what they are signing up to.</p></div></div>
+<div class="rule"><span class="rn mono">06</span><div><b>Check the whole group</b><p>Check that every rider has:</p><div class="tiles4"><div><i>⛽</i>100% full tank</div><div><i>💧</i>food + 3 L water</div><div><i>🏍️</i>CRF or lighter</div><div><i>🪖</i>minimum gear</div></div><ul><li>100% full tank of gas</li><li>food and at least 3 liters of water</li><li>the recommended bike: a CRF or lighter with 50/50 or 100% enduro tyres (heavier bikes like 701 are allowed only for riders with a lot of off-road experience)</li><li>the minimum gear: high boots, knee protection, helmet and gloves</li></ul><p><strong>Anyone who doesn't meet these requirements can't join.</strong> Send them home because they put the whole ride at risk.</p></div></div>
+<div class="rule"><span class="rn mono">07</span><div><b>Find the sweeping rider</b><svg class="fig" viewBox="0 0 360 96" role="img" aria-label="Leader first, sweeping rider last, a radio each">
 <path d="M18 44H342" stroke="#2a2e35" stroke-width="18" stroke-linecap="round"/>
 <path d="M330 44 344 44" stroke="#f5a524" stroke-width="4" stroke-linecap="round"/><path d="M336 36l10 8-10 8" fill="none" stroke="#f5a524" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="300" cy="44" r="14" fill="#f5a524"/><text x="300" y="49" text-anchor="middle" font-size="13" fill="#111" font-family="system-ui,-apple-system,sans-serif" font-weight="700">L</text>
@@ -115,8 +230,8 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <text x="170" y="84" text-anchor="middle" font-size="13" fill="#9aa0a9" font-family="system-ui,-apple-system,sans-serif" font-weight="700">the group</text>
 <text x="22" y="84" text-anchor="start" font-size="13" fill="#7ee2a8" font-family="system-ui,-apple-system,sans-serif" font-weight="700">Sweeping rider</text>
 </svg><p>Identify the more experienced riders and ask one of them to be the sweeping rider. They will be riding last for the rest of the ride. They might be grumpy because it's less fun, but sweeping is a position of responsibility, second only to the leader, as they often find themselves helping struggling riders and the rest of the group when the leader is not present. Try to identify the most helpful and responsible person, he will be your second in command.</p><p>If a pair of radios were provided by the organizers, keep one radio for you and give the other to the sweeping rider, asking them to let you know every time the rear of the group stops, so that you can also stop and wait for them to catch up with the head.</p></div></div>
-<div class="stage" id="start"><i>🚦</i><h2>At the start of the trail</h2></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 42h14V24h22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="34" r="5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M36 18l6 6-6 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">8</span></div><div><b>Explain the riding rules to the group</b><p>Before you set off on the trail, explain these two rules to the whole group.</p><div class="key" id="corner-man"><b>A. “Corner man” rule</b><p>The rule: <strong>at every turn, the rider right behind the leader becomes the corner man.</strong></p><div class="cmanim" id="cmAnim">
+</div><div class="band" id="start"><img src="../img/rules/b_l2-2.jpg" alt="" loading="lazy"><span class="bn mono">04</span><h2>At the start of the trail</h2></div>
+<div class="ldwrap"><div class="rule"><span class="rn mono">08</span><div><b>Explain the riding rules to the group</b><p>Before you set off on the trail, explain these three rules to the whole group.</p><div class="key" id="corner-man"><b>A. “Corner man” rule</b><p>The rule: <strong>at every turn, the rider right behind the leader becomes the corner man.</strong></p><div class="cmanim" id="cmAnim">
 <svg viewBox="0 0 360 250" role="img" aria-label="Animation: the rider behind the leader stops at the turn and points the way, everyone rides past, the sweeper arrives and gives a thumbs up, and the corner man rides on in front of the sweeper">
 <rect width="360" height="250" rx="12" fill="#1c2a20"/>
 <path d="M78 92 V-10" stroke="#151a17" stroke-width="40" opacity=".7"/>
@@ -139,7 +254,7 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 (() => {
   const road = document.getElementById("cmRoad"), g = document.getElementById("cmRiders"), cap = document.getElementById("cmCap");
   const ring = document.getElementById("cmRing"), bub = document.getElementById("cmBub"), thumb = document.getElementById("cmThumb");
-  const L = road.getTotalLength(), J = 178, gap = 54, v = 70, CORNER = { x: 78, y: 44 }, OFF = [0, 1, 2, 3, 5], END = (L + 5.2 * gap) / v + 1;
+  const L = road.getTotalLength(), J = 178, gap = 54, v = 70, CORNER = { x: 78, y: 44 }, OFF = [0, 1, 2, 3, 5], END = (L + 5.2 * gap) / v + 1 + ((178 + 54) / 70 - 2 * 54 / 70);
   const ns = "http://www.w3.org/2000/svg", mk = (c, t) => { const e = document.createElementNS(ns, "g");
     e.innerHTML = `<g class="b" transform-origin="0 0"><g transform="scale(1.45)"><rect x="-3.5" y="-17" width="7" height="9" rx="3.5" fill="#000"/><rect x="-3.5" y="9" width="7" height="10" rx="3.5" fill="#000"/>
       <path class="p" d="M-5 -9 h10 l2 12 l-3 9 h-8 l-3 -9z" fill="${c}" stroke="#000" stroke-width="1.4"/><path d="M-10.5 -9 h21" stroke="#cfd3d8" stroke-width="2.5" stroke-linecap="round"/>
@@ -149,19 +264,20 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
   const cm = riders[1], at = d => road.getPointAtLength(Math.max(0, Math.min(L, d)));
   const place = (e, d) => { if (d < 0 || d > L) { e.style.display = "none"; return; } e.style.display = ""; const q = at(d), a = at(d - 2), b = at(d + 2);
     e.setAttribute("transform", `translate(${q.x} ${q.y})`); e.querySelector(".b").setAttribute("transform", `rotate(${Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90})`); };
-  const tStop = (J + gap) / v, tGo = (J + 4 * gap) / v, tSweep = (J + 3.6 * gap) / v;
+  // Chu 11/25: only the leader and rider 2 at first; the rest only start coming once rider 2 has stopped as corner man (delay D).
+  const tStop = (J + gap) / v, D = tStop - 2 * gap / v, tGo = (J + 4 * gap) / v + D, tSweep = (J + 3.6 * gap) / v + D;
   let t0 = null, raf = null, tm = null;
   const frame = now => {
     if (t0 === null) t0 = now; const t = (now - t0) / 1000;
-    riders.forEach((r, i) => { if (i !== 1) place(r, v * t - OFF[i] * gap); });
+    riders.forEach((r, i) => { if (i !== 1) place(r, i === 0 ? v * t : v * (t - D) - OFF[i] * gap); });
     const stopped = t >= tStop && t < tGo;
     if (stopped) { cm.style.display = ""; cm.setAttribute("transform", `translate(${CORNER.x} ${CORNER.y})`); cm.querySelector(".b").setAttribute("transform", "rotate(90)"); }
-    else place(cm, t < tStop ? v * t - gap : v * t - 4 * gap);
+    else place(cm, t < tStop ? v * t - gap : v * (t - D) - 4 * gap);
     const isC = t >= tStop, col = isC ? "#e05d2f" : "#ecedef";
     cm.querySelectorAll(".p, .h").forEach(x => x.setAttribute("fill", col)); cm.querySelector("text").textContent = isC ? "C" : ""; cm.querySelector("text").setAttribute("fill", isC ? "#fff" : "#111");
     ring.setAttribute("opacity", stopped ? 0.35 + 0.35 * Math.sin(t * 6) : 0); ring.setAttribute("r", 22 + 3 * Math.sin(t * 6));
     bub.setAttribute("opacity", stopped && t < tSweep ? 1 : 0); thumb.setAttribute("opacity", t >= tSweep && t < tGo + 1 ? 1 : 0);
-    cap.textContent = t < J / v + 0.4 ? "1 · The group rides up to a turn"
+    cap.textContent = t < J / v + 0.4 ? "1 · The leader signals the rider behind him"
       : t < tStop + 0.9 ? "2 · The rider behind the leader stops: he's the corner man"
       : t < tSweep ? "3 · Everyone rides past. He points the way 👉"
       : t < tGo + 1.4 ? "4 · Sweeper arrives 👍 He rides on in front of the sweeper"
@@ -183,22 +299,23 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <rect x="174" y="6" width="64" height="32" rx="16" fill="#e05d2f"/><text x="206" y="27" fill="#fff">turn 3</text>
 <path d="M242 22h12M250 16l6 6-6 6" fill="none" stroke="#9aa0a9" stroke-width="3" stroke-linecap="round"/>
 <rect x="260" y="6" width="98" height="32" rx="16" fill="#2f9e6e"/><text x="309" y="27" fill="#fff">sweeper</text>
-</g></svg><p><strong>Everyone takes a turn, so the whole group helps as a team, and nobody misses a turn.</strong></p><p class="credit">🎬 Watch how it works: <a href="https://www.youtube.com/watch?v=HBkNeuxHTbk" target="_blank" rel="noopener">Cornerman System: Navigating large adventure riding groups</a>. Thank you, <a href="https://www.youtube.com/@MotoRidesAustralia" target="_blank" rel="noopener">MotoRides Australia</a>, for the clear explanation! 🙏</p></div><div class="key"><b>B. “Help front rider” rule</b><ul><li><strong>Group rule:</strong> if the rider in front of you drops their bike in a difficult spot, always stop, get off and help lift it. It saves everyone's energy. Each rider should remember to help their buddy in front.</li><li>As leader, stop after every significant obstacle, such as a hard climb, and wait until everyone is through. If someone is struggling, help.</li></ul></div></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="34" cy="13" r="6" fill="#e5484d"/><path d="M5 42c6-14 14 2 20-10s10-12 10-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 0"/></svg><span class="n">9</span></div><div><b>Before starting the ride activate the GPS recording.</b><p>When GPS recording most apps will be displaying a line on the screen showing where you rode up to this point. This line is very useful to orient yourself on the map to see where you came from should you need to backtrack.</p><p>Also, your GPS recording helps us to keep the track updated. If you find the track blocked we would see which detour you took to avoid the obstacle.</p></div></div>
-<div class="stage" id="trail"><i>🏍️</i><h2>On the trail</h2></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 34a18 18 0 0 1 36 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 34l-9-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="34" r="2.5" fill="currentColor"/><path d="M9 34h4M35 34h4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">10</span></div><div><b>Keep a relaxed pace</b><p>On L1 rides, ride at a speed where riders can <strong>chill and relax</strong>. Ride slow enough that the group is never far behind you.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 18h24v10a12 12 0 0 1-24 0z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M33 21h3a5 5 0 0 1 0 10h-4M15 6v6M21 4v8M27 6v6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">11</span></div><div><b>Take a break every 1–2 hours</b><svg class="fig" viewBox="0 0 360 70" role="img" aria-label="Ride 1 to 2 hours, stop 15 minutes, repeat">
+</g></svg><p><strong>Everyone takes a turn, so the whole group helps as a team, and nobody misses a turn.</strong></p><p class="credit">🎬 Watch how it works: <a href="https://www.youtube.com/watch?v=HBkNeuxHTbk" target="_blank" rel="noopener">Cornerman System: Navigating large adventure riding groups</a>. Thank you, <a href="https://www.youtube.com/@MotoRidesAustralia" target="_blank" rel="noopener">MotoRides Australia</a>, for the clear explanation! 🙏</p></div><div class="key"><b>B. “Help front rider” rule</b><ul><li><strong>Group rule:</strong> if the rider in front of you drops their bike in a difficult spot, always stop, get off and help lift it. It saves everyone's energy. Each rider should remember to help their buddy in front.</li><li>As leader, stop after every significant obstacle, such as a hard climb, and wait until everyone is through. If someone is struggling, help.</li></ul></div><div class="key"><b>C. Hand signals</b><ul><li><strong>Hazard on that side:</strong> arm pointing down, left or right (rock, hole, root)</li><li><strong>Slow down:</strong> palm down, waving up and down</li><li><strong>Stopping:</strong> arm raised, palm open</li><li><strong>Rider needs help / group should stop:</strong> hand tapping top of helmet</li><li><strong>Pass every signal down the line to the rider behind you.</strong></li></ul></div></div></div>
+<div class="rule"><span class="rn mono">09</span><div><b>Before starting the ride activate the GPS recording.</b><p>When GPS recording most apps will be displaying a line on the screen showing where you rode up to this point. This line is very useful to orient yourself on the map to see where you came from should you need to backtrack.</p><p>Also, your GPS recording helps us to keep the track updated. If you find the track blocked we would see which detour you took to avoid the obstacle.</p></div></div>
+</div><div class="band" id="trail"><img src="../img/rules/b_l2-3.jpg" alt="" loading="lazy"><span class="bn mono">05</span><h2>On the trail</h2></div>
+<div class="ldwrap"><div class="rule"><span class="rn mono">10</span><div><b>Keep a relaxed pace</b><p>On L1 rides, ride at a speed where riders can <strong>chill and relax</strong>. Ride slow enough that the group is never far behind you.</p></div></div>
+<div class="rule"><span class="rn mono">11</span><div><b>Take a break every 1–2 hours</b><svg class="fig" viewBox="0 0 360 70" role="img" aria-label="Ride 1 to 2 hours, stop 15 minutes, repeat">
 <rect x="4" y="18" width="130" height="22" rx="11" fill="#1f5fbf"/><text x="69" y="34" text-anchor="middle" font-size="13" fill="#fff" font-family="system-ui,-apple-system,sans-serif" font-weight="700">ride 1–2 h</text>
 <rect x="140" y="18" width="40" height="22" rx="11" fill="#f5a524"/><text x="160" y="34" text-anchor="middle" font-size="12" fill="#111" font-family="system-ui,-apple-system,sans-serif" font-weight="700">15′</text>
 <rect x="186" y="18" width="130" height="22" rx="11" fill="#1f5fbf"/><text x="251" y="34" text-anchor="middle" font-size="13" fill="#fff" font-family="system-ui,-apple-system,sans-serif" font-weight="700">ride 1–2 h</text>
 <rect x="322" y="18" width="34" height="22" rx="11" fill="#f5a524"/><text x="339" y="34" text-anchor="middle" font-size="12" fill="#111" font-family="system-ui,-apple-system,sans-serif" font-weight="700">15′</text>
 <text x="160" y="60" text-anchor="middle" font-size="12" fill="#9aa0a9" font-family="system-ui,-apple-system,sans-serif" font-weight="700">break</text><text x="339" y="60" text-anchor="middle" font-size="12" fill="#9aa0a9" font-family="system-ui,-apple-system,sans-serif" font-weight="700">break</text>
 </svg><ul><li>Stop for 15 minutes every 1–2 hours, or right after an obstacle that wore the group out.</li><li>Announce how long the break is. When time's up, rally the group, politely interrupting conversations if needed; otherwise the break drags on.</li><li>Use the break to check how everyone is doing and whether anyone has a problem.</li></ul></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 40h12a12 12 0 0 0 12-12V8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 40l12-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/></svg><span class="n">12</span></div><div><b>If you took a wrong turn or lose the track</b><p>It's always better to go back and find the track, instead of continuing the wrong way hoping to catch the track further ahead, because most of the time you will not find it, or end up skipping a big section of the ride.</p><p>Don't worry about making mistakes and turning the whole group around and backtrack, everyone knows that off-road GPS navigation is difficult and they don't mind.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 44S10 30 10 19a14 14 0 0 1 28 0c0 11-14 25-14 25z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="18" y="16" width="12" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.5 16v-2.5a3.5 3.5 0 0 1 7 0V16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">13</span></div><div><b>Stick to the plan</b><p>Riders may suggest changes to the route, trying to “hijack” the ride. Push back politely because everyone signed up for this specific route on this day, and it's your job keeping this commitment for the group.</p></div></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M20 8H9v32h11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 24h20M34 16l8 8-8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">14</span></div><div><b>Leaving early? Tell the leader</b><p>Anyone who wants to leave the ride and go home: <strong>please inform the leader.</strong> If the leader is not present, let your teammate know.</p></div></div>
-<div class="stage" id="end"><i>🍻</i><h2>At the end</h2></div>
-<div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 8h12l-1 12a5 5 0 0 1-10 0zM27 8h12l-1 12a5 5 0 0 1-10 0zM15 25v13M33 25v13M10 40h10M28 40h10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">15</span></div><div><b>Finish together</b><p>Plan a brief drinks stop at one of the Thai shops on the way home so the group can socialize before heading off.</p></div></div>
+<div class="rule"><span class="rn mono">12</span><div><b>If you took a wrong turn or lose the track</b><p>It's always better to go back and find the track, instead of continuing the wrong way hoping to catch the track further ahead, because most of the time you will not find it, or end up skipping a big section of the ride.</p><p>Don't worry about making mistakes and turning the whole group around and backtrack, everyone knows that off-road GPS navigation is difficult and they don't mind.</p></div></div>
+<div class="rule"><span class="rn mono">13</span><div><b>Stick to the plan</b><p>Riders may suggest changes to the route, trying to “hijack” the ride. Push back politely because everyone signed up for this specific route on this day, and it's your job keeping this commitment for the group.</p></div></div>
+<div class="rule"><span class="rn mono">14</span><div><b>Leaving early? Tell the leader</b><p>Anyone who wants to leave the ride and go home: <strong>please inform the leader.</strong> If the leader is not present, let your teammate know.</p></div></div>
+</div><div class="band" id="end"><img src="../img/rules/b_l3-3.jpg" alt="" loading="lazy"><span class="bn mono">06</span><h2>At the end</h2></div>
+<div class="ldwrap"><div class="rule"><span class="rn mono">15</span><div><b>Finish together</b><p>Plan a brief drinks stop at one of the Thai shops on the way home so the group can socialize before heading off.</p></div></div>
+</div>
 <footer>Last updated November 2026</footer>
 </main>
 </body>

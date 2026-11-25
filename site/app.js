@@ -143,9 +143,10 @@
     rf.setAttribute("aria-expanded", String(open));
   };
   gm.addEventListener("toggle", () => { if (!gm.open || !gm.classList.contains("safety")) rf && rf.setAttribute("aria-expanded", "false"); });
-  if ($("qrBtn")) $("qrBtn").onclick = async () => {
+  // "Share" on each track page (Chu 11/25: the top-bar button is gone): a code for the page that's open.
+  const showQr = async (home) => {
     // Always the public address (a test copy on a computer would otherwise give a link phones can't open).
-    const url = (site.siteUrl || location.origin + location.pathname) + location.hash;
+    const url = (site.siteUrl || location.origin + location.pathname) + (home === true ? "" : location.hash);
     try {
       await loadQr();
       const q = qrcode(0, "M"); q.addData(url); q.make();
@@ -153,14 +154,29 @@
       $("qrImg").hidden = false;
       $("qrUrl").textContent = url.replace(/^https?:\/\//, "");
       // On a track page the code opens that track: say which one above the code.
-      const tr = current ? `${current.id} ${current.name}` : "";
+      const tr = home === true ? "CNX Enduro tracks: all tracks" : current ? `${current.id} ${current.name}` : "";
       $("qrTrackName").textContent = tr; $("qrTrackName").hidden = !tr;
     } catch (e) {
       $("qrImg").hidden = true;
       $("qrUrl").textContent = "Couldn't load the QR code. Check your internet and try again.";
     }
+    shareUrl = url;
+    $("qrTitle").textContent = home === true ? "Share this website" : current ? "Share this track" : "Share this page";
+    $("qrCopy").textContent = "Copy link";
+    $("qrSend").hidden = !navigator.share;
     $("qrBox").showModal();
   };
+  // Share box (Chu 11/25): one Share button = QR code (in person) + Copy link + the phone's own share menu (LINE, WhatsApp…).
+  let shareUrl = "";
+  $("qrCopy").onclick = async () => {
+    try { await navigator.clipboard.writeText(shareUrl); $("qrCopy").textContent = "Copied ✓"; }
+    catch (e) { $("qrCopy").textContent = "Couldn't copy"; }
+  };
+  $("qrSend").onclick = async () => {
+    const name = $("qrTrackName").hidden ? "" : $("qrTrackName").textContent;
+    try { await navigator.share({ title: name || document.title, text: name ? `Track ${name}` : "", url: shareUrl }); } catch (e) {}
+  };
+  document.addEventListener("click", e => { if (!e.target.closest) return; if (e.target.closest("#qrBtn")) showQr(); else if (e.target.closest("#siteShare")) { e.preventDefault(); showQr(true); } });
   $("qrClose").onclick = () => $("qrBox").close();
   $("qrBox").addEventListener("click", e => {  // a tap outside the box closes it (a tap on its own edge doesn't)
     const b = $("qrBox").getBoundingClientRect();
@@ -197,9 +213,10 @@
     return `<div class="brows">${b.gear.map(row).join("")}</div>`;
   };
   // Difficulty levels box, right above the track list (main section only): L0–L4 badges → /difficulty, then the wet rule.
-  const levelsHtml = b => `<p class="lvhead">${esc(b.levelsTitle)}</p><a class="lvlist" href="difficulty/">` +
+  // One "Difficulty levels" button that opens the list (Chu 11/25); the closed button still shows the 5 level colours.
+  const levelsHtml = b => `<details class="lvfold"><summary><span class="lvf-t">${esc(b.levelsTitle)}</span><span class="lvf-dots">${b.levels.map(l => `<i style="background:${esc(l.c)};color:${esc(l.t)}">${esc(l.l)}</i>`).join("")}</span></summary><a class="lvlist" href="difficulty/">` +
     b.levels.map(l => `<span class="lv"><span class="lvb" style="background:${esc(l.c)};color:${esc(l.t)}">${esc(l.l)}</span><b>${esc(l.name)}</b><span>${esc(l.text)}</span></span>`).join("") +
-    `<span class="lvmore">${esc(b.levelsLink)}</span></a><div class="brows lvwet">${iconRow(b.wet)}</div>`;
+    `<span class="lvmore">${esc(b.levelsLink)}</span></a><div class="brows lvwet">${iconRow(b.wet)}</div></details>`;
 
   // ---------- map ----------
   // Blue-dot label on a track page: how far along this track the rider is (or how far off it).
@@ -355,7 +372,10 @@
     const sec = sectionOf(id);
     const isMain = id === main.id;
     document.title = isMain ? site.title : `${sec.title} · ${site.title}`;
-    $("subtitle").textContent = sec.subtitle;
+    // "Beginner-friendly" shows as the green L1 badge (Chu 11/25); the badge links to the L1 photos
+    const sub = sec.subtitle || "";
+    if (/^Beginner-friendly /.test(sub)) $("subtitle").innerHTML = `<a class="l1tag" href="difficulty/#l1">L1</a> ${esc(sub.replace(/^Beginner-friendly /, ""))}`;
+    else $("subtitle").textContent = sub;
     $("intro").textContent = sec.intro;
     $("rulesSummary").textContent = sec.rulesSummary;
     $("rulesBody").innerHTML = isMain && site.beforeRide ? beforeRideHtml(site.beforeRide) : rulesHtml(data.rules[id] || []);
@@ -685,8 +705,7 @@
         ${CNX_BETA ? `<button class="btn navgo" id="navGo" type="button">▶ Navigate</button><button class="btn ridego" id="rideGo" type="button">👥 Ride together</button>` : ""}
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
-        <button class="btn" id="copy">Copy link</button>
-        <button class="btn phoneonly" id="qrTrack" type="button">QR code</button>
+        <button class="btn" id="qrBtn" type="button">Share</button>
       </div>
       ${site.shareNotice ? `<p class="share small">${esc(site.shareNotice)}</p>` : ""}
       <div class="facts">
@@ -737,11 +756,6 @@
     $("overview").hidden = true;
     $("detail").hidden = false;
     $("back").onclick = () => go(sectionHash(t.category));
-    $("qrTrack").onclick = () => $("qrBtn").click();  // phones: the header (with its QR button) is hidden here
-    $("copy").onclick = async () => {
-      try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; }
-      catch { $("copy").textContent = "Copy failed"; }
-    };
     if ($("navGo")) $("navGo").onclick = () => startNav(t);
     if ($("rideGo")) $("rideGo").onclick = () => ride && ride.open();
     if ($("sendForm")) setupSendForm(t);

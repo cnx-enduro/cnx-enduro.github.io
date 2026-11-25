@@ -17,7 +17,7 @@
     <p id="subtitle" class="muted"></p>
   </div>
   <nav class="toplinks" id="topLinks" aria-label="Rules and guides">
-    <a href="rules/">Rules</a><a href="difficulty/">Levels</a><a href="navigate/">Navigate</a><a href="ride-together/">Ride together</a>
+    <a href="rules/">Rules</a><a href="difficulty/">Levels</a><a href="navigate/">Navigate</a><a href="ride-together/">Ride together</a><a href="#" id="siteShare">Share</a>
   </nav>
   <nav class="secnav" id="secNav" aria-label="Sections" hidden>
     <div class="seg" id="secTabs"></div>
@@ -70,10 +70,15 @@
   </aside>
 </main>
 <dialog class="qrbox" id="qrBox" aria-labelledby="qrTitle">
-  <h2 id="qrTitle">Scan to open on a phone</h2>
+  <h2 id="qrTitle">Share this track</h2>
   <p class="qrtrack" id="qrTrackName" hidden></p>
   <div class="qrimg" id="qrImg"></div>
   <p class="muted small" id="qrUrl"></p>
+  <p class="muted small qrhint">Standing together? Let them scan the code.</p>
+  <div class="qracts">
+    <button class="btn" id="qrCopy" type="button">Copy link</button>
+    <button class="btn" id="qrSend" type="button" hidden>Send in a chat</button>
+  </div>
   <button class="btn" id="qrClose" type="button">Close</button>
 </dialog>
 

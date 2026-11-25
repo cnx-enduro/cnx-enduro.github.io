@@ -706,4 +706,45 @@ body.walkguide .navstop, body.walkguide .ridechip { visibility: hidden; }
 .readfirst .rf-i { font-size: 18px; text-align: center; }
 .readfirst .rf-a { font-size: 22px; color: #c9a64a; transition: transform .15s; }
 .readfirst[aria-expanded="true"] .rf-a { transform: rotate(90deg); }
+/* Difficulty levels folded into one button (Chu 11/25) */
+.lvfold { margin: 0 0 8px; }
+.lvfold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 15px; color: var(--text); }
+.lvfold > summary::-webkit-details-marker { display: none; }
+.lvfold > summary::after { content: "›"; font-size: 22px; color: var(--muted); transition: transform .15s; }
+.lvfold[open] > summary::after { transform: rotate(90deg); }
+.lvfold .lvf-t { flex: 1; }
+.lvf-dots { display: flex; gap: 4px; }
+.lvf-dots i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 5px; border: 1px solid rgba(255,255,255,.15); }
+.lvfold[open] .lvf-dots { display: none; }
+.lvfold .lvlist { margin-top: 8px; }
+/* Share box: Copy link + Send in a chat under the QR code */
+.qracts { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 4px 0 10px; }
+.qracts .btn { min-height: 44px; }
+.qrhint { margin: 0 0 8px; }
+/* green L1 badge in the subtitle (replaces "Beginner-friendly") */
+.l1tag { display: inline-block; background: #1e9e4a; color: #fff !important; font-weight: 800; font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 5px; text-decoration: none; vertical-align: 1px; }
+#topLinks a[href="rules/"] { color: var(--accent); }  /* Rules in yellow (Chu 11/25); Share stays white like the rest */
 
+
+/* ===== Home page in flow design (Chu 11/25): ink black, Futura caps with wide spacing, gold mono numbers, panels with hairlines ===== */
+:root { --bg: #0b0b0d; --surface: #131317; --surface-2: #18181d; --line: #232327; --text: #f2efe9; --muted: rgba(242,239,233,.62); --gold: #e8c468; }
+.top { background: #0b0b0d; border-bottom-color: #232327; }
+.top h1 { font-family: Futura, "Avenir Next", -apple-system, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 16px; }
+.top p { font-size: 12.5px; }
+.toplinks a { font-family: Futura, "Avenir Next", -apple-system, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; font-size: 11.5px; }
+.toplinks a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+.section, #listHead { font-family: Futura, "Avenir Next", -apple-system, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .18em; font-size: 12px; color: var(--gold); }
+.list { gap: 10px; }
+#list .card { border-radius: 12px; background: linear-gradient(180deg, #16161b, #101013); border-color: #232327; padding: 14px 16px 14px 12px; }
+#list .card:hover, #list .card.hl { border-color: rgba(232,196,104,.55); background: linear-gradient(180deg, #1a1a20, #121216); }
+#list .card h3 { font-size: 16px; font-weight: 600; letter-spacing: .005em; }
+#list .card .num { color: var(--gold); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 500; letter-spacing: .06em; margin-right: 8px; }
+#list .stats { font-size: 13px; }
+#list .chip { border-color: #2c2c33; }
+.ver { color: rgba(242,239,233,.42); }
+.readfirst { border-radius: 12px; }
+.readfirst b { font-family: Futura, "Avenir Next", -apple-system, sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 13px; }
+.lvfold > summary { border-radius: 12px; background: linear-gradient(180deg, #16161b, #101013); border-color: #232327; }
+.lvfold .lvf-t { font-family: Futura, "Avenir Next", -apple-system, sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 700; }
+/* "Recent updates" stays quiet: grey, not gold (Chu 11/25) */
+.updates > summary.section, .updates > summary.section::marker { color: var(--muted); }
