@@ -9,10 +9,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.min.css">
 <script>
-// Paper look, test only (Chu 11/26): open the site with ?beta to switch it on (remembered on this phone), ?beta=0 to switch it off.
+// Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
 (() => { try { const q = new URLSearchParams(location.search);
-  if (q.has("beta")) localStorage.setItem("cnx-paper", q.get("beta") === "0" ? "0" : "1");
-  if (localStorage.getItem("cnx-paper") === "1") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
+  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -22,7 +22,6 @@
     <h1 id="title">Chiang Mai Enduro Riders Tracks</h1>
     <p id="subtitle" class="muted"></p>
   </div>
-  <a class="papertag" href="?beta=0">Paper test · back to normal</a>
   <nav class="toplinks" id="topLinks" aria-label="Rules and guides">
     <a href="rules/">Rules</a><a href="difficulty/">Levels</a><a href="navigate/">Navigate</a><a href="ride-together/">Ride together</a><a href="#" id="siteShare">Share</a>
   </nav>

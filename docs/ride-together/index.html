@@ -186,16 +186,16 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 .og { color: var(--gold); font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
 </style>
 <script>
-// Paper look, test only (?beta on, ?beta=0 off; remembered on this phone) — same switch as the home page
+// Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
 (() => { try { const q = new URLSearchParams(location.search);
-  if (q.has("beta")) localStorage.setItem("cnx-paper", q.get("beta") === "0" ? "0" : "1");
-  if (localStorage.getItem("cnx-paper") === "1") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
+  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="../paper-pages.css">
 </head>
 <body>
 <main>
-<a class="back" href="../">← All tracks</a><a class="papertag2" href="?beta=0">Paper test · back to normal</a>
+<a class="back" href="../">← All tracks</a>
 <div class="hero"><img src="../img/rules/hero_together.jpg" alt="Two riders on a forest trail"><div class="q"><p>See everyone in your group on the map.</p><b>Chiang Mai Enduro Riders</b><small>Ride together</small></div></div>
 <h1>Ride together</h1>
 <p class="lead">Riders on one track share their spot with a 4-digit code.</p>

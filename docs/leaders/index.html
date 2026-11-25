@@ -200,16 +200,16 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 @media (max-width: 760px) { .ldwrap { grid-template-columns: 1fr; } }
 </style>
 <script>
-// Paper look, test only (?beta on, ?beta=0 off; remembered on this phone) — same switch as the home page
+// Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
 (() => { try { const q = new URLSearchParams(location.search);
-  if (q.has("beta")) localStorage.setItem("cnx-paper", q.get("beta") === "0" ? "0" : "1");
-  if (localStorage.getItem("cnx-paper") === "1") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
+  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="../paper-pages.css">
 </head>
 <body>
 <main>
-<a class="back" href="../">← All tracks</a><a class="papertag2" href="?beta=0">Paper test · back to normal</a>
+<a class="back" href="../">← All tracks</a>
 <div class="hero"><img src="../img/rules/hero_leaders.jpg" alt="A dirt trail through the forest"><div class="q"><p>Lead for them, not for you.</p><b>Chiang Mai Enduro Riders</b><small>Rules for ride leaders</small></div></div>
 <nav class="cards4" aria-label="Rules"><a class="card" href="../rules/"><img src="../img/rules/c1.jpg" alt="" loading="lazy"><span class="n mono">01</span><svg viewBox="0 0 48 48"><path d="M6 10h24v15H16l-7 6v-6H6z"/><path d="M34 18h8v14h-3v5l-6-5H22v-4"/></svg><b>Community</b></a><a class="card" href="../ride-rules/"><img src="../img/rules/c2.jpg" alt="" loading="lazy"><span class="n mono">02</span><svg viewBox="0 0 48 48"><circle cx="12" cy="34" r="6"/><circle cx="36" cy="34" r="6"/><path d="M12 34l7-11h10l7 11M19 23l-3-6M29 23l4-8h5"/></svg><b>Group ride</b></a><a class="card on" href="../leaders/"><img src="../img/rules/c3.jpg" alt="" loading="lazy"><span class="n mono">03</span><svg viewBox="0 0 48 48"><path d="M12 42V6"/><path d="M12 8h24l-6 8 6 8H12"/></svg><b>Ride leaders</b></a><a class="card" href="../sharing/"><img src="../img/rules/c4.jpg" alt="" loading="lazy"><span class="n mono">04</span><svg viewBox="0 0 48 48"><path d="M6 12l12-5 12 5 12-5v29l-12 5-12-5-12 5z"/><path d="M18 7v29M30 12v29"/></svg><b>Sharing GPX</b></a></nav>
 <h1>Leading a beginner enduro ride</h1>
