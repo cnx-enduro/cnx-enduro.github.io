@@ -28,9 +28,21 @@
   "shareNotice": "The GPX files are for the local enduro community and shouldn't be reshared or published on other public sites.",
   "riskNotice": "Ride at your own risk. Tracks change with weather, landslides and logging, and may cross private land. Check conditions and ride with others.",
   "contribute": "Found a change on a track? Open the track and use \"Send it to us\".",
+  "navTip": {
+    "title": "Navigate on our map",
+    "rows": [
+      {
+        "app": "Navigate",
+        "c": "#1e9e4a",
+        "bold": "on our map",
+        "text": "Open any track → Navigate. It guides you along the track"
+      }
+    ]
+  },
   "groupTip": {
     "title": "Riding as a group? Share your live location",
     "items": [
+      "Ride together on our map: open a track → Ride together → Start a ride, and share the 4-digit code.",
       "WhatsApp: in the group chat, Location → Share live location → 8 hours.",
       "Google Maps: Location sharing → pick the riders → Until you turn this off.",
       "Messenger: in the group chat, Location → Share live location. It stops after about 1 hour, so share again."
@@ -38,29 +50,40 @@
     "note": "Sharing uses your phone's battery and data. Turn it off when you get home.",
     "rows": [
       {
-        "app": "WhatsApp",
-        "c": "#25D366",
-        "bold": "8 hours",
-        "text": "Group chat → Location → Share live location"
-      },
-      {
-        "app": "Google Maps",
-        "c": "#4285F4",
-        "bold": "until you stop",
-        "text": "Location sharing → pick the riders"
-      },
-      {
-        "app": "Messenger",
-        "c": "#A855F7",
-        "bold": "about 1 hour",
-        "text": "Group chat → Location → Share live location. Share again after"
+        "app": "Ride together",
+        "c": "#8b5cf6",
+        "bold": "share live location",
+        "text": "Open a track → Ride together → Start a ride, share the 4-digit code. Everyone sees each other on the map"
       },
       {
         "icon": "🔋",
         "bold": "Uses battery and data",
         "text": "Turn it off when you get home"
       }
-    ]
+    ],
+    "more": {
+      "label": "Other apps",
+      "rows": [
+        {
+          "app": "WhatsApp",
+          "c": "#25D366",
+          "bold": "8 hours",
+          "text": "Group chat → Location → Share live location"
+        },
+        {
+          "app": "Google Maps",
+          "c": "#4285F4",
+          "bold": "until you stop",
+          "text": "Location sharing → pick the riders"
+        },
+        {
+          "app": "Messenger",
+          "c": "#A855F7",
+          "bold": "about 1 hour",
+          "text": "Group chat → Location → Share live location. Share again after"
+        }
+      ]
+    }
   },
   "shareGuide": {
     "title": "How to share GPX responsibly 🗺️",

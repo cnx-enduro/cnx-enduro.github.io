@@ -16,7 +16,9 @@
     <h1 id="title">Chiang Mai Enduro Riders Tracks</h1>
     <p id="subtitle" class="muted"></p>
   </div>
-  <button class="btn small qrbtn" id="qrBtn" type="button" title="Show a QR code to open this page on a phone">QR code</button>
+  <nav class="toplinks" id="topLinks" aria-label="Rules and guides">
+    <a href="rules/">Rules</a><a href="ride-rules/">Group ride rules</a><a href="leaders/">Ride leaders</a><a href="difficulty/">Levels</a><a href="#" data-tip="navTip">Navigate</a><a href="#" data-tip="groupTip">Group ride</a>
+  </nav>
   <nav class="secnav" id="secNav" aria-label="Sections" hidden>
     <div class="seg" id="secTabs"></div>
     <select id="secPick" aria-label="Choose a section"></select>
@@ -32,6 +34,9 @@
   <aside class="panel">
     <div id="overview">
       <a class="back" id="toMain" href="#" hidden>← Easy enduro tracks</a>
+      <!-- Top-bar links open these (Chu 11/25: everything on top, no Menu). The tiles stay hidden; they hold the open/close logic. -->
+      <button class="readfirst" id="readFirst" type="button" aria-expanded="false"><span class="rf-i" aria-hidden="true">⚠️</span><b>Read before you ride</b><span class="rf-a" aria-hidden="true">›</span></button>
+      <details class="guidemenu" id="guideMenu"><summary><span class="gm-i" aria-hidden="true">☰</span>Rules &amp; guides<small>Safety, rules, navigate, group ride</small></summary>
       <div class="notice">
         <p id="intro"></p>
         <p id="restricted" class="strong"></p>
@@ -40,26 +45,27 @@
         <p id="riskNotice" class="share" hidden></p>
         <div id="noticeRows" hidden></div>
       </div>
-      <!-- 4 guide tiles: tap one and its text opens under the tiles (one at a time) -->
       <nav class="guides" id="guides" aria-label="Guides">
-        <a href="rules/"><span class="gic" style="--c:#f5a524">📜</span><b>Community rules</b><small>Chat + group ride rules →</small></a>
+        <a href="rules/"><span class="gic" style="--c:#f5a524">📜</span><b>Community rules</b><small>Read before joining →</small></a>
+        <a href="ride-rules/"><span class="gic" style="--c:#14b8a6">🏍️</span><b>Group ride rules</b><small>Corner man, hand signals →</small></a>
         <a href="leaders/"><span class="gic" style="--c:#e05d2f">🧭</span><b>Leading a ride</b><small>Rules for ride leaders →</small></a>
         <button type="button" data-open="rules"><span class="gic" style="--c:#e0a020">📋</span><b>Before you ride</b><small>Gear and supplies</small></button>
         <a href="difficulty/"><span class="gic" style="--c:#2f9e6e">📶</span><b>Difficulty</b><small>L0–L4, with photos →</small></a>
+        <button type="button" data-open="navTip"><span class="gic" style="--c:#1e9e4a">📍</span><b>Navigate</b><small>Follow a track</small></button>
         <button type="button" data-open="groupTip"><span class="gic" style="--c:#2f7cf6">👥</span><b>Group ride</b><small>Share live location</small></button>
-        <button type="button" data-open="shareGuide"><span class="gic" style="--c:#b05cd6">🗺️</span><b>Sharing GPX</b><small>Do it responsibly</small></button>
       </nav>
       <details class="rules" id="rules">
         <summary id="rulesSummary">Read before riding</summary>
         <div id="rulesBody"></div>
       </details>
+      <details class="rules" id="navTip" hidden>
+        <summary></summary>
+        <div></div>
+      </details>
       <details class="rules" id="groupTip" hidden>
         <summary></summary>
         <div></div>
       </details>
-      <details class="rules guide" id="shareGuide" hidden>
-        <summary></summary>
-        <div></div>
       </details>
       <div id="levelsBox" hidden></div>  <!-- difficulty levels, right above the tracks (Chu 11/19) -->
       <h2 class="section" id="listHead">Tracks</h2>

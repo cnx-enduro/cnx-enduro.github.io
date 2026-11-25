@@ -25,7 +25,7 @@
   $("contribute").textContent = site.contribute;
   // One scannable row: icon, bold short line, small grey rest (same look as the notice box).
   // r.app + r.c: the app's name in its own colour (WhatsApp green, Google Maps blue, Messenger purple) with a matching dot.
-  const iconRow = r => `<div class="nrow"><span class="nic" aria-hidden="true">${r.c ? `<i class="adot" style="background:${esc(r.c)}"></i>` : esc(r.icon)}</span>` +
+  const iconRow = r => r.head ? `<div class="nhead">${esc(r.head)}</div>` : `<div class="nrow"><span class="nic" aria-hidden="true">${r.c ? `<i class="adot" style="background:${esc(r.c)}"></i>` : esc(r.icon)}</span>` +
     `<span><b>${r.app ? `<span class="app" style="color:${esc(r.c)}">${esc(r.app)}</span> · ` : ""}${esc(r.bold)}</b>${r.text ? `<span>${esc(r.text)}</span>` : ""}</span></div>`;
   // Guide tiles: a tile opens its text under the tiles and closes the others; tap again to close.
   document.querySelectorAll("#guides button").forEach(b => b.addEventListener("click", () => {
@@ -33,16 +33,27 @@
     document.querySelectorAll("#guides button").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-expanded", "false"); $(x.dataset.open).open = false; });
     d.open = open; b.classList.toggle("on", open); b.setAttribute("aria-expanded", String(open));
   }));
+  // Navigate tip (site.json navTip): how the site's own ▶ Navigate works.
+  if (site.navTip) {
+    const g = $("navTip");
+    g.querySelector("summary").textContent = site.navTip.title;
+    g.querySelector("div").innerHTML = `<div class="brows">${site.navTip.rows.map(iconRow).join("")}</div>`;
+    g.hidden = false;
+  }
   // Tip for groups: share live location in an app the riders already have (site.json groupTip).
   if (site.groupTip) {
     const g = $("groupTip");
     g.querySelector("summary").textContent = site.groupTip.title;
-    g.querySelector("div").innerHTML = site.groupTip.rows ? `<div class="brows">${site.groupTip.rows.map(iconRow).join("")}</div>` :
+    const more = site.groupTip.more;  // other apps tucked behind a small "Other apps" button (Chu 11/25: Ride together is the one option shown)
+    g.querySelector("div").innerHTML = site.groupTip.rows ? `<div class="brows">${site.groupTip.rows.map(iconRow).join("")}</div>` +
+      (more ? `<button type="button" class="morebtn" aria-expanded="false">${esc(more.label)} ›</button><div class="brows moreapps" hidden>${more.rows.map(iconRow).join("")}</div>` : "") :
       `<ul>${site.groupTip.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` + (site.groupTip.note ? `<p class="muted">${esc(site.groupTip.note)}</p>` : "");
+    const mb = g.querySelector(".morebtn");
+    if (mb) mb.onclick = () => { const box = g.querySelector(".moreapps"), show = box.hidden; box.hidden = !show; mb.setAttribute("aria-expanded", String(show)); mb.textContent = `${more.label} ${show ? "⌄" : "›"}`; };
     g.hidden = false;
   }
   // "How to share GPX responsibly": a rider's own post, word for word, with its photo (site.json shareGuide).
-  if (site.shareGuide) {
+  if (site.shareGuide && $("shareGuide")) {
     const sg = site.shareGuide, g = $("shareGuide"), ps = a => (a || []).map(x => `<p>${esc(x)}</p>`).join("");
     g.querySelector("summary").textContent = sg.title;
     const full = (sg.byline ? `<p class="muted small">${esc(sg.byline)}</p>` : "") + ps(sg.intro) +
@@ -102,7 +113,37 @@
     s.src = "vendor/qrcode.js"; s.onload = ok; s.onerror = () => { qrLib = null; s.remove(); fail(); };
     document.head.appendChild(s);
   }));
-  $("qrBtn").onclick = async () => {
+  // Top bar (Chu 11/25: everything on top, no Menu): pages open directly; tips open under the notice area in the panel.
+  // Tap the same link again to close it.
+  const gm = $("guideMenu");
+  document.querySelectorAll("#topLinks [data-tip]").forEach(l => l.addEventListener("click", e => {
+    e.preventDefault();
+    const tip = l.dataset.tip, onTrack = location.hash && location.hash !== "#";
+    const wasOpen = !onTrack && gm.open && (tip === "safety" ? gm.classList.contains("safety") : $(tip) && $(tip).open);
+    document.querySelectorAll("#topLinks a").forEach(x => x.classList.remove("on"));
+    document.querySelectorAll("#guides button").forEach(b => { b.classList.remove("on"); $(b.dataset.open).open = false; });
+    if (wasOpen) { gm.open = false; gm.classList.remove("safety"); return; }
+    if (onTrack) location.hash = "";
+    setTimeout(() => {
+      gm.open = true; gm.classList.toggle("safety", tip === "safety"); l.classList.add("on");
+      if (rf) rf.setAttribute("aria-expanded", "false");
+      if (tip !== "safety") $(tip).open = true;
+      // phones: the map sticks to the top, so stop just under it, not behind it
+      const mw = document.querySelector(".mapwrap"), stick = mw && getComputedStyle(mw).position === "sticky" ? mw.getBoundingClientRect().height : 0;
+      window.scrollTo({ top: gm.getBoundingClientRect().top + window.scrollY - stick - 8, behavior: "instant" });
+    }, onTrack ? 450 : 0);
+  }));
+  // "Read before you ride" (Chu 11/25, where the red no-ride line was): opens the safety notice + the gear/supplies text.
+  const rf = $("readFirst");
+  if (rf) rf.onclick = () => {
+    const open = !(gm.open && gm.classList.contains("safety"));
+    document.querySelectorAll("#topLinks a").forEach(x => x.classList.remove("on"));
+    document.querySelectorAll("#guides button").forEach(b => { b.classList.remove("on"); $(b.dataset.open).open = false; });
+    gm.open = open; gm.classList.toggle("safety", open); if ($("rules")) $("rules").open = open;
+    rf.setAttribute("aria-expanded", String(open));
+  };
+  gm.addEventListener("toggle", () => { if (!gm.open || !gm.classList.contains("safety")) rf && rf.setAttribute("aria-expanded", "false"); });
+  if ($("qrBtn")) $("qrBtn").onclick = async () => {
     // Always the public address (a test copy on a computer would otherwise give a link phones can't open).
     const url = (site.siteUrl || location.origin + location.pathname) + location.hash;
     try {

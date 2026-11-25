@@ -66,6 +66,20 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 .tiles5 div i { display: block; font-style: normal; font-size: 26px; margin-bottom: 4px; }
 @media (max-width: 520px) { .tiles5 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) { .tiles4 { grid-template-columns: repeat(2, 1fr); } }
+
+/* Sharing GPX (moved here from the home page, Chu 11/25): drawn from site.json shareGuide via data/tracks.json */
+.share { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.share .bhead { font-weight: 700; font-size: 16px; margin: 0 0 4px; }
+.share .nrow { display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 9px 0; border-top: 1px solid var(--line); }
+.share .nrow:first-of-type { border-top: 0; }
+.share .nic { font-size: 18px; line-height: 1.3; text-align: center; }
+.share .nrow b { display: block; font-size: 15px; line-height: 1.35; }
+.share .nrow b + span { display: block; font-size: 14px; color: var(--muted); line-height: 1.45; margin-top: 1px; }
+.share details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.share summary { cursor: pointer; font-weight: 700; color: var(--accent); min-height: 32px; }
+.share ol { padding-left: 22px; } .share li { margin: 6px 0; }
+.share img { display: block; width: 100%; height: auto; border-radius: 8px; margin: 10px 0 2px; }
+.muted { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -73,7 +87,7 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <a class="back" href="../">← All tracks</a>
 <h1>Community rules</h1>
 <p class="group">Chiang Mai Enduro Riders</p>
-<nav class="jump"><a href="#disclaimer">⚠️ Disclaimer</a><a href="#rules">📜 Rules</a><a href="#break">⚠️ If you break them</a><a href="#remember">🙏 Please remember</a><a href="../ride-rules/">🏍️ Group ride rules</a><a href="../difficulty/">📶 Difficulty levels</a><a href="../leaders/">🧭 Leader rules</a></nav>
+<nav class="jump"><a href="#disclaimer">⚠️ Disclaimer</a><a href="#rules">📜 Rules</a><a href="#sharing">🗺️ Sharing GPX</a><a href="#break">⚠️ If you break them</a><a href="#remember">🙏 Please remember</a><a href="../ride-rules/">🏍️ Group ride rules</a><a href="../difficulty/">📶 Difficulty levels</a><a href="../leaders/">🧭 Leader rules</a></nav>
 
 <section id="disclaimer">
 <h2>Disclaimer ⚠️</h2>
@@ -87,6 +101,11 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 11l26 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 26l6-6 6 6M24 20v12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">4</span></div><div><b>Do not post any of our community tracks on other websites or social media.</b></div></div>
 <div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 25 25 7h15v15L22 40z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="33" cy="15" r="2.5" fill="currentColor"/><path d="M6 6l36 36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">5</span></div><div><b>No commercial posts without admin approval.</b></div></div>
 <div class="rule"><div class="ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 28a14 14 0 0 1 28 0v4H10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14v8M10 32h28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 26h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="n">6</span></div><div><b>Minimum gear: helmet, high boots, kneepads, gloves, and goggles on every group ride.</b><div class="tiles5"><div><i>🪖</i>helmet</div><div><i>🥾</i>high boots</div><div><i>🦵</i>kneepads</div><div><i>🧤</i>gloves</div><div><i>🥽</i>goggles</div></div></div></div>
+</section>
+
+<section id="sharing">
+<h2 id="shareTitle">How to share GPX responsibly 🗺️</h2>
+<div class="share" id="shareBox"><p class="muted">Loading…</p></div>
 </section>
 
 <section id="break">
@@ -107,5 +126,21 @@ footer { border-top: 1px solid var(--line); padding-top: 12px; color: var(--mute
 <section id="leaders"><a class="rule leadlink" href="../leaders/"><div class="num">🧭</div><div><b>Leading a ride?</b><span>Rules for group leaders: navigation, the meeting point, the corner man, breaks. Read them before you lead →</span></div></a></section>
 <footer>Last updated November 2026</footer>
 </main>
+<script>
+// Sharing GPX guide: same words as before (site.json shareGuide), drawn here so there's one source.
+(async () => {
+  const box = document.getElementById("shareBox"), esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  try {
+    const sg = (await (await fetch("../data/tracks.json")).json()).site.shareGuide;
+    if (!sg) { document.getElementById("sharing").hidden = true; return; }
+    document.getElementById("shareTitle").textContent = sg.title;
+    const ps = a => (a || []).map(x => `<p>${esc(x)}</p>`).join("");
+    const row = r => `<div class="nrow"><span class="nic" aria-hidden="true">${esc(r.icon || "")}</span><span><b>${esc(r.bold)}</b>${r.text ? `<span>${esc(r.text)}</span>` : ""}</span></div>`;
+    const full = (sg.byline ? `<p class="muted">${esc(sg.byline)}</p>` : "") + ps(sg.intro) + (sg.rules ? `<ol>${sg.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ol>` : "") + ps(sg.outro) +
+      (sg.photo ? `<img src="../${esc(sg.photo)}" alt="${esc(sg.photoAlt || "")}" loading="lazy">` : "");
+    box.innerHTML = sg.summary ? `<p class="bhead">${esc(sg.summary.head)}</p>${sg.summary.rows.map(row).join("")}<details><summary>${esc(sg.summary.more)}</summary>${full}</details>` : full;
+  } catch (e) { box.innerHTML = `<p class="muted">Couldn't load the guide. Check your connection and reload.</p>`; }
+})();
+</script>
 </body>
 </html>
