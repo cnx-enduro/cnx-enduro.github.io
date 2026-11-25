@@ -9,8 +9,12 @@
 //  - off track (> 15 m for 20 s, only when the phone's own GPS is better than 15 m): red screen edge,
 //    ⚠ OFF TRACK, green ← / → with metres to the track, red dots = the way you came since leaving it.
 //  - (the thin green phone-direction line comes with location ON, common.js, so it is on here too)
+//  - turns (Chu 11/26): from 500 m before a junction where the track turns, a box on top of the ahead list:
+//    bent arrow + "200 m" counting down in 50 m steps + "Turn left"; 2 beeps + buzz at 200 m, 1 beep at the turn.
+//    Turns come from tools/turns.py (track turns 35°+ where the offline map shows 3+ ways meeting), t.turns.
 // Track up everywhere: the way ahead points up the screen.
-const NAV = { OFF_M: 15, OFF_S: 20, AHEAD_KM: 2, SPEED_WINDOW_MIN: 15, SPEED_MIN_MOVING_MIN: 10, SMALL_AFTER_MS: 8000 };
+const NAV = { OFF_M: 15, OFF_S: 20, AHEAD_KM: 2, SPEED_WINDOW_MIN: 15, SPEED_MIN_MOVING_MIN: 10, SMALL_AFTER_MS: 8000,
+  TURN_SHOW_M: 500, TURN_BEEP_M: 200, TURN_NOW_M: 30, TURN_PAST_M: 25 };
 
 // Sunset (sun 0.833° below the horizon) for a day and place, worked out on the phone (no signal needed).
 function sunsetAt(day, lat, lon) {
@@ -52,6 +56,17 @@ function startNavigate(o) {
       return { kind: "laterite", name: "Laterite", from: Math.min(a, b), to: Math.max(a, b) };
     }),
   ];
+
+  // ---- turns ahead (junctions only) ----
+  const turns = (t.turns || []).slice().sort((a, b) => a.km - b.km), turnTold = {};
+  // bent arrow: a stem up, then the way you turn (by the real angle), arrow head at the end
+  const TURN = (dir, deg) => {
+    const a = Math.min(150, Math.max(35, deg)) * (dir === "L" ? -1 : 1) * R, ex = 16 + 11 * Math.sin(a), ey = 15 - 11 * Math.cos(a);
+    const hx = h => (ex + 6 * Math.sin(a + h * R)).toFixed(1), hy = h => (ey - 6 * Math.cos(a + h * R)).toFixed(1);
+    return `<svg class="turnic" viewBox="0 0 32 32" width="40" height="40" aria-hidden="true"><path d="M16 30V15L${ex.toFixed(1)} ${ey.toFixed(1)}M${hx(150)} ${hy(150)}L${ex.toFixed(1)} ${ey.toFixed(1)}L${hx(-150)} ${hy(-150)}" ` +
+      `fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  const turnWord = d => d === "L" ? "Turn left" : "Turn right";
 
   // ---- the boxes on the map ----
   const ui = document.createElement("div");
@@ -248,7 +263,22 @@ function startNavigate(o) {
     // laterite: slippery sign + "Laterite 200 m", counting down every 50 m; on it: "Laterite now", how much is left
     const lat = a => `<div class="na laterite">${SLIP}<span><b>Laterite ${a.from <= nav.km ? "now" : step50(a.from - nav.km)}</b>` +
       `<small>${a.from <= nav.km ? step50(a.to - nav.km) + " of it · slippery when wet" : "slippery when wet"}</small></span></div>`;
-    aheadBox.innerHTML = (s ? row(s, s.kind === "water" ? "≈" : "★", s.kind) : "") + (l ? lat(l) : "");
+    // the next turn: from 500 m, counting down in 50 m steps; "now" in the last 30 m; gone 25 m after it
+    let turnRow = "";
+    const tn = nav.joined && !nav.off && !map.cnxWalking ? turns.find(x => (x.km - nav.km) * 1000 > -NAV.TURN_PAST_M) : null;
+    if (tn) {
+      const m = (tn.km - nav.km) * 1000;
+      if (m <= NAV.TURN_SHOW_M) {
+        const then = turns.find(x => x.km > tn.km && (x.km - tn.km) * 1000 <= 150);
+        const near = m <= NAV.TURN_NOW_M;
+        turnRow = `<div class="na turn${near ? " now" : ""}">${TURN(tn.dir, tn.deg)}<span><b>${near ? "Now" : step50(m / 1000)}</b>` +
+          `<small>${turnWord(tn.dir)}${then ? ", then " + (then.dir === "L" ? "left" : "right") : ""}</small></span></div>`;
+        const told = turnTold[tn.km] || 0;
+        if (m <= NAV.TURN_BEEP_M && told < 1) { turnTold[tn.km] = 1; try { navigator.vibrate && navigator.vibrate([150, 100, 150]); } catch (e) {} if (o.beep) o.beep(2, 1175, 0.15); }
+        if (near && told < 2) { turnTold[tn.km] = 2; try { navigator.vibrate && navigator.vibrate(250); } catch (e) {} if (o.beep) o.beep(1, 1175, 0.3); }
+      }
+    }
+    aheadBox.innerHTML = turnRow + (s ? row(s, s.kind === "water" ? "≈" : "★", s.kind) : "") + (l ? lat(l) : "");
     if (s && s.at && (!pin || pin._for !== s)) {
       if (pin) pin.remove();
       pin = L.marker(s.at, { interactive: false, zIndexOffset: 900, icon: L.divIcon({ className: "", iconSize: [26, 26], html: `<div class="navpin ${s.kind}">${s.kind === "water" ? "≈" : "★"}</div>` }) }).addTo(map);

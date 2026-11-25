@@ -175,28 +175,36 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 .card b { display: block; font-size: 16px; } .card span { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
 @media (max-width: 900px) { .shots { grid-template-columns: repeat(2, 1fr); } .grid3 { grid-template-columns: 1fr; } }
 
-.offic { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #2f9e6e; vertical-align: -7px; margin: 0 2px; }
+.offic, .shot span.offic { display: inline-grid; padding: 0; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #2f9e6e; vertical-align: -7px; margin: 0 2px; }
 .offic svg { width: 18px; height: 18px; }
 </style>
+<script>
+// Paper look, test only (?beta on, ?beta=0 off; remembered on this phone) — same switch as the home page
+(() => { try { const q = new URLSearchParams(location.search);
+  if (q.has("beta")) localStorage.setItem("cnx-paper", q.get("beta") === "0" ? "0" : "1");
+  if (localStorage.getItem("cnx-paper") === "1") document.documentElement.classList.add("paper"); } catch (e) {} })();
+</script>
+<link rel="stylesheet" href="../paper-pages.css">
 </head>
 <body>
 <main>
-<a class="back" href="../">← All tracks</a>
-<div class="hero"><img src="../img/rules/hero_nav.jpg" alt="A dirt trail through the hills"><div class="q"><p>Follow any track on your phone. No extra app.</p><b>Chiang Mai Enduro Riders</b><small>Navigate</small></div></div>
+<a class="back" href="../">← All tracks</a><a class="papertag2" href="?beta=0">Paper test · back to normal</a>
+<div class="hero"><img src="../img/rules/hero_nav.jpg" alt="A dirt trail through the hills"><div class="q"><p>Navigation built in. Open a track and ride.</p><b>Chiang Mai Enduro Riders</b><small>Navigate</small></div></div>
 <h1>Navigate</h1>
 <p class="lead">Every track on this site, step by step on your phone.</p>
 <div class="how">Open a track → <em>▶ Navigate</em></div>
 <div class="shots">
-<div class="shot"><img src="../img/guide/v4_nav_blue.jpg" alt="Follow the blue line" loading="lazy"><span class="num">01</span><div><b>Follow the blue line</b><span>Blue = still to ride, grey = done. The map turns with the track, so the way ahead is always up.</span></div></div>
+<div class="shot"><img src="../img/guide/v4_nav_turn.jpg" alt="Follow the blue line" loading="lazy"><span class="num">01</span><div><b>Follow the blue line</b><span>Blue = still to ride, grey = done. The way ahead is always up. Before each junction: which way, and how far. Two beeps at 200 m.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_bigbox.jpg" alt="Tap the time box" loading="lazy"><span class="num">02</span><div><b>Tap the time box</b><span>Arrival time, km to go, and when it gets dark.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_record.jpg" alt="⏺ Record your ride" loading="lazy"><span class="num">03</span><div><b>⏺ Record your ride</b><span>Red = where you rode, blue = still to ride.</span></div></div>
-<div class="shot"><img src="../img/guide/v4_nav_green.jpg" alt="Thin green line" loading="lazy"><span class="num">04</span><div><b>Thin green line</b><span>Where your phone is pointing. When you ride, it follows your direction.</span></div></div>
-<div class="shot"><img src="../img/guide/v4_nav_lock.jpg" alt="🔒 Rain lock" loading="lazy"><span class="num">05</span><div><b>🔒 Rain lock</b><span>Rain and gloves can't press anything. Slide 🔒 into the circle to unlock.</span></div></div>
-<div class="shot"><img src="../img/guide/v4_nav_walk.jpg" alt="🚶 Walk" loading="lazy"><span class="num">06</span><div><b>🚶 Walk</b><span>Left the bike to scout on foot? Find my bike walks you back.</span></div></div>
+<div class="shot"><img src="../img/guide/v4_nav_heading.jpg" alt="Green line = your phone" loading="lazy"><span class="num">04</span><div><b>Green line = your phone</b><span>It points where your phone is facing, all the way up the screen. Turn the phone to look around.</span></div></div>
+<div class="shot"><img src="../img/guide/v4_nav_lock2.jpg" alt="🔒 Rain lock" loading="lazy"><span class="num">05</span><div><b>🔒 Rain lock</b><span>Rain and gloves can't press anything. Drag to unlock: pull the tab on the left to the middle of the screen.</span></div></div>
+<div class="shot"><img src="../img/guide/v4_nav_walk2.jpg" alt="🚶 Walk" loading="lazy"><span class="num">06</span><div><b>🚶 Walk</b><span>Left the bike to scout on foot? Find my bike walks you back.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_offline.jpg" alt="Offline map" loading="lazy"><span class="num">07</span><div><b><span class="offic" aria-label="offline map button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8.5 4.5 15.5 7 21 5v12.5L15.5 19.5 8.5 17 3 19z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 4.5V17M15.5 7v5" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17.5" cy="17.5" r="5.2" fill="#fff"/><path d="M15.2 17.6l1.6 1.6 3.1-3.3" fill="none" stroke="#2f9e6e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Offline map</b><span>On the track page, tap <span class="offic" aria-label="offline map button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8.5 4.5 15.5 7 21 5v12.5L15.5 19.5 8.5 17 3 19z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 4.5V17M15.5 7v5" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17.5" cy="17.5" r="5.2" fill="#fff"/><path d="M15.2 17.6l1.6 1.6 3.1-3.3" fill="none" stroke="#2f9e6e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span> while you have signal. The map then works with no signal.</span></div></div>
 </div>
 <div class="note">The offline map saves by itself when you start Navigate. Start it while you still have signal. ■ NAV stops it.</div>
 <footer>Last updated November 2026</footer>
 </main>
+<script>/* Paper test: Paper guide pictures (p4_) */ if (document.documentElement.classList.contains("paper")) document.querySelectorAll(".shot img").forEach(function (i) { i.src = i.getAttribute("src").replace(/\/v[34]_/, "/p4_"); });</script>
 </body>
 </html>

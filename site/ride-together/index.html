@@ -185,10 +185,17 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 .ot { font-size: 15px; font-weight: 600; } .ot b { font-weight: 800; } .ot small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; }
 .og { color: var(--gold); font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
 </style>
+<script>
+// Paper look, test only (?beta on, ?beta=0 off; remembered on this phone) — same switch as the home page
+(() => { try { const q = new URLSearchParams(location.search);
+  if (q.has("beta")) localStorage.setItem("cnx-paper", q.get("beta") === "0" ? "0" : "1");
+  if (localStorage.getItem("cnx-paper") === "1") document.documentElement.classList.add("paper"); } catch (e) {} })();
+</script>
+<link rel="stylesheet" href="../paper-pages.css">
 </head>
 <body>
 <main>
-<a class="back" href="../">← All tracks</a>
+<a class="back" href="../">← All tracks</a><a class="papertag2" href="?beta=0">Paper test · back to normal</a>
 <div class="hero"><img src="../img/rules/hero_together.jpg" alt="Two riders on a forest trail"><div class="q"><p>See everyone in your group on the map.</p><b>Chiang Mai Enduro Riders</b><small>Ride together</small></div></div>
 <h1>Ride together</h1>
 <p class="lead">Riders on one track share their spot with a 4-digit code.</p>
@@ -211,10 +218,8 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 <a class="oapp" href="https://www.google.com/maps" target="_blank" rel="noopener"><span class="oi" style="background:#4285F4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="11" r="2.2" fill="#fff"/></svg></span><span class="ot"><b style="color:#4285F4">Google Maps</b> · until you stop<small>Location sharing → pick the riders</small></span><span class="og">Open ›</span></a>
 <a class="oapp" href="https://m.me/" target="_blank" rel="noopener"><span class="oi" style="background:#A855F7"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4C7.6 4 4 7.3 4 11.4c0 2.3 1.1 4.4 2.9 5.7V20l2.7-1.5c.8.2 1.6.3 2.4.3 4.4 0 8-3.3 8-7.4S16.4 4 12 4z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 13l2.7-2.8 2 1.8 2.8-3" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ot"><b style="color:#A855F7">Messenger</b> · about 1 hour<small>Group chat → Location → Share live location. Share again after</small></span><span class="og">Open ›</span></a>
 </div>
-<div class="card"><b><span style="color:#4285F4">Google Maps</span> · until you stop</b><span>Location sharing → pick the riders</span></div>
-<div class="card"><b><span style="color:#A855F7">Messenger</span> · about 1 hour</b><span>Group chat → Location → Share live location. Share again after</span></div>
-</div>
 <footer>Last updated November 2026</footer>
 </main>
+<script>/* Paper test: Paper guide pictures (p4_) */ if (document.documentElement.classList.contains("paper")) document.querySelectorAll(".shot img").forEach(function (i) { i.src = i.getAttribute("src").replace(/\/v[34]_/, "/p4_"); });</script>
 </body>
 </html>

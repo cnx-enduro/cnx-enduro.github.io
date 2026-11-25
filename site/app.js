@@ -433,11 +433,13 @@
   };
   map.on("whereupdate", e => { youAt = e.latlng; updateYou(); });
   // Track page: the open track drawn in surface colours (from OpenStreetMap, see surfaces.py).
+  // Paper test (?beta): deeper shades, because white and bright orange vanish on a light map (Chu 11/26)
+  const PAPERMAP = document.documentElement.classList.contains("paper");
   const SURFACES = [
-    ["single", "Single track", "#e5397a"],
-    ["double", "Double track / dirt", "#ff9800"],
-    ["lanes", "Concrete lanes (two strips)", "#33d6ff"],
-    ["paved", "Paved", "#f4f4f4"],
+    ["single", "Single track", PAPERMAP ? "#c2185b" : "#e5397a"],
+    ["double", "Double track / dirt", PAPERMAP ? "#d96c00" : "#ff9800"],
+    ["lanes", "Concrete lanes (two strips)", PAPERMAP ? "#1683b5" : "#33d6ff"],
+    ["paved", "Paved", PAPERMAP ? "#5e574a" : "#f4f4f4"],
     ["unknown", "Not on the map", "#8a8f98"],
   ];
   const LATERITE = "#7a1408";

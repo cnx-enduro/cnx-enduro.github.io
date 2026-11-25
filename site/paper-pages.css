@@ -1,0 +1,53 @@
+/* PAPER look for the inner pages (Rules ×4, Levels, Navigate, Ride together) — test only: html.paper (?beta).
+   Loaded after each page's own styles. Dark ink on light paper, serif titles; photos fade into paper, not black. */
+html:root.paper:not([data-theme="x"]) {
+  --bg: #f3eee3; --surface: #fbf8f1; --surface-2: #efe8da; --line: #d9cfbb; --text: #16140f;
+  --muted: #5e574a; --accent: #8a5a00; --gold: #8a5a00; --red: #c62828; color-scheme: light;
+}
+html.paper body { background: var(--bg); color: var(--text); }
+html.paper h1, html.paper h2, html.paper .rl, html.paper .card b, html.paper .band h2, html.paper .shot b, html.paper .how,
+html.paper .strike small, html.paper .chips span, html.paper .back, html.paper footer, html.paper .key > b, html.paper .level dt,
+html.paper .rtabs a, html.paper .levels-nav a, html.paper .thanks, html.paper .og, html.paper .bn {
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; text-transform: none !important; letter-spacing: .01em !important;
+}
+html.paper h1 { font-size: clamp(30px, 6vw, 46px); }
+html.paper .rl, html.paper .shot b, html.paper .card b { font-size: 17px !important; font-weight: 700; }
+html.paper .hero .q p { color: var(--red); font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+html.paper .hero .q b { color: var(--text); }
+/* photo cards and tiles: the photo fades into paper and the words are ink */
+html.paper .card, html.paper .rtile { background: #fbf8f1; border-color: var(--line); color: var(--text); }
+html.paper .card img, html.paper .rtile img { opacity: .85; filter: grayscale(.2) sepia(.1); }
+html.paper .card::after, html.paper .rtile::after { content: ""; position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(180deg, rgba(243,238,227,.05) 0%, rgba(251,248,241,.88) 34%, #fbf8f1 52%); }
+html.paper .card > *:not(img), html.paper .rtile > *:not(img) { position: relative; z-index: 1; }
+html.paper .card .n, html.paper .rtile .rn { color: var(--text); }
+html.paper .card svg, html.paper .rtile svg { stroke: var(--gold); }
+html.paper .card.on { border-color: var(--text); }
+html.paper .rtile b, html.paper .rtile .rl { color: var(--text); }
+html.paper .rtile .rt > span { color: var(--muted); }
+/* section bands: photo fades into paper from the left */
+html.paper .band { background: #fbf8f1; border-color: var(--line); }
+html.paper .band img { opacity: .9; filter: grayscale(.2) sepia(.1); }
+html.paper .band::after { background: linear-gradient(90deg, rgba(251,248,241,.97) 0%, rgba(251,248,241,.6) 55%, rgba(251,248,241,.1) 100%); }
+html.paper .band h2 { color: var(--text); } html.paper .band .bn { color: var(--gold); }
+/* panels */
+html.paper .rulesgrid .rule, html.paper .disc, html.paper .strike, html.paper .key, html.paper .shot, html.paper .note, html.paper .how,
+html.paper .oapp, html.paper .rules p, html.paper .level, html.paper .ldwrap > .rule, html.paper .post li {
+  background: #fbf8f1 !important; border-color: var(--line) !important; color: var(--text);
+}
+html.paper .rulesgrid .rule .rn, html.paper .ldwrap > .rule .rn, html.paper .shot .num { border-color: var(--gold); color: var(--gold); background: #fbf8f1; }
+html.paper .redline b { color: var(--red); } html.paper .redline { border-color: rgba(198,40,40,.35) !important; }
+html.paper .strike.s2 small { color: var(--red); }
+html.paper .chips span { border-color: #cfc4ad !important; color: var(--text) !important; }
+html.paper .gest { stroke: var(--gold); }
+html.paper .level .photos img { border-color: var(--line); }
+html.paper .shot img { border-bottom-color: var(--line); }
+html.paper a { color: var(--accent); }
+html.paper .card, html.paper .card:visited, html.paper .oapp { color: var(--text); }
+html.paper footer { color: var(--muted); border-color: var(--line); }
+html.paper .papertag2 { display: inline-block; margin: 14px 0 0 10px; font: 700 12px -apple-system, sans-serif; color: #fff !important; background: #16140f; padding: 4px 9px; border-radius: 6px; text-decoration: none; }
+.papertag2 { display: none; }
+/* the overlay must sit above the photo: photo 0, overlay 0 (drawn after), words 1 */
+html.paper .rtile img, html.paper .card img { z-index: 0 !important; position: absolute !important; }
+html.paper .rtile::after, html.paper .card::after { z-index: 0 !important; }
+html.paper .rtile > *:not(img), html.paper .card > *:not(img) { z-index: 1 !important; }

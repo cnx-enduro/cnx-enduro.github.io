@@ -552,6 +552,17 @@ def main():
         with open(path, "w", encoding="utf-8") as f:
             f.write(html)
 
+    # Turn alerts for Navigate, made on a computer by tools/turns.py from the offline map: only if made for this
+    # exact version of the track line (a changed track needs `python3 tools/turns.py` again, then build again)
+    turns_path = os.path.join(SRC, "offline", "turns.json")
+    turns = json.load(open(turns_path))["tracks"] if os.path.exists(turns_path) else {}
+    for t in tracks:
+        tt = turns.get(t["id"])
+        s = f'{len(t["line"])}:{t["km"]}:{t["line"][0][0]:.5f},{t["line"][-1][1]:.5f}'
+        if tt and tt.get("sig") == s:
+            t["turns"] = [{"km": x["km"], "dir": x["dir"], "deg": x["deg"]} for x in tt["turns"]]
+        else:
+            warn(f"Track {t['id']} has no turn alerts for its current line: run `python3 tools/turns.py`, then build again")
     data = {
         "site": site,
         "rules": rules,

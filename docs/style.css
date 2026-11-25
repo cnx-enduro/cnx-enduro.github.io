@@ -775,3 +775,164 @@ html.paper .leaflet-container { background: #efe8da; }
 /* level colours on paper: L1 stays green (Chu 11/26), L2 in a deeper blue */
 html.paper path[stroke="#1f5fbf"] { stroke: #1446c8; }
 html.paper [style*="#1f5fbf"] { background-color: #1446c8 !important; }
+/* Paper test: no thick colour bar on the track cards, just a very thin grey line (Chu 11/26) */
+html.paper #list .card { grid-template-columns: 1px 1fr; gap: 14px; }
+html.paper #list .card .swatch { background: #d9cfbb !important; border-radius: 0; }
+
+/* ===== Paper test: Navigate + Ride together panels in paper too (Chu 11/26) — light card, dark ink; red/purple/green keep their meaning ===== */
+html.paper .navmini, html.paper .navbig, html.paper .navsun, html.paper .rs-box, html.paper .recbox, html.paper .ridechip,
+html.paper .navstop, html.paper .navui .navmenu, html.paper .walkst {
+  background: #fbf8f1 !important; color: #16140f !important; border-color: #cfc4ad !important; box-shadow: 0 2px 10px rgba(60,45,20,.18);
+}
+html.paper .navmini *, html.paper .navbig *, html.paper .navsun *, html.paper .rs-box h2, html.paper .rs-box label, html.paper .rs-row,
+html.paper .recbox, html.paper .navmenusheet .mrow, html.paper .ridechip { color: #16140f; }
+html.paper .navbig .bar, html.paper .navbig [class*="bar"] { background: #e5dccb; }
+html.paper .rs-small, html.paper .rs-box p, html.paper .navmenusheet .mrow small, html.paper .rs-row small { color: #5e574a !important; }
+html.paper .rs-name, html.paper .rs-code, html.paper .recname { background: #fff !important; color: #16140f !important; }
+html.paper .recname input { color: #16140f; }
+html.paper .rs-b.s, html.paper .rs-seg button, html.paper .rs-x { background: #efe8da !important; color: #16140f !important; }
+html.paper .rs-seg button.on { background: #8b5cf6 !important; color: #fff !important; }
+html.paper .rs-tip { background: #f3eee3; color: #4a443a; }
+html.paper .rs-big span { background: #fff; color: #16140f; }
+html.paper .rs-row { border-bottom-color: #e2d9c7; } html.paper .rs-row.me { background: #e9e1cf; }
+html.paper .navmenusheet .mrow { border-bottom-color: #e2d9c7; }
+html.paper .navstop span { color: #16140f; }
+html.paper .rs-dim, html.paper .recdim { background: rgba(40,30,15,.35); }
+/* the six rule tiles: fade the photo fully into paper behind the words */
+html.paper .rtile::after { background: linear-gradient(180deg, rgba(243,238,227,.05) 0%, rgba(251,248,241,.88) 34%, #fbf8f1 52%) !important; }
+html.paper .nb-sun, html.paper .nb-x { background: #efe8da !important; color: #16140f !important; }
+html.paper .nb-sun small, html.paper .nb-eta small { color: #6b6356; }
+html.paper .nb-bar { background: #e5dccb; }
+/* Paper test: track page buttons like the Paper mockup — Navigate solid ink, Ride together outlined, the rest quiet (Chu 11/26) */
+html.paper .btn.navgo { background: #16140f !important; border-color: #16140f !important; color: #fbf8f1 !important; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 17px; }
+html.paper .btn.navgo:hover { background: #2a261d !important; }
+html.paper .btn.ridego { background: #fbf8f1 !important; border: 2px solid #16140f !important; color: #16140f !important; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 17px; }
+html.paper .btn.ridego:hover { background: #f1ebdd !important; }
+html.paper .btn.primary { background: #fbf8f1; color: #16140f; border-color: #cfc4ad; }
+html.paper .btn { font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+/* Ride together's own panel buttons follow: start = ink, join = outline */
+html.paper .rs-b.p { background: #16140f !important; color: #fbf8f1 !important; }
+html.paper .rs-b.s { background: #fbf8f1 !important; color: #16140f !important; border: 2px solid #16140f !important; }
+html.paper .rs-seg button.on { background: #16140f !important; color: #fbf8f1 !important; }
+html.paper .rs-name, html.paper .rs-code { border-color: #16140f !important; }
+html.paper .rs-big span { border-color: #16140f; }
+/* Paper: the rest of Navigate / Ride together / Walk (Chu 11/26: every element on paper). Safety colours stay: SOS red, waiting amber, walk warning orange, locked rain lock amber */
+html.paper .cnxtoast, html.paper .ridetoast, html.paper .navtoast, html.paper .navdark { background: #fbf8f1; color: #16140f; border: 2px solid #16140f; box-shadow: 0 3px 12px rgba(40,30,15,.35); }
+html.paper .navdark { border-color: #d96c00; }
+html.paper .cnxtoast small, html.paper .ridetoast small { color: #5e574a; }
+html.paper .cnxtoast .tbike { color: #d96c00; }
+html.paper .cmpwake { background: #fbf8f1; border-color: #1e9e4a; color: #1e9e4a; }
+html.paper .ridestat { background: #16140f; color: #fbf8f1; box-shadow: 0 2px 10px rgba(40,30,15,.4); }
+html.paper .ridesos.mine { background: #16140f; }
+html.paper .navui .navmenu { background: #fbf8f1; color: #16140f; border-color: #16140f; box-shadow: 0 2px 8px rgba(40,30,15,.3); }
+html.paper .navmini .nm-bar, html.paper .nm-bar { background: #e5dccb; }
+html.paper .ns-tip { color: #5e574a; border-top-color: #e2d9c7; }
+html.paper .nb-foot { color: #5e574a; } html.paper .nb-foot b { color: #16140f; }
+html.paper .recnote, html.paper .recmsg { color: #8a5a00; }
+html.paper .recdel, html.paper .rs-msg.bad { color: #c62828; }
+html.paper .rs-msg, html.paper .rs-l, html.paper .recbox label, html.paper .recname i { color: #5e574a; }
+html.paper .recbox { background: #fbf8f1; color: #16140f; }
+/* map buttons: unlocked rain lock + walk = paper circles with an ink ring (not see-through grey) */
+html.paper .leaflet-bar.rainlock a:not(.on), html.paper .leaflet-bar.walkbtn a:not(.on) { background: #fbf8f1; color: #16140f; border-color: #16140f; }
+html.paper .leaflet-bar.walkbtn a.on { background: #d96c00; border-color: #16140f; }
+html.paper .leaflet-bar.locate a.on, html.paper .locate .locsign.on, html.paper .compass a.route, html.paper .leaflet-bar.offsave a.busy { background: #1446c8; border-color: #1446c8; }
+html.paper .leaflet-bar.offsave a.saved, html.paper .leaflet-bar.offsave a.update { background: #1e9e4a; border-color: #1e9e4a; }
+/* rain-lock slider: paper band, ink arrows (pocket screen stays black) */
+html.paper body:not(.pocket) .rl-slide { background: transparent; }  /* see-through: the map stays visible (Chu 11/26) */
+html.paper body:not(.pocket) .rl-knob { background: #16140f; color: #fbf8f1; box-shadow: 0 0 0 5px rgba(22,20,15,.15); }
+html.paper body:not(.pocket) .rl-ring { border-color: #16140f; }
+html.paper body:not(.pocket) .rl-ring.in { border-color: #1e9e4a; box-shadow: 0 0 0 6px rgba(30,158,74,.25); }
+html.paper body:not(.pocket) .rl-arr { color: #16140f; text-shadow: 0 0 4px #fbf8f1, 0 0 8px #fbf8f1; }
+html.paper body:not(.pocket) .rl-ring { background: rgba(251,248,241,.35); }
+html.paper body:not(.pocket) .rl-hint { left: 8px; right: auto; top: 90px; transform-origin: left center; width: max-content; padding: 4px 12px; border-radius: 999px; background: rgba(251,248,241,.92); border: 1px solid #16140f; color: #16140f; font-size: 15px; }
+/* walk */
+html.paper .walkst { border-color: #d96c00; } html.paper .walkst small { color: #5e574a; } html.paper .walkst .bikeic { color: #d96c00; }
+html.paper .walkst .wnav { background: #16140f; color: #fbf8f1; }
+html.paper .findbike { background: #16140f; color: #fbf8f1; box-shadow: 0 2px 8px rgba(40,30,15,.4); }
+html.paper .findbike .bikeic { color: #ff9a3d; }
+html.paper .findbike.on { background: #1446c8; color: #fff; }
+html.paper .navbackbar { background: #16140f; color: #fbf8f1; }
+html.paper body:not(.pocket) .rl-hint.flash { animation-name: rlflashp; }
+@keyframes rlflashp { 50% { color: #b45309; transform: scale(1.06); } }
+/* normal look too: no dark band over the map (Chu 11/26 "don't block the screen"); knob, ring, arrows and a small label pill only */
+html:not(.paper) body:not(.pocket) .rl-slide { background: transparent; }
+html:not(.paper) body:not(.pocket) .rl-arr { color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; }
+html:not(.paper) body:not(.pocket) .rl-ring { background: rgba(0,0,0,.25); }
+html:not(.paper) body:not(.pocket) .rl-hint { left: 8px; right: auto; top: 90px; transform-origin: left center; width: max-content; padding: 4px 12px; border-radius: 999px; background: rgba(12,14,18,.85); font-size: 15px; }
+html:not(.paper) body:not(.pocket) .rl-hint.flash { animation-name: rlflashn; }
+@keyframes rlflashn { 50% { color: #ffb02e; transform: scale(1.06); } }
+/* Rain lock slider = one sign on the left, slide it to the center (Chu 11/26: no lock knob, no circle, map stays visible).
+   The circle is still there, invisible, as the target in the middle. */
+body .raincover .rl-ring { opacity: 0; }
+body .raincover .rl-arr { display: none; }
+body .raincover .rl-knob { left: 8px; top: 40px; width: auto; height: 52px; padding: 0 18px; border-radius: 26px; gap: 8px; white-space: nowrap;
+  font: 800 17px/1 system-ui, -apple-system, sans-serif; background: #fff; color: #000; box-shadow: 0 2px 10px rgba(0,0,0,.45); }
+body .raincover .rl-knob .rl-chev { font-weight: 900; letter-spacing: 1px; color: #b45309; }
+body .raincover .rl-knob.in { background: #1e9e4a; color: #fff; } body .raincover .rl-knob.in .rl-chev { color: #fff; }
+body .raincover .rl-knob.flash { animation: rlknobflash .45s ease 3; }
+@keyframes rlknobflash { 50% { box-shadow: 0 0 0 6px rgba(224,160,32,.7), 0 2px 10px rgba(0,0,0,.45); } }
+html.paper body .raincover .rl-knob { background: #16140f; color: #fbf8f1; box-shadow: 0 2px 10px rgba(40,30,15,.4); font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+html.paper body .raincover .rl-knob .rl-chev { color: #f0b45a; }
+html.paper body .raincover .rl-knob.in { background: #1e9e4a; color: #fff; }
+/* Chu 11/26: no solid colour block at all while locked: the sign is text + arrows only, with a soft outline so it reads on any map */
+body:not(.pocket) .raincover { background: transparent; }
+body .raincover .rl-knob, html.paper body .raincover .rl-knob { background: transparent; box-shadow: none; padding: 0 10px; font-size: 21px; font-weight: 900;
+  color: #fff; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 0 10px rgba(0,0,0,.8); }
+html.paper body .raincover .rl-knob { color: #16140f; text-shadow: 0 0 3px #fbf8f1, 0 0 6px #fbf8f1, 0 0 10px #fbf8f1; }
+body .raincover .rl-knob .rl-chev { color: #ffb02e; } html.paper body .raincover .rl-knob .rl-chev { color: #b45309; }
+body .raincover .rl-knob.in, html.paper body .raincover .rl-knob.in { background: transparent; color: #1e9e4a; }
+body .raincover .rl-knob.in .rl-chev { color: #1e9e4a; }
+body .raincover .rl-knob.flash { animation: rlknobflash2 .45s ease 3; }
+@keyframes rlknobflash2 { 50% { color: #e0a020; } }
+/* ▶ Navigate turn box (Chu 11/26): bigger than the stop rows, read at a glance */
+.na.turn { padding: 6px 14px 6px 8px; border: 2px solid #fff; }
+.na.turn .turnic { flex: none; color: #fff; }
+.na.turn b { font-size: 26px; font-weight: 900; } .na.turn small { font-size: 14px; font-weight: 700; color: #e9edf2; }
+.na.turn.now { background: #1a73ff; border-color: #1a73ff; }
+/* Paper: ahead rows (stops, laterite, turns) on paper too */
+html.paper .na { background: #fbf8f1; color: #16140f; box-shadow: 0 2px 8px rgba(40,30,15,.3); border: 1px solid #d9cfbb; }
+html.paper .na small { color: #5e574a; }
+html.paper .na.laterite { border: 2px solid #d32f2f; }
+html.paper .na.turn { border: 2px solid #16140f; } html.paper .na.turn .turnic { color: #16140f; } html.paper .na.turn small { color: #16140f; }
+html.paper .na.turn.now { background: #16140f; color: #fbf8f1; } html.paper .na.turn.now .turnic, html.paper .na.turn.now small { color: #fbf8f1; }
+/* Rain lock (Chu 11/26, from his video): slim "Drag to unlock" tab on the left edge, reading upwards; drag right and
+   rings open around the finger, green when far enough. No band, no knob, no circle target. */
+body .raincover .rl-slide { left: 0; right: auto; width: 60px; top: 50%; height: 190px; margin-top: -95px; }
+body .raincover .rl-ring, body .raincover .rl-arr { display: none; }
+body .raincover .rl-knob, html.paper body .raincover .rl-knob { left: 0; top: 0; width: 44px; height: 190px; padding: 0; border-radius: 0 12px 12px 0;
+  writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; text-shadow: none;
+  font: 900 16px/1 system-ui, -apple-system, sans-serif; letter-spacing: .3px; white-space: nowrap;
+  background: #fff; color: #c62828; border: 2px solid #c62828; border-left: 0; box-shadow: 0 2px 8px rgba(0,0,0,.45); transition: none; cursor: grab; }
+html.paper body .raincover .rl-knob { background: #fbf8f1; color: #16140f; border-color: #16140f; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 17px; box-shadow: 0 2px 8px rgba(40,30,15,.35); }
+body .raincover .rl-knob.held { opacity: .6; }
+body .raincover .rl-knob.in, html.paper body .raincover .rl-knob.in { background: #1e9e4a; color: #fff; border-color: #1e9e4a; }
+body .raincover .rl-knob.flash { animation: rltabflash .45s ease 3; }
+@keyframes rltabflash { 50% { background: #e0a020; color: #000; } }
+.rl-rings { position: fixed; z-index: 10004; width: 0; height: 0; pointer-events: none; --p: 0; --c: #1a73ff; }
+html.paper .rl-rings { --c: #16140f; }
+.rl-rings.in { --c: #1e9e4a; }
+.rl-rings[hidden] { display: none; }
+.rl-rings i { position: absolute; left: 0; top: 0; border-radius: 50%; border: 2px solid var(--c); transform: translate(-50%, -50%); box-sizing: border-box; }
+.rl-rings i:nth-child(1) { width: calc(34px + 26px * var(--p)); height: calc(34px + 26px * var(--p)); border-width: 5px; }
+.rl-rings i:nth-child(2) { width: calc(60px + 90px * var(--p)); height: calc(60px + 90px * var(--p)); }
+.rl-rings i:nth-child(3) { width: calc(90px + 160px * var(--p)); height: calc(90px + 160px * var(--p)); opacity: .7; animation: rlring 1.1s ease-out infinite; }
+@keyframes rlring { from { transform: translate(-50%, -50%) scale(.85); opacity: .8; } to { transform: translate(-50%, -50%) scale(1.15); opacity: 0; } }
+/* Green phone line with small arrowheads along it (Chu 11/26, his photo): the line stays 1.5 px, triangles every 70 px */
+.phonebeam { width: 14px; margin-left: -7px; background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='70'%3E%3Cpath d='M7 28 12.5 38H1.5z' fill='%2339ff14'/%3E%3C/svg%3E") center bottom / 14px 70px repeat-y,
+  linear-gradient(#39ff14, #39ff14) center / 1.5px 100% no-repeat; }
+html.paper .phonebeam { background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='70'%3E%3Cpath d='M7 28 12.5 38H1.5z' fill='%231e9e4a'/%3E%3C/svg%3E") center bottom / 14px 70px repeat-y,
+  linear-gradient(#1e9e4a, #1e9e4a) center / 2px 100% no-repeat; }
+/* target circles in the middle of the screen, shrinking big → small on a loop (Chu 11/26) */
+.rl-rings i:nth-child(n) { width: 220px; height: 220px; border-width: 3px; opacity: 0; animation: rlshrink 1.8s linear infinite; }
+.rl-rings i:nth-child(2) { animation-delay: .6s; } .rl-rings i:nth-child(3) { animation-delay: 1.2s; }
+@keyframes rlshrink { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(-50%, -50%) scale(.3); opacity: .9; } }
+.rl-rings b { position: absolute; left: 0; top: 0; width: 64px; height: 64px; border-radius: 50%; border: 5px solid var(--c); transform: translate(-50%, -50%); box-sizing: border-box; }
+.rl-rings.in b { background: rgba(30,158,74,.25); }
+.rl-rings.in i { animation-play-state: paused; }
+html.paper .rl-rings.in { --c: #1e9e4a; }
+/* Chu 11/26: the green line stays NEON green in Paper too (his pick), with its arrows */
+html.paper .phonebeam { background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='70'%3E%3Cpath d='M7 28 12.5 38H1.5z' fill='%2339ff14'/%3E%3C/svg%3E") center bottom / 14px 70px repeat-y,
+  linear-gradient(#39ff14, #39ff14) center / 1.5px 100% no-repeat; }

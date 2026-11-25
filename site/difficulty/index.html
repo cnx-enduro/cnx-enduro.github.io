@@ -158,10 +158,17 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 .level .photos img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
 @media (max-width: 560px) { .level .photos { grid-template-columns: repeat(3, 70%); overflow-x: auto; scroll-snap-type: x mandatory; } .level .photos img { scroll-snap-align: start; } .level dl { grid-template-columns: 1fr; gap: 2px; } .level dd { margin-bottom: 8px; } }
 </style>
+<script>
+// Paper look, test only (?beta on, ?beta=0 off; remembered on this phone) — same switch as the home page
+(() => { try { const q = new URLSearchParams(location.search);
+  if (q.has("beta")) localStorage.setItem("cnx-paper", q.get("beta") === "0" ? "0" : "1");
+  if (localStorage.getItem("cnx-paper") === "1") document.documentElement.classList.add("paper"); } catch (e) {} })();
+</script>
+<link rel="stylesheet" href="../paper-pages.css">
 </head>
 <body>
 <main>
-<a class="back" href="../">← All tracks</a>
+<a class="back" href="../">← All tracks</a><a class="papertag2" href="?beta=0">Paper test · back to normal</a>
 <div class="hero"><img src="../img/rules/hero_levels.jpg" alt="A rider lifting a dirt bike stuck in mud"><div class="q"><p>Join rides at or below your level.</p><b>Chiang Mai Enduro Riders</b><small>Difficulty levels</small></div></div>
 <h1>Difficulty levels</h1>
 <p class="intro">Every ride is announced with a level. Join rides at or below your level.</p>

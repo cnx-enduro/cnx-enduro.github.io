@@ -294,8 +294,8 @@ function addLocate(map, whereText, routeBearing) {
 }
 
 // 🔒 Rain lock, bottom left: one tap and the screen ignores every touch (rain drops make phones tap and scroll
-// by themselves). The map keeps following the rider and the screen stays awake. To unlock: slide the 🔒 from the
-// left edge into the circle in the middle (Chu 11/21: a 2 s hold could happen by itself in a pocket; a slide can't).
+// by themselves). The map keeps following the rider and the screen stays awake. To unlock: drag the "Drag to unlock" tab
+// from the left edge into the middle of the screen (Chu 11/21: a 2 s hold could happen by itself in a pocket; a slide can't).
 // Let go before the circle = it springs back. 👖 Pocket screen (ride.js) is the same lock on black.
 // The phone's Back button while locked stays on the page and points at the slide (Android "Back" used to leave the
 // site with no signal and lose the ride).
@@ -314,7 +314,7 @@ function addRainLock(map) {
     if (!on) document.body.classList.remove("pocket");
     cover.hidden = !on;
     btn.classList.toggle("on", on);
-    const t = on ? "Screen locked. Slide the lock into the circle to unlock" : "Lock the screen (rain)";
+    const t = on ? "Screen locked. Drag to unlock: the tab on the left, to the middle of the screen" : "Lock the screen (rain)";
     btn.title = t; btn.setAttribute("aria-label", t); btn.setAttribute("aria-pressed", String(on));
     if (on) {
       holdScreen();
@@ -334,32 +334,33 @@ function addRainLock(map) {
   cover = document.createElement("div");
   cover.className = "raincover"; cover.hidden = true;
   cover.innerHTML = `<div class="rl-slide"><div class="rl-ring"></div><div class="rl-arr">› › ›</div>
-    <div class="rl-knob" role="slider" aria-label="Slide to unlock">🔒</div><p class="rl-hint">Slide 🔒 to the circle to unlock</p></div>`;
+    <div class="rl-knob" role="slider" aria-label="Drag to unlock">Drag to unlock</div></div>
+    <div class="rl-rings" hidden><i></i><i></i><i></i><b></b></div>`;
   ["touchstart", "touchmove", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click", "dblclick", "wheel", "contextmenu", "gesturestart"]
     .forEach(ev => cover.addEventListener(ev, swallow, { passive: false }));
   document.body.appendChild(cover);
-  knob = cover.querySelector(".rl-knob"); hint = cover.querySelector(".rl-hint");
+  knob = cover.querySelector(".rl-knob"); hint = knob;  // Chu 11/26 (his video): a slim "Drag to unlock" tab on the left edge; drag right, rings open around the finger
   const ring = cover.querySelector(".rl-ring");
-  // the slide: finger down on the knob, follow it sideways, unlock if let go inside the circle
-  let x0 = null, pid = null;
-  const knobAt = dx => { knob.style.transform = `translateX(${Math.max(0, dx)}px)`; };
-  const inRing = () => { const k = knob.getBoundingClientRect(), r = ring.getBoundingClientRect();
-    const kx = k.left + k.width / 2, ky = k.top + k.height / 2, rx = r.left + r.width / 2, ry = r.top + r.height / 2;
-    return Math.hypot(kx - rx, ky - ry) <= r.width / 2; };
+  // the drag (Chu 11/26): finger down on the tab → circles appear in the middle of the screen, shrinking big → small
+  // on a loop; drag the finger into the middle (green) and let go = unlocked. Anywhere else = nothing.
+  const rings = cover.querySelector(".rl-rings");
+  let x0 = null, pid = null, fx = 0, fy = 0;
+  const HIT = 50;  // px from the middle that counts as "in"
+  const mid = () => [innerWidth / 2, innerHeight / 2];
+  const inRing = () => { const [cx, cy] = mid(); return Math.hypot(fx - cx, fy - cy) <= HIT; };
+  const track = e => { fx = e.clientX; fy = e.clientY; };  // no colour change before letting go (Chu 11/26)
   knob.addEventListener("pointerdown", e => {
     e.preventDefault(); e.stopPropagation(); x0 = e.clientX; pid = e.pointerId;
     try { knob.setPointerCapture(pid); } catch (er) {}
-    knob.style.transition = "none"; ring.classList.add("near");
+    const [cx, cy] = mid(); rings.style.left = cx + "px"; rings.style.top = cy + "px";
+    rings.hidden = false; knob.classList.add("held"); track(e);
   });
-  knob.addEventListener("pointermove", e => {
-    if (x0 == null || e.pointerId !== pid) return; e.preventDefault();
-    const max = ring.getBoundingClientRect().right - knob.getBoundingClientRect().width / 2 - (knob.getBoundingClientRect().left - (parseFloat((knob.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0)) ;
-    knobAt(Math.min(e.clientX - x0, max)); ring.classList.toggle("in", inRing());
-  });
+  knob.addEventListener("pointermove", e => { if (x0 == null || e.pointerId !== pid) return; e.preventDefault(); track(e); });
   const drop = e => {
     if (x0 == null || (e && e.pointerId !== pid)) return;
+    if (e && e.clientX != null) { fx = e.clientX; fy = e.clientY; }
     const ok = inRing(); x0 = null; pid = null;
-    knob.style.transition = ""; knobAt(0); ring.classList.remove("near", "in");
+    rings.hidden = true; rings.classList.remove("in"); knob.classList.remove("in", "held");
     if (ok) setLocked(false); else flash();
   };
   knob.addEventListener("pointerup", drop); knob.addEventListener("pointercancel", drop);
@@ -893,6 +894,7 @@ function addWalk(map) {
     }
     update(here);
   });
+  let walkZoom0 = null;
   const show = () => {
     map.cnxWalking = true; document.body.classList.add("walking");
     if (!layers) {
@@ -913,6 +915,8 @@ function addWalk(map) {
     const here = map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where();
     W = { start: Date.now(), bike: here ? [+here.lat.toFixed(6), +here.lng.toFixed(6)] : null, pts: [], maxAway: 0 };
     guiding = false; lastM = W.bike ? 0 : null; store(); show();
+    // zoom in close on foot (Chu 11/26): the footprints and the bike read clearly; back to the old zoom when Walk ends
+    walkZoom0 = map.getZoom(); if (walkZoom0 < 18) map.setZoom(18);
     warn.hidden = false; clearTimeout(warn._t); warn._t = setTimeout(() => { warn.hidden = true; }, 5000);
   };
   function end() {
@@ -923,6 +927,8 @@ function addWalk(map) {
     status.hidden = true; find.hidden = true; warn.hidden = true;
     if (btn) { btn.classList.remove("on"); btn.title = "Walk: exploring on foot. Pins your bike"; }
     map.fire("walkchange", { on: false });
+    if (walkZoom0 != null && map.getZoom() === 18) map.setZoom(walkZoom0);
+    walkZoom0 = null;
   }
   find.onclick = () => {
     if (!W) return;
