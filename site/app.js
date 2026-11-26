@@ -538,7 +538,13 @@
   const markPaused = () => { const v = navState(); if (v) try { localStorage.setItem("cnx-nav", JSON.stringify({ ...v, paused: true })); } catch (e) {} };
   const pauseNav = () => { if (nav) { nav.pause(); nav = null; markPaused(); } wrap.style.height = ""; backBar(); };
   let beepCtx = null;
-  const unlockSound = () => { try { beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)(); beepCtx.resume(); } catch (e) {} };
+  const unlockSound = () => { try {
+    beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)(); beepCtx.resume();
+    // iPhone (Chu 11/27, no voice in Chrome): play a silent sound inside the tap itself — the reliable way iOS lets a page make sound
+    const b = beepCtx.createBuffer(1, 1, 22050), s = beepCtx.createBufferSource(); s.buffer = b; s.connect(beepCtx.destination); s.start(0);
+  } catch (e) {} };
+  // iPhone: Navigate plays like a music app, so the side silent switch doesn't mute the voice/beeps (as Find my bike does); back after
+  const navSound = on => { try { if (navigator.audioSession) navigator.audioSession.type = on ? "playback" : "auto"; } catch (e) {} };
   const beep = (n = 1, hz = 880, len = 0.25, wave = "sine", vol = 0.3) => { try { if (!beepCtx) return; for (let k = 0; k < n; k++) { const o = beepCtx.createOscillator(), v = beepCtx.createGain();
     o.type = wave; o.frequency.value = hz; v.gain.value = vol; o.connect(v); v.connect(beepCtx.destination); o.start(beepCtx.currentTime + k * 0.5); o.stop(beepCtx.currentTime + k * 0.5 + len); } } catch (e) {} };
   map.cnxBeep = beep; map.cnxUnlockSound = unlockSound;
@@ -546,7 +552,9 @@
   // saved with the offline map. Same sound path as the beeps, a short tone first; if a clip can't play, Navigate beeps instead.
   const VOICE = ["in200_L", "in200_R", "then_L", "then_R", "now_L", "now_R", "off", "back", "dark", "lat200", "water200", "finish", "sos", "lost", "st_lunch", "st_wait", "st_forest", "behind", "navon", "rideback"];
   const voiceBuf = {};
-  const loadVoice = () => { if (!beepCtx) return; VOICE.forEach(k => { if (!voiceBuf[k]) voiceBuf[k] = fetch(`audio/voice/${k}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
+  // a quiet (suspended) sound engine decodes fine before any tap, so the clips are ready when ▶ Navigate is tapped
+  const loadVoice = () => { if (!beepCtx) try { beepCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    VOICE.forEach(k => { if (!voiceBuf[k]) voiceBuf[k] = fetch(`audio/voice/${k}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
     .then(b => b && new Promise((ok, bad) => beepCtx.decodeAudioData(b, ok, bad))).catch(() => null); }); };
   let sayQ = Promise.resolve(true);
   const sayVoice = (...keys) => (sayQ = sayQ.then(async () => {  // one phrase after another, never on top of each other
@@ -579,9 +587,9 @@
     unlockSound();
     navTrack = t; navBack = !!back;
     const nt = back ? reversedTrack(t) : t;
-    loadVoice();
+    loadVoice(); navSound(true);
     const o = { map, t: nt, kmOf: kmAlong(nt), length: field(t, "length"), youAt, restore, beep, say: sayVoice, onMenu: openMenu, onNavBtn: navChoice,
-      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; showTrack(t); backBar();
+      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; showTrack(t); backBar(); navSound(false);
         if (map.cnxRecord) map.cnxRecord.endAuto(); } };  // ■ Stop Navigate also stops the recording → save box
     if (navigator.getBattery) navigator.getBattery().then(b => { o.battery = b; }).catch(() => {});
     if (phone.matches) { window.scrollTo({ top: 0 }); wrap.style.height = "100svh"; }
@@ -777,6 +785,7 @@
   }
 
   function showTrack(t) {
+    loadVoice();  // 🗣 clips ready before ▶ Navigate is tapped, so "Navigation is on." plays at once
     current = t;
     $("map").classList.add("ontrack");  // one track open: hide the park banner (the red stripes stay)
     document.body.classList.add("trackpage");  // phones: no site title bar on a track page, more room for the map

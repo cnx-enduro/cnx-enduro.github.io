@@ -1089,3 +1089,8 @@ body.navmode .leaflet-bar.recbtn.autorec { display: none !important; }
 .locate .locmsg { right: 54px; bottom: 0; max-width: min(240px, calc(100vw - 140px)); }
 html.paper .locate .locmsg { background: #fbf8f1; color: #16140f; border: 2px solid #16140f; border-radius: 8px; padding: 6px 9px;
   font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 14px; box-shadow: 0 2px 8px rgba(40,30,15,.3); }
+/* off-track / to-the-track box on the track's side again (Chu 11/27): left = under the time box (the ahead list moves below it),
+   right = under ☰ */
+.navoff.left { left: 10px; right: auto; align-items: flex-start; top: 62px; }
+.navoff.right { right: 10px; left: auto; align-items: flex-end; top: 62px; }
+.navui:has(.navoff.left:not([hidden])) .navahead { top: 168px; }

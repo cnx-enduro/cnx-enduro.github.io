@@ -208,7 +208,7 @@ function startNavigate(o) {
       const a = map.latLngToContainerPoint(ll), b = map.latLngToContainerPoint([n.lat, n.lon]), left = b.x < a.x;
       offBox.innerHTML = (nav.off ? `<span class="no-lbl">⚠ OFF TRACK</span>` : "") +
         `<span class="no-go">${ARROW(left)}<span><b>${dist(n.dist)}</b><small>${nav.off ? "back to the track" : "to the track"}</small></span></span>`;
-      offBox.className = "navoff right"; offBox.hidden = false;  // always right, under ☰ (Chu 11/26: it covered the menu); the arrow shows the side
+      offBox.className = "navoff " + (left ? "left" : "right"); offBox.hidden = false;  // on the track's side (Chu 11/27): left under the time box, right under ☰
     } else offBox.hidden = true;
     glow.hidden = !nav.off;
     // progress + arrival time + sun
