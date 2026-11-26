@@ -59,7 +59,7 @@ function startNavigate(o) {
   ];
 
   // ---- turns ahead (junctions only) ----
-  const turns = (t.turns || []).slice().sort((a, b) => a.km - b.km), turnTold = {};
+  const turns = (t.turns || []).slice().sort((a, b) => a.km - b.km), turnTold = {}, latTold = {};
   // bent arrow: a stem up, then the way you turn (by the real angle), arrow head at the end
   const TURN = (dir, deg) => {
     const a = Math.min(150, Math.max(35, deg)) * (dir === "L" ? -1 : 1) * R, ex = 16 + 11 * Math.sin(a), ey = 15 - 11 * Math.cos(a);
@@ -94,6 +94,8 @@ function startNavigate(o) {
   const mini = q(".navmini"), big = q(".navbig"), sunBox = q(".navsun"), aheadBox = q(".navahead"), offBox = q(".navoff"), glow = q(".navglow"), toast = q(".navtoast");
   const darkMsg = q(".navdark"), darkGlow = q(".navwarn"), mapMsg = q(".navmapmsg");
   let smallT = null, toastT = null;
+  // 🗣 speak a phrase (app.js sayVoice); if it can't play, fall back to the old beep
+  const speak = (keys, fallback) => { if (o.say) o.say(...keys).then(ok => { if (!ok && fallback) fallback(); }); else if (fallback) fallback(); };
   const say = (text, ms = 6000) => { toast.textContent = text; toast.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { toast.hidden = true; }, ms); };
   const setBig = on => {
     big.hidden = !on; mini.hidden = on; clearTimeout(smallT);
@@ -183,7 +185,7 @@ function startNavigate(o) {
     const n = locate(ll), km = kmOf(n);
     const onLine = n.dist <= NAV.OFF_M;
     if (onLine) nav.joined = true;
-    if (onLine || nav.i == null || km >= nav.km - 0.3) { nav.i = n.i; nav.km = km; nav.n = n; }
+    if (onLine || nav.i == null || nav.n == null || km >= nav.km - 0.3) { nav.i = n.i; nav.km = km; nav.n = n; }  // nav.n null after a resume (11/27 fix)
     // route split
     const cut = [nav.n.lat, nav.n.lon];
     rCase.setLatLngs([...line.slice(0, nav.i + 1), cut]); ridden.setLatLngs([...line.slice(0, nav.i + 1), cut]);
@@ -199,6 +201,7 @@ function startNavigate(o) {
       if (nav.joined && nav.offSince != null && now - nav.offSince >= NAV.OFF_S * 1000 && !map.cnxWalking) nav.off = true;
     }
     if (map.cnxWalking) { nav.off = false; nav.offSince = null; }  // 🚶 on foot: no OFF TRACK alarm
+    if (nav.off !== !!nav.saidOff) { if (nav.off) speak(["off"]); else if (onLine) speak(["back"]); nav.saidOff = nav.off; }  // 🗣 once per change
     stray.setLatLngs(nav.off ? nav.strayPts : []);
     const lead = !nav.joined && n.dist > NAV.OFF_M;  // riding to the track: arrow, no warning
     if ((nav.off || lead) && !map.cnxWalking) {
@@ -247,7 +250,7 @@ function startNavigate(o) {
       darkGlow.hidden = false; darkGlow.classList.remove("go"); void darkGlow.offsetWidth; darkGlow.classList.add("go");
       setTimeout(() => { darkMsg.hidden = true; darkGlow.hidden = true; }, 6000);
       try { navigator.vibrate && navigator.vibrate([300, 700, 300, 700, 300]); } catch (e) {}
-      if (o.beep) o.beep(3);
+      speak(["dark"], () => o.beep && o.beep(3));
     }
     if (o.battery && o.battery.level != null && !o.battery.charging && o.battery.level < 0.3) {
       mini.dataset.bat = Math.round(o.battery.level * 100) + "%"; mini.classList.toggle("batlow", o.battery.level < 0.15);
@@ -257,6 +260,9 @@ function startNavigate(o) {
     const next = kind => ahead.filter(a => (kind === "laterite" ? a.kind === "laterite" : a.kind !== "laterite") && a.to >= nav.km && a.from - nav.km <= NAV.AHEAD_KM)
       .sort((a, b) => a.from - b.from)[0];
     const s = next("stop"), l = next("laterite");
+    if (l && l.from > nav.km && (l.from - nav.km) * 1000 <= NAV.TURN_BEEP_M && !latTold[l.from]) { latTold[l.from] = 1; speak(["lat200"]); }  // 🗣 laterite ahead
+    if (s && s.kind === "water" && s.from > nav.km && (s.from - nav.km) * 1000 <= NAV.TURN_BEEP_M && !latTold["w" + s.from]) { latTold["w" + s.from] = 1; speak(["water200"]); }  // 🗣 water crossing
+    if (nav.joined && !nav.saidEnd && t.km - nav.km < 0.08 && nav.km > t.km * 0.5) { nav.saidEnd = true; speak(["finish"]); }  // 🗣 end of the track
     const row = (a, icon, cls) => {
       const now = a.from <= nav.km;
       return `<div class="na ${cls}"><i>${icon}</i><span><b>${now ? "Here" : step100(a.from - nav.km)}</b><small>${esc(a.name)}</small></span></div>`;
@@ -275,8 +281,9 @@ function startNavigate(o) {
         turnRow = `<div class="na turn${near ? " now" : ""}">${TURN(tn.dir, tn.deg)}<span><b>${near ? "Now" : step50(m / 1000)}</b>` +
           `<small>${turnWord(tn.dir)}${then ? ", then " + (then.dir === "L" ? "left" : "right") : ""}</small></span></div>`;
         const told = turnTold[tn.km] || 0;
-        if (m <= NAV.TURN_BEEP_M && told < 1) { turnTold[tn.km] = 1; try { navigator.vibrate && navigator.vibrate([150, 100, 150]); } catch (e) {} if (o.beep) o.beep(2, 1175, 0.15); }
-        if (near && told < 2) { turnTold[tn.km] = 2; try { navigator.vibrate && navigator.vibrate(250); } catch (e) {} if (o.beep) o.beep(1, 1175, 0.3); }
+        if (m <= NAV.TURN_BEEP_M && told < 1) { turnTold[tn.km] = 1; try { navigator.vibrate && navigator.vibrate([150, 100, 150]); } catch (e) {}
+          speak([`in200_${tn.dir}`, ...(then ? [`then_${then.dir}`] : [])], () => o.beep && o.beep(2, 1175, 0.15)); }
+        if (near && told < 2) { turnTold[tn.km] = 2; try { navigator.vibrate && navigator.vibrate(250); } catch (e) {} speak([`now_${tn.dir}`], () => o.beep && o.beep(1, 1175, 0.3)); }
       }
     }
     // ↩ riding the track backwards: a steady reminder on top of the list

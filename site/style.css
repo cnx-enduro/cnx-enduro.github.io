@@ -1063,3 +1063,29 @@ html.paper .recsign { background: #c62828; color: #fff; border: 2px solid #16140
 html.paper .recsign::before { border-radius: 2px; }
 /* Navigate notes stay between the left and right button columns, never over a button (Chu 11/26) */
 .navui .navdark, .navui .navtoast { left: 66px; right: 66px; transform: none; width: auto; max-width: none; margin: 0 auto; text-align: center; box-sizing: border-box; }
+/* Navigate: the map-type (layers) corner button moves into ☰ → Map type (Chu 11/27) */
+body.navmode .leaflet-control-layers { display: none !important; }
+body.navmode .navui .navmenu { top: 8px; }
+.navoff, .navoff.right, .navoff.left { top: 62px; }  /* under ☰, now that ☰ is in the corner */
+/* Map credits row + scale bar in the Paper style (Chu 11/27): cream, ink text, serif; the red park note stays red.
+   The credits never run under the left buttons: they wrap on the right side instead. */
+.leaflet-bottom.leaflet-right { max-width: calc(100% - 110px); }  /* % of the map, so the credits wrap before the left buttons */
+html.paper .leaflet-control-attribution { background: rgba(251,248,241,.9) !important; color: #5e574a; border-top-left-radius: 7px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; padding: 0 7px; }  /* no extra height: same row height as the scale bar */
+html.paper .leaflet-control-attribution a { color: #16140f; }
+html.paper .areakey { color: #c62828; } html.paper .leaflet-control-attribution .areakey i { border-color: #c62828; }
+html.paper .leaflet-control-scale-line { background: rgba(251,248,241,.9); color: #16140f; border-color: #16140f;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+/* ⏺ in Navigate = recording status (Chu 11/27): red, white dot, "REC" + the time chip; no STOP (Navigate's ■ stops it) */
+body.navmode .leaflet-bar.recbtn a.on.auto i { border-radius: 50%; }
+html.paper body.navmode .leaflet-bar.recbtn a.on.auto::before { content: "REC"; }
+/* Navigate records by itself: no REC square, only the red time chip (● 0:56) at the top of the left column (Chu 11/27) */
+body.navmode .leaflet-bar.recbtn.autorec { box-shadow: none !important; background: none; border: 0 !important; }
+body.navmode .leaflet-bar.recbtn.autorec a { display: none !important; }
+body.navmode .leaflet-bar.recbtn.autorec .recsign { position: static; transform: none; display: inline-block; font-size: 15px; padding: 3px 9px; }
+/* Chu 11/27 (final): nothing on screen while Navigate records — no square, no time chip */
+body.navmode .leaflet-bar.recbtn.autorec { display: none !important; }
+/* location message sits LEFT of the right-hand buttons, never over 🧭 (Chu 11/27: "the north-up / track-up button is gone") */
+.locate .locmsg { right: 54px; bottom: 0; max-width: min(240px, calc(100vw - 140px)); }
+html.paper .locate .locmsg { background: #fbf8f1; color: #16140f; border: 2px solid #16140f; border-radius: 8px; padding: 6px 9px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 14px; box-shadow: 0 2px 8px rgba(40,30,15,.3); }

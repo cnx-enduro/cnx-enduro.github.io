@@ -9,17 +9,18 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.min.css">
 <script>
-// Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
+// Paper look = the site's look for everyone (Chu 11/26). (The old dark look and its ?beta=0 switch were removed 11/27.)
 (() => { try { const q = new URLSearchParams(location.search);
-  if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
-  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper");
+  localStorage.removeItem("cnx-look");  // the old dark look is gone (Chu 11/27): Paper for everyone, Night on phones in dark mode
+  document.documentElement.classList.add("paper");
   // Night look (Chu 11/26): follows the phone's dark mode, map screens only. Test switch ?night=1 on · ?night=0 off · ?night=auto
   if (q.has("night")) localStorage.setItem("cnx-night", q.get("night") || "1");
   const nt = localStorage.getItem("cnx-night") || "auto", h = document.documentElement;
   const dm = matchMedia("(prefers-color-scheme: dark)");
-  if (nt === "1" || nt === "b" || (nt === "auto" && dm.matches)) h.classList.add("night");
+  const phone = matchMedia("(pointer: coarse)").matches;  // Night on phones/tablets only; computers always Paper (Chu 11/27)
+  if (nt === "1" || nt === "b" || (nt === "auto" && phone && dm.matches)) h.classList.add("night");
   // Live (Chu 11/26): the phone flips dark at sunset (Automatic) → Night switches on the spot, no reload; app.js repaints the lines
-  if (nt === "auto" && dm.addEventListener) dm.addEventListener("change", e => { h.classList.toggle("night", e.matches); dispatchEvent(new Event("cnxnight")); });
+  if (nt === "auto" && phone && dm.addEventListener) dm.addEventListener("change", e => { h.classList.toggle("night", e.matches); dispatchEvent(new Event("cnxnight")); });
   } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="style.css">

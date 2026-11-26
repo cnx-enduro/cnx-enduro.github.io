@@ -389,6 +389,52 @@ def surface_pieces(pts, runs, cls_of=lambda r: PAVED.get(r["cls"], r["cls"])):
     return [p for p in pieces if len(p["line"]) > 1]
 
 
+def check_css_text(text, where):
+    """Brackets must balance: { } overall, and ( ) inside every selector and every rule. A selector cut in half
+    (like ':is(h1 {') makes the browser throw away everything after it without any error message."""
+    import re as _re
+    if text.count("/*") != text.count("*/"):
+        return [f"{where}: a comment '/*' is never closed with '*/' (everything after it would be ignored)"]
+    text = _re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=_re.S)   # comments out, lines kept
+    text = _re.sub(r'"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'', lambda m: " " * len(m.group(0)), text)  # strings out
+    braces = parens = 0
+    line = 1
+    for ch in text:
+        if ch == "\n":
+            line += 1
+        elif ch == "(":
+            parens += 1
+        elif ch == ")":
+            parens -= 1
+            if parens < 0:
+                return [f"{where} line {line}: a ')' without its '('"]
+        elif ch in "{}":
+            if parens != 0:
+                return [f"{where} line {line}: '{ch}' while a '(' is still open (a selector or value cut in half?)"]
+            braces += 1 if ch == "{" else -1
+            if braces < 0:
+                return [f"{where} line {line}: a '}}' without its '{{'"]
+    if braces or parens:
+        return [f"{where}: {braces} '{{' and {parens} '(' left open at the end"]
+    return []
+
+
+def check_styles(src):
+    import re as _re
+    problems = []
+    for dirpath, _dirs, files in os.walk(src):
+        for f in files:
+            path = os.path.join(dirpath, f)
+            rel = os.path.relpath(path, src)
+            if f.endswith(".css") and "vendor" not in rel:
+                problems += check_css_text(open(path, encoding="utf-8").read(), rel)
+            elif f.endswith(".html"):
+                html = open(path, encoding="utf-8").read()
+                for k, m in enumerate(_re.finditer(r"<style[^>]*>(.*?)</style>", html, flags=_re.S)):
+                    problems += check_css_text(m.group(1), f"{rel} <style> #{k + 1}")
+    return problems
+
+
 def main():
     with open(os.path.join(TRACKS, "site.json")) as f:
         site = json.load(f)
@@ -518,6 +564,13 @@ def main():
 
     # Night look CSS is made from the Paper CSS (tools/night.py), so the two never drift apart
     subprocess.run([sys.executable, os.path.join(ROOT, "tools", "night.py")], check=True)
+    # Stop here if any style sheet is broken (Chu 11/26: one bad line in night.css silently dropped every rule after it,
+    # and the map stayed light at night). Checks every .css in site/ and every page's <style> block.
+    css_problems = check_styles(SRC)
+    if css_problems:
+        for msg in css_problems:
+            print("CSS ERROR:", msg, file=sys.stderr)
+        sys.exit("Build stopped: fix the style sheet(s) above. Nothing was written to docs/.")
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)

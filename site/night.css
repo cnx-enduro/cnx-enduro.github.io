@@ -255,6 +255,16 @@ html.paper.night :is(h1, h2, h3, h4, h5, h6, b, strong, summary, label, button, 
 html.paper.night .recsign { background: #e53935; color: #fff; border: 2px solid #ece4d4; border-radius: 7px; padding: 1px 8px;
   font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.54)}
 html.paper.night .recsign::before { border-radius: 2px}
+html.paper.night .leaflet-control-attribution { background: rgba(27,25,22,.9) !important; color: #a99f8c; border-top-left-radius: 7px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; padding: 0 7px}
+html.paper.night .leaflet-control-attribution a { color: #ece4d4}
+html.paper.night .areakey { color: #e53935}
+html.paper.night .leaflet-control-attribution .areakey i { border-color: #e53935}
+html.paper.night .leaflet-control-scale-line { background: rgba(27,25,22,.9); color: #ece4d4; border-color: #ece4d4;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif}
+html.paper.night body.navmode .leaflet-bar.recbtn a.on.auto::before { content: "REC"}
+html.paper.night .locate .locmsg { background: #1b1916; color: #ece4d4; border: 2px solid #ece4d4; border-radius: 8px; padding: 6px 9px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.54)}
 
 /* ---- Night only (not from Paper) ---- */
 html.paper.night .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) grayscale(.55) sepia(.2) brightness(.92) contrast(.92) !important; }

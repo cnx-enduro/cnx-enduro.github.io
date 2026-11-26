@@ -54,6 +54,7 @@ function baseMap(el, opts = {}) {
       maxZoom: 19, attribution: 'Powered by <a href="https://www.esri.com">Esri</a> | Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     });
   const layersCtl = opts.layersControl !== false ? L.control.layers(bases, null, { position: "topright" }).addTo(map) : null;
+  map.cnxLayersCtl = layersCtl;  // Navigate shows the map types inside ☰ instead (app.js, Chu 11/27)
   L.control.scale({ imperial: false }).addTo(map);
   if (opts.locate !== false) addLocate(map, opts.whereText, turns ? opts.routeBearing : null);
   if (opts.locate !== false) addRainLock(map);
@@ -534,7 +535,8 @@ function addOffline(map, o) {
   map.on("whererefresh", refresh);  // a track opened, or back to the list
   const shellUrls = t => {
     const u = ["./", "data/tracks.json", "offline/tracks.json", "areas/doi-suthep-pui.geojson", "vendor/protomaps-leaflet.js",
-      "vendor/images/layers.png", "vendor/images/layers-2x.png", `gpx/${t.file}`];
+      "vendor/images/layers.png", "vendor/images/layers-2x.png", `gpx/${t.file}`,
+      ...["in200_L", "in200_R", "then_L", "then_R", "now_L", "now_R", "off", "back", "dark", "lat200", "water200", "finish", "sos", "lost", "st_lunch", "st_wait", "st_forest", "behind", "navon", "rideback"].map(k => `audio/voice/${k}.mp3`)];  // 🗣 voice works with no signal
     document.querySelectorAll("script[src], link[rel=stylesheet][href]").forEach(e => u.push(e.getAttribute("src") || e.getAttribute("href")));
     return [...new Set(u)].filter(x => !/^https?:/.test(x));
   };
@@ -677,7 +679,9 @@ function addRecord(map) {
   const undraw = () => { if (line) { map.removeLayer(line); map.removeLayer(casing); line = casing = null; } };
   const show = () => {
     if (!btn) return;
-    btn.classList.toggle("on", on); sign.hidden = !on;
+    btn.classList.toggle("on", on); sign.hidden = !on; btn.classList.toggle("auto", !!(on && rec && rec.auto));
+    btn.parentElement.style.display = on ? "" : "none";
+    btn.parentElement.classList.toggle("autorec", !!(on && rec && rec.auto));  // Navigate: only the time chip shows (Chu 11/27)  // Chu 11/27: no idle ⏺ — it shows only while recording (Navigate records by itself)
     const t = on ? "Recording. Tap to stop" : "Record your ride (GPX)";
     btn.title = t; btn.setAttribute("aria-label", t); btn.setAttribute("aria-pressed", String(on));
     clearInterval(tick);
@@ -741,7 +745,7 @@ function addRecord(map) {
       if (res !== "saved") return;
       rec = null; forget(); undraw(); closeSheet(); show();
     };
-    sheet.querySelector(".reckeep").onclick = () => { on = true; store(); closeSheet(); map.cnxLocate && map.cnxLocate.on(); show(); };
+    sheet.querySelector(".reckeep").onclick = () => { on = true; if (rec) rec.auto = false; store(); closeSheet(); map.cnxLocate && map.cnxLocate.on(); show(); };
     sheet.querySelector(".recdel").onclick = () => {
       if (!confirm("Delete this ride? It can't be brought back.")) return;
       rec = null; forget(); undraw(); closeSheet(); show();
@@ -755,6 +759,8 @@ function addRecord(map) {
     btn = box.querySelector("a"); sign = box.querySelector(".recsign");
     btn.addEventListener("click", e => {
       e.preventDefault();
+      // Navigate records by itself (Chu 11/27): there ⏺ is a status, a tap only says how it works
+      if (on && rec && rec.auto && document.body.classList.contains("navmode")) { cnxToast("Recording with Navigate · stops when you stop NAV", 3500); return; }
       if (on) { on = false; store(); show(); openSheet(false); return; }
       if (rec && rec.pts.length) return openSheet(true);  // an unsaved ride is waiting
       on = true; rec = { start: Date.now(), pts: [] }; store();
@@ -775,6 +781,18 @@ function addRecord(map) {
   else if (left) forget();
   map.cnxRecord = {
     isOn: () => on,
+    // ▶ Navigate starts the recording and ■ Stop Navigate ends it (Chu 11/27). Ride back / pause / resume keep the same ride.
+    startAuto: () => {
+      if (on) { if (rec) { rec.auto = true; store(); } show(); return "on"; }
+      if (rec && rec.pts.length) return "waiting";  // an earlier ride isn't saved yet: never overwrite it
+      on = true; rec = { start: Date.now(), pts: [], auto: true }; store();
+      map.cnxLocate && map.cnxLocate.on(); show(); return "started";
+    },
+    endAuto: () => {
+      if (!on || !rec || !rec.auto) return;
+      on = false; store(); show();
+      if (rec.pts.length > 1) openSheet(false); else { rec = null; forget(); undraw(); show(); }  // didn't move: nothing to save
+    },
     gpx: () => rec && rec.pts.length ? { text: gpx(rec, rec.name || defaultName(rec)), file: (rec.name || defaultName(rec)).replace(/[\\/:*?"<>|]+/g, "-") + ".gpx" } : null,
   };
 }

@@ -186,10 +186,10 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 .og { color: var(--gold); font-family: Futura, "Avenir Next", sans-serif; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
 </style>
 <script>
-// Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
+// Paper look = the site's look for everyone (Chu 11/26). (The old dark look and its ?beta=0 switch were removed 11/27.)
 (() => { try { const q = new URLSearchParams(location.search);
-  if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
-  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  localStorage.removeItem("cnx-look");  // the old dark look is gone (Chu 11/27): Paper for everyone, Night on phones in dark mode
+  document.documentElement.classList.add("paper"); } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="../paper-pages.css">
 </head>

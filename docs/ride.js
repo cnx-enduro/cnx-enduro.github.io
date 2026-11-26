@@ -155,7 +155,9 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     }, () => ended("Ride ended")));
     unsub.push(D.onValue(fb.r(`${base}/meta`), s => {
       if (!s.exists()) return ended("Ride ended");
+      const before = status && status.s;
       status = (s.val() || {}).status || null; paintStatus();
+      if (status && status.s && status.s !== before && g && g.leader !== me && h.say && { lunch: 1, wait: 1, forest: 1 }[status.s]) h.say("st_" + status.s);  // 🗣 leader's status
     }, () => ended("Ride ended")));
     sendT = setInterval(() => send(true), RIDE.SEND_MS);
     h.map.on("whereupdate", onWhere);
@@ -346,7 +348,9 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     if (!g || g.leader !== me) { wait.hidden = true; return; }
     const lr = lastRider(), a = along(riders[me] || {}), b = lr && lr !== me ? along(riders[lr]) : null;
     const gap = a != null && b != null ? a - b : 0;
+    const was = waitShown;
     if (gap > RIDE.SPREAD_M) waitShown = true; else if (gap < RIDE.SPREAD_OK_M) waitShown = false;
+    if (waitShown && !was && h.say) h.say("behind");  // 🗣 leader hears "A rider is falling behind." (same moment as the ⏸ Wait sign)
     wait.hidden = !waitShown;
     if (waitShown) wait.textContent = `⏸ Wait · last rider ${km(gap)} back`;
   }
@@ -363,6 +367,7 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     if (!banner._for || banner._for !== id + r.sos) {  // new 🆘: buzz (Android) + beep
       banner._for = id + r.sos;
       try { navigator.vibrate && navigator.vibrate([400, 200, 400, 200, 400]); } catch (e) {}
+      if (h.say) h.say("sos");  // 🗣 "Emergency. A rider needs help." — no names: they can't be pre-recorded (Chu 11/27)
       try { if (audio) for (let k = 0; k < 3; k++) { const o = audio.createOscillator(), v = audio.createGain(); o.frequency.value = 880; v.gain.value = 0.3; o.connect(v); v.connect(audio.destination); o.start(audio.currentTime + k * 0.5); o.stop(audio.currentTime + k * 0.5 + 0.3); } } catch (e) {}
     }
   }
@@ -376,7 +381,7 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
     banner.innerHTML = `<span>😕 ${esc(r.n)}: I lost you guys<small>${d == null ? "" : km(Math.abs(d)) + (d >= 0 ? " ahead of you" : " behind you")}</small></span>` +
       `<a class="go" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lng}">Go ➤</a><button type="button" class="x" aria-label="Close">✕</button>`;
     banner.querySelector(".x").onclick = () => { sosSeen["w" + id + r.wait] = 1; paintSos(); };
-    if (banner._for !== "w" + id + r.wait) { banner._for = "w" + id + r.wait; try { navigator.vibrate && navigator.vibrate(300); } catch (e) {} }
+    if (banner._for !== "w" + id + r.wait) { banner._for = "w" + id + r.wait; try { navigator.vibrate && navigator.vibrate(300); } catch (e) {} if (h.say) h.say("lost"); }  // 🗣 "A rider has lost the group."
   }
   setInterval(() => { if (g) { paint(); if (Date.now() > g.ends) ended("Ride switched off after 8 hours"); } }, 30000);  // greys stale dots
 

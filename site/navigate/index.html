@@ -179,10 +179,10 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 .offic svg { width: 18px; height: 18px; }
 </style>
 <script>
-// Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
+// Paper look = the site's look for everyone (Chu 11/26). (The old dark look and its ?beta=0 switch were removed 11/27.)
 (() => { try { const q = new URLSearchParams(location.search);
-  if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
-  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  localStorage.removeItem("cnx-look");  // the old dark look is gone (Chu 11/27): Paper for everyone, Night on phones in dark mode
+  document.documentElement.classList.add("paper"); } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="../paper-pages.css">
 </head>
@@ -196,7 +196,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
 <div class="shots">
 <div class="shot"><img src="../img/guide/v4_nav_turn.jpg" alt="Follow the blue line" loading="lazy"><span class="num">01</span><div><b>Follow the blue line</b><span>Blue = still to ride, grey = done. The way ahead is always up. Before each junction: which way, and how far. Two beeps at 200 m.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_bigbox.jpg" alt="Tap the time box" loading="lazy"><span class="num">02</span><div><b>Tap the time box</b><span>Arrival time, km to go, and when it gets dark.</span></div></div>
-<div class="shot"><img src="../img/guide/v4_nav_record.jpg" alt="⏺ Record your ride" loading="lazy"><span class="num">03</span><div><b>⏺ Record your ride</b><span>Red = where you rode, blue = still to ride.</span></div></div>
+<div class="shot"><img src="../img/guide/v4_nav_record.jpg" alt="⏺ Records by itself" loading="lazy"><span class="num">03</span><div><b>⏺ Records by itself</b><span>Navigate records your GPX automatically, from start to stop. Stop NAV to save it.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_heading.jpg" alt="Green line = your phone" loading="lazy"><span class="num">04</span><div><b>Green line = your phone</b><span>It points where your phone is facing, all the way up the screen. Turn the phone to look around. <b>Faint line</b> = the phone isn't sure which way it faces: ignore it and keep riding. It comes back bright once you ride faster.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_lock2.jpg" alt="🔒 Rain lock" loading="lazy"><span class="num">05</span><div><b>🔒 Rain lock</b><span>Rain and gloves can't press anything. Drag to unlock: pull the tab on the left into the circle in the middle and hold it there 1 second.</span></div></div>
 <div class="shot"><img src="../img/guide/v4_nav_walk2.jpg" alt="🚶 Walk" loading="lazy"><span class="num">06</span><div><b>🚶 Walk</b><span>Getting off the bike to scout on foot? Tap 🚶 first: it pins your bike. Find my bike walks you back.</span></div></div>

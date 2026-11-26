@@ -542,6 +542,26 @@
   const beep = (n = 1, hz = 880, len = 0.25, wave = "sine", vol = 0.3) => { try { if (!beepCtx) return; for (let k = 0; k < n; k++) { const o = beepCtx.createOscillator(), v = beepCtx.createGain();
     o.type = wave; o.frequency.value = hz; v.gain.value = vol; o.connect(v); v.connect(beepCtx.destination); o.start(beepCtx.currentTime + k * 0.5); o.stop(beepCtx.currentTime + k * 0.5 + len); } } catch (e) {} };
   map.cnxBeep = beep; map.cnxUnlockSound = unlockSound;
+  // 🗣 Voice navigation (Chu 11/27): short phrases in the Irish voice he picked (edge-tts en-IE-EmilyNeural, site/audio/voice/),
+  // saved with the offline map. Same sound path as the beeps, a short tone first; if a clip can't play, Navigate beeps instead.
+  const VOICE = ["in200_L", "in200_R", "then_L", "then_R", "now_L", "now_R", "off", "back", "dark", "lat200", "water200", "finish", "sos", "lost", "st_lunch", "st_wait", "st_forest", "behind", "navon", "rideback"];
+  const voiceBuf = {};
+  const loadVoice = () => { if (!beepCtx) return; VOICE.forEach(k => { if (!voiceBuf[k]) voiceBuf[k] = fetch(`audio/voice/${k}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
+    .then(b => b && new Promise((ok, bad) => beepCtx.decodeAudioData(b, ok, bad))).catch(() => null); }); };
+  let sayQ = Promise.resolve(true);
+  const sayVoice = (...keys) => (sayQ = sayQ.then(async () => {  // one phrase after another, never on top of each other
+    try {
+      if (!beepCtx) return false;
+      const bufs = await Promise.all(keys.map(k => voiceBuf[k] || null));
+      if (!bufs.length || bufs.some(b => !b)) return false;
+      beep(1, 880, 0.12);
+      let t = beepCtx.currentTime + 0.25;
+      for (const b of bufs) { const s = beepCtx.createBufferSource(); s.buffer = b; s.connect(beepCtx.destination); s.start(t); t += b.duration + 0.05; }
+      if (window.__cnxVoiceLog) window.__cnxVoiceLog.push(keys.join("+"));  // the device tests read this
+      await new Promise(r => setTimeout(r, Math.max(0, t - beepCtx.currentTime) * 1000));
+      return true;
+    } catch (e) { return false; }
+  }));
   // ↩ Ride back the way I came (Chu 11/26: a trail closed mid-ride, U-turn home the same way). The same track turned
   // around: line reversed, stops / laterite / height chart counted from the other end, turns flipped left ↔ right, so
   // the arrows, turn alerts, arrival time (= back at the start) and stops ahead all work backwards with nothing new.
@@ -559,8 +579,10 @@
     unlockSound();
     navTrack = t; navBack = !!back;
     const nt = back ? reversedTrack(t) : t;
-    const o = { map, t: nt, kmOf: kmAlong(nt), length: field(t, "length"), youAt, restore, beep, onMenu: openMenu, onNavBtn: navChoice,
-      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; showTrack(t); backBar(); } };
+    loadVoice();
+    const o = { map, t: nt, kmOf: kmAlong(nt), length: field(t, "length"), youAt, restore, beep, say: sayVoice, onMenu: openMenu, onNavBtn: navChoice,
+      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; showTrack(t); backBar();
+        if (map.cnxRecord) map.cnxRecord.endAuto(); } };  // ■ Stop Navigate also stops the recording → save box
     if (navigator.getBattery) navigator.getBattery().then(b => { o.battery = b; }).catch(() => {});
     if (phone.matches) { window.scrollTo({ top: 0 }); wrap.style.height = "100svh"; }
     if (surfaceLayer) map.removeLayer(surfaceLayer);
@@ -568,6 +590,8 @@
     if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }
     map.setView(youAt || t.start, 16, { animate: false });
     nav = startNavigate(o);  // straight from the tap: the iPhone compass question needs it
+    sayVoice(back ? "rideback" : "navon");  // 🗣 so the rider knows the voice reaches the headphones (Chu 11/27)
+    if (map.cnxRecord && map.cnxRecord.startAuto() === "waiting") cnxToast("Your last ride isn't saved yet: tap ⏺ to save it", 4500);  // Navigate records by itself
     setTimeout(() => map.invalidateSize(), 260);
     if (/[?&]cnxtest\b/.test(location.search)) window.__cnx.nav = nav;
     backBar(); armBack();
@@ -617,6 +641,22 @@
     };
   }
 
+  // 🗂 Map type inside ☰ while navigating (Chu 11/27): the layers corner button is hidden in Navigate (style.css)
+  const mapLayers = () => ((map.cnxLayersCtl && map.cnxLayersCtl._layers) || []).filter(l => !l.overlay);
+  const mapTypeNow = () => { const on = mapLayers().find(l => map.hasLayer(l.layer)); return on ? on.name : ""; };
+  function mapTypes() {
+    const rows = mapLayers().map((l, k) => `<button class="rs-b s mchoice" data-k="${k}" type="button"><i>${map.hasLayer(l.layer) ? "✓" : ""}</i><span>${esc(l.name)}</span></button>`).join("");
+    mbox.innerHTML = `<button class="rs-x" type="button" aria-label="Close">✕</button><h2>🗂 Map type</h2>${rows}`;
+    mbox.querySelector(".rs-x").onclick = closeMenu;
+    mbox.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+      const pick = mapLayers()[+b.dataset.k];
+      mapLayers().forEach(l => { if (l !== pick && map.hasLayer(l.layer)) map.removeLayer(l.layer); });
+      if (!map.hasLayer(pick.layer)) map.addLayer(pick.layer);
+      map.fire("baselayerchange", { layer: pick.layer, name: pick.name });  // the rider picked: the offline auto-switch leaves it alone
+      closeMenu();
+    });
+  }
+
   // ☰ Menu in Navigate (Chu 11/21, in his order). Navigate keeps running behind every row.
   const menu = document.createElement("div");
   menu.className = "ridesheet navmenusheet"; menu.hidden = true;
@@ -642,6 +682,7 @@
     const t = current;
     mbox.innerHTML = `<button class="rs-x" type="button" aria-label="Close">✕</button><h2>☰ Menu</h2>
       <button class="mrow" data-m="page" type="button"><i>⬅</i><span>Back to track page<small>Navigate keeps running</small></span></button>
+      <button class="mrow" data-m="map" type="button"><i>🗂</i><span>Map type<small>${esc(mapTypeNow())}</small></span></button>
       <button class="mrow" data-m="cam" type="button"><i>📷</i><span>Camera</span></button>
       <button class="mrow" data-m="gpx" type="button"><i>📤</i><span>Share GPX</span></button>
       <button class="mrow" data-m="loc" type="button"><i>📍</i><span>Send my location</span></button>
@@ -651,6 +692,7 @@
     menu.hidden = false;
     mbox.querySelector(".rs-x").onclick = closeMenu;
     mbox.querySelector("[data-m=page]").onclick = () => { closeMenu(); const tt = current; pauseNav(); if (tt) showTrack(tt); backBar(); };
+    mbox.querySelector("[data-m=map]").onclick = () => mapTypes();
     mbox.querySelector("[data-m=cam]").onclick = () => { closeMenu(); camIn.value = ""; camIn.click(); };
     mbox.querySelector("[data-m=loc]").onclick = async () => {
       closeMenu(); const ll = here();
@@ -1082,7 +1124,7 @@
   // 👥 Ride together (ride.js): needs the track page's map, Navigate and the km-along helper.
   const kmCache = {};
   const ride = CNX_BETA && window.CNX_FIREBASE && typeof setupRide === "function" ? setupRide({
-    map, current: () => current, navOn: () => !!nav, startNav: () => { if (current) startNav(current); }, beep, unlockSound,
+    map, current: () => current, navOn: () => !!nav, startNav: () => { if (current) startNav(current); }, beep, unlockSound, say: sayVoice,
     kmAt: (t, ll) => (kmCache[t.id] || (kmCache[t.id] = kmAlong(t)))(nearestOnLine(t.line, ll)),
     loadQr, siteUrl: () => site.siteUrl || location.origin + location.pathname,
   }) : null;
