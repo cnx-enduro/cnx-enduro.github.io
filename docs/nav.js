@@ -12,6 +12,7 @@
 //  - turns (Chu 11/26): from 500 m before a junction where the track turns, a box on top of the ahead list:
 //    bent arrow + "200 m" counting down in 50 m steps + "Turn left"; 2 beeps + buzz at 200 m, 1 beep at the turn.
 //    Turns come from tools/turns.py (track turns 35°+ where the offline map shows 3+ ways meeting), t.turns.
+//  - ■ NAV asks (app.js navChoice): ↩ Ride back the way I came (t.back: the same track turned around) / ■ Stop / ✕ Cancel.
 // Track up everywhere: the way ahead points up the screen.
 const NAV = { OFF_M: 15, OFF_S: 20, AHEAD_KM: 2, SPEED_WINDOW_MIN: 15, SPEED_MIN_MOVING_MIN: 10, SMALL_AFTER_MS: 8000,
   TURN_SHOW_M: 500, TURN_BEEP_M: 200, TURN_NOW_M: 30, TURN_PAST_M: 25 };
@@ -45,7 +46,7 @@ function startNavigate(o) {
   const SUN = w => `<svg viewBox="0 0 24 16" width="${w}" height="${w * 2 / 3}" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0z" fill="#ffb02e"/>` +
     (w > 20 ? `<path d="M12 1v2.5M3.8 4.4l1.8 1.8M20.2 4.4l-1.8 1.8M0.5 12h2M21.5 12h2" stroke="#ffb02e" stroke-width="1.8" stroke-linecap="round"/>` : "") +
     `<path d="M0 14.5h24" stroke="#fff" stroke-width="${w > 20 ? 1.6 : 2}"/></svg>`;
-  const ARROW = left => `<svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true" style="transform:rotate(${left ? 180 : 0}deg)"><path d="M3 12h16m-7-8 8 8-8 8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const ARROW = left => `<svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true" style="transform:rotate(${left ? 180 : 0}deg)"><path d="M3 12h16m-7-8 8 8-8 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
   // ---- what's ahead on this track: stops and laterite as km ranges ----
   const kmAt = ll => kmOf(nearestOnLine(line, ll));
@@ -103,7 +104,7 @@ function startNavigate(o) {
   // Nothing in it stops Navigate any more (its ✕ used to, and riders read ✕ as "close"): only ■ NAV stops.
   mini.onclick = () => setBig(true);
   big.onclick = () => setBig(false);
-  q(".navstop").onclick = () => stop(true);
+  q(".navstop").onclick = () => (o.onNavBtn ? o.onNavBtn() : stop(true));  // asks: ride back / stop / cancel (app.js)
   q(".navmenu").onclick = () => o.onMenu && o.onMenu();
   q(".ns-x").onclick = () => { sunBox.hidden = true; };
   map.on("click", closeSun);
@@ -138,7 +139,7 @@ function startNavigate(o) {
   // ---- the ride's state ----
   const nav = { i: null, km: 0, n: null, joined: false, offSince: null, off: false, fixes: [], strayPts: [], redShown: false, last: null, acc: null, warnAt: 0 };
   if (o.restore && o.restore.track === t.id) Object.assign(nav, { i: o.restore.i ?? null, km: o.restore.km || 0, joined: !!o.restore.joined, warnAt: o.restore.warnAt || 0 });
-  const saveState = () => { try { localStorage.setItem("cnx-nav", JSON.stringify({ track: t.id, i: nav.i, km: nav.km, joined: nav.joined, warnAt: nav.warnAt, at: Date.now(), paused: false })); } catch (e) {} };
+  const saveState = () => { try { localStorage.setItem("cnx-nav", JSON.stringify({ track: t.id, back: !!t.back, i: nav.i, km: nav.km, joined: nav.joined, warnAt: nav.warnAt, at: Date.now(), paused: false })); } catch (e) {} };
   let saveT = 0;
   const notesKmh = () => {  // the track notes' pace: "70km (6 hours)" / "(5-6 hours)" (slower one) / "full day" = 8 h
     const f = o.length || "", m = f.match(/(\d+(?:\.\d+)?)\s*(?:-\s*(\d+(?:\.\d+)?))?\s*hours?/i);
@@ -203,8 +204,8 @@ function startNavigate(o) {
     if ((nav.off || lead) && !map.cnxWalking) {
       const a = map.latLngToContainerPoint(ll), b = map.latLngToContainerPoint([n.lat, n.lon]), left = b.x < a.x;
       offBox.innerHTML = (nav.off ? `<span class="no-lbl">⚠ OFF TRACK</span>` : "") +
-        `<span class="no-go">${ARROW(left)}${dist(n.dist)}</span><span class="no-sub">${nav.off ? "back to the track" : "to the track"}</span>`;
-      offBox.className = "navoff " + (left ? "left" : "right"); offBox.hidden = false;
+        `<span class="no-go">${ARROW(left)}<span><b>${dist(n.dist)}</b><small>${nav.off ? "back to the track" : "to the track"}</small></span></span>`;
+      offBox.className = "navoff right"; offBox.hidden = false;  // always right, under ☰ (Chu 11/26: it covered the menu); the arrow shows the side
     } else offBox.hidden = true;
     glow.hidden = !nav.off;
     // progress + arrival time + sun
@@ -278,7 +279,9 @@ function startNavigate(o) {
         if (near && told < 2) { turnTold[tn.km] = 2; try { navigator.vibrate && navigator.vibrate(250); } catch (e) {} if (o.beep) o.beep(1, 1175, 0.3); }
       }
     }
-    aheadBox.innerHTML = turnRow + (s ? row(s, s.kind === "water" ? "≈" : "★", s.kind) : "") + (l ? lat(l) : "");
+    // ↩ riding the track backwards: a steady reminder on top of the list
+    const backRow = t.back ? `<div class="na goback"><i>↩</i><span><b>Going back</b><small>to the start</small></span></div>` : "";
+    aheadBox.innerHTML = backRow + turnRow + (s ? row(s, s.kind === "water" ? "≈" : "★", s.kind) : "") + (l ? lat(l) : "");
     if (s && s.at && (!pin || pin._for !== s)) {
       if (pin) pin.remove();
       pin = L.marker(s.at, { interactive: false, zIndexOffset: 900, icon: L.divIcon({ className: "", iconSize: [26, 26], html: `<div class="navpin ${s.kind}">${s.kind === "water" ? "≈" : "★"}</div>` }) }).addTo(map);
@@ -317,5 +320,5 @@ function startNavigate(o) {
     if (fromButton && o.onExit) o.onExit();
   }
   // pause = leave the map view but keep the ride's state (☰ → Back to track page, another page): ▶ Back to Navigate
-  return { stop: () => stop(false), pause: () => { saveState(); stop(false, true); }, _nav: nav, _update: update };
+  return { stop: () => stop(false), end: () => stop(true), pause: () => { saveState(); stop(false, true); }, _nav: nav, _update: update };
 }

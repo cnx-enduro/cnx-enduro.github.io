@@ -261,13 +261,21 @@
   // line shows over green forest), else one colour per track. The start dot carries the track number so tracks
   // of the same colour can still be told apart.
   const levelOf = t => { const l = (site.trackLevels || {})[t.id]; return l && ((site.beforeRide || {}).levels || []).find(x => x.l === l); };
-  tracks.forEach((t, i) => {
+  // Line colour + edge for the current look; also run again when Night switches on/off live (cnxnight, see below)
+  const trackLook = (t, i) => {
     const lv = site.colorBy === "level" && levelOf(t);
-    t.color = (lv && (lv.map || lv.c)) || colorFor(i);
-    // Paper test (?beta): L1 stays green, L2 deeper blue, with a light paper edge instead of the dark one
+    let color = (lv && (lv.map || lv.c)) || colorFor(i);
+    // Paper: L1 stays green, L2 deeper blue, with a light paper edge instead of the dark one
     const paper = document.documentElement.classList.contains("paper");
-    if (paper && lv) t.color = { L1: "#1e9e4a", L2: "#1446c8" }[lv.l] || t.color;  // one green: the darker L1 badge green on lines too
-    const casing = L.polyline(t.line, paper ? { color: "#fbf8f1", weight: 8, opacity: 0.9, interactive: false } : { color: "#000", weight: 7, opacity: 0.55, interactive: false });
+    const night = paper && document.documentElement.classList.contains("night");  // Night look: lifted colours, dark edge
+    if (paper && lv) color = (night ? { L1: "#35c46b", L2: "#5b8dff" } : { L1: "#1e9e4a", L2: "#1446c8" })[lv.l] || color;  // one green: the darker L1 badge green on lines too
+    const edge = night ? { color: "#0d0c0b", weight: 8 } : paper ? { color: "#fbf8f1", weight: 8 } : { color: "#000", weight: 7 };
+    return { color, edge, edgeOpacity: night ? 0.85 : paper ? 0.9 : 0.55 };
+  };
+  tracks.forEach((t, i) => {
+    const look = trackLook(t, i);
+    t.color = look.color;
+    const casing = L.polyline(t.line, { ...look.edge, opacity: look.edgeOpacity, interactive: false });
     const line = L.polyline(t.line, { color: t.color, weight: 4, opacity: 0.95 });
     const start = L.marker(t.start, { icon: L.divIcon({ className: "tstart", iconSize: [24, 24], iconAnchor: [12, 12],
       html: `<span style="background:${t.color}">${Number(t.id)}</span>` }) });
@@ -278,6 +286,20 @@
     g.on("mouseover", () => highlight(t.id, true));
     g.on("mouseout", () => highlight(t.id, false));
     layers[t.id] = { g, line, casing, start };
+  });
+  // 🌙 Night on/off live (phone switches at sunset / sunrise): repaint lines, number pins and surface colours in place,
+  // nothing reloads and Navigate keeps running (Chu 11/26: seamless). The rest of the look is CSS.
+  addEventListener("cnxnight", () => {
+    tracks.forEach((t, i) => {
+      const look = trackLook(t, i), l = layers[t.id];
+      t.color = look.color;
+      l.line.setStyle({ color: look.color }); l.casing.setStyle(look.edge);
+      const el = l.start.getElement(); if (el && el.firstElementChild) el.firstElementChild.style.background = look.color;
+      l.start.options.icon.options.html = `<span style="background:${look.color}">${Number(t.id)}</span>`;
+    });
+    setSurfaceColors();
+    if (surfaceLayer) surfaceLayer.eachLayer(g => g.eachLayer && g.eachLayer(p => { if (p.options.cls) p.setStyle({ color: surfaceColor[p.options.cls] }); }));
+    document.querySelectorAll("[data-surf]").forEach(e => { e.style.background = surfaceColor[e.dataset.surf]; });
   });
   const boundsOf = sec => L.latLngBounds(tracks.filter(t => t.category === sec).flatMap(t => t.line));
   // A map fitted while its box still has no size zooms all the way in; wait for layout first.
@@ -434,16 +456,22 @@
   map.on("whereupdate", e => { youAt = e.latlng; updateYou(); });
   // Track page: the open track drawn in surface colours (from OpenStreetMap, see surfaces.py).
   // Paper test (?beta): deeper shades, because white and bright orange vanish on a light map (Chu 11/26)
-  const PAPERMAP = document.documentElement.classList.contains("paper");
-  const SURFACES = [
-    ["single", "Single track", PAPERMAP ? "#c2185b" : "#e5397a"],
-    ["double", "Double track / dirt", PAPERMAP ? "#d96c00" : "#ff9800"],
-    ["lanes", "Concrete lanes (two strips)", PAPERMAP ? "#1683b5" : "#33d6ff"],
-    ["paved", "Paved", PAPERMAP ? "#5e574a" : "#f4f4f4"],
-    ["unknown", "Not on the map", "#8a8f98"],
+  // Night look uses the bright (old dark-look) shades again: they were made for a dark map
+  const SURF = [  // [key, label, Paper colour, bright colour (dark map)]
+    ["single", "Single track", "#c2185b", "#e5397a"],
+    ["double", "Double track / dirt", "#d96c00", "#ff9800"],
+    ["lanes", "Concrete lanes (two strips)", "#1683b5", "#33d6ff"],
+    ["paved", "Paved", "#5e574a", "#f4f4f4"],
+    ["unknown", "Not on the map", "#8a8f98", "#8a8f98"],
   ];
+  const paperMap = () => document.documentElement.classList.contains("paper") && !document.documentElement.classList.contains("night");
+  let SURFACES = [], surfaceColor = {};
+  const setSurfaceColors = () => {
+    SURFACES = SURF.map(([k, label, pc, bc]) => [k, label, paperMap() ? pc : bc]);
+    surfaceColor = Object.fromEntries(SURFACES.map(([k, , c]) => [k, c]));
+  };
+  setSurfaceColors();
   const LATERITE = "#7a1408";
-  const surfaceColor = Object.fromEntries(SURFACES.map(([k, , c]) => [k, c]));
   const surfaceLabel = Object.fromEntries(SURFACES.map(([k, label]) => [k, label]));
   // Point on the track → km along it (the display line is simplified, so scale to the GPX's real length).
   const kmAlong = t => {
@@ -488,13 +516,18 @@
     const sh = t.surface.shares;
     const used = SURFACES.filter(([k]) => sh[k] > 0);
     return `<h2 class="section">Surface</h2>
-      <div class="surfbar" aria-hidden="true">${used.map(([k, , c]) => `<span style="flex:${sh[k]};background:${c}"></span>`).join("")}</div>
-      <ul class="surfkey">${used.map(([k, label, c]) => `<li><i style="background:${c}"></i>${label} <b>${sh[k]}%</b></li>`).join("")}</ul>
+      <div class="surfbar" aria-hidden="true">${used.map(([k, , c]) => `<span data-surf="${k}" style="flex:${sh[k]};background:${c}"></span>`).join("")}</div>
+      <ul class="surfkey">${used.map(([k, label, c]) => `<li><i data-surf="${k}" style="background:${c}"></i>${label} <b>${sh[k]}%</b></li>`).join("")}</ul>
       ${t.surface.lateriteShare ? `<p class="laterite"><i></i>Laterite (pig skin), slippery when wet <b>${t.surface.lateriteShare}%</b><br>
         <span class="muted small">Marked only where the map knows it. Other parts may be laterite too.</span></p>` : ""}
       <p class="muted small">From OpenStreetMap, so it can be out of date. The notes above are the riders' own word.</p>`;
   };
 
+  // Directions to start first, a little stronger than Download GPX, with the Google Maps pin so riders know where it
+  // opens (Chu 11/26). The pin is drawn here (red / yellow / green / blue with a white dot), no image to load.
+  const GMAPS_PIN = `<svg class="gpin" viewBox="0 0 24 34" width="17" height="24" aria-hidden="true"><defs><clipPath id="gpc"><path d="M12 0C5.4 0 0 5.3 0 11.9 0 20.8 12 34 12 34s12-13.2 12-22.1C24 5.3 18.6 0 12 0z"/></clipPath></defs>` +
+    `<g clip-path="url(#gpc)"><path d="M0 0h24v34H0z" fill="#34a853"/><path d="M-2 -2h28L4 22-2 16z" fill="#4285f4"/><path d="M8 -2h18v14L14 6z" fill="#ea4335"/><path d="M26 12v6L13 34 9 30z" fill="#fbbc04"/></g>` +
+    `<circle cx="12" cy="11.6" r="4.4" fill="#fff"/></svg>`;
   function go(id) { location.hash = id ? "#" + id : ""; }
 
   // ▶ Navigate (nav.js): the map fills the phone screen, surface colours off, the route drawn blue / grey.
@@ -509,11 +542,25 @@
   const beep = (n = 1, hz = 880, len = 0.25, wave = "sine", vol = 0.3) => { try { if (!beepCtx) return; for (let k = 0; k < n; k++) { const o = beepCtx.createOscillator(), v = beepCtx.createGain();
     o.type = wave; o.frequency.value = hz; v.gain.value = vol; o.connect(v); v.connect(beepCtx.destination); o.start(beepCtx.currentTime + k * 0.5); o.stop(beepCtx.currentTime + k * 0.5 + len); } } catch (e) {} };
   map.cnxBeep = beep; map.cnxUnlockSound = unlockSound;
-  function startNav(t, restore) {
+  // ↩ Ride back the way I came (Chu 11/26: a trail closed mid-ride, U-turn home the same way). The same track turned
+  // around: line reversed, stops / laterite / height chart counted from the other end, turns flipped left ↔ right, so
+  // the arrows, turn alerts, arrival time (= back at the start) and stops ahead all work backwards with nothing new.
+  const reversedTrack = t => {
+    const K = t.km, flip = k => Math.max(0, +(K - k).toFixed(3));
+    return { ...t, back: true, line: [...t.line].reverse(), start: t.end || t.line[t.line.length - 1], end: t.start,
+      climb: t.descent ?? t.climb, descent: t.climb,
+      pois: (t.pois || []).map(p => ({ ...p, km: flip(p.kmTo ?? p.km), kmTo: p.kmTo != null ? flip(p.km) : undefined })),
+      turns: (t.turns || []).map(x => ({ ...x, km: flip(x.km), dir: x.dir === "L" ? "R" : "L" })),
+      profile: (t.profile || []).map(([k, ...r]) => [flip(k), ...r]).reverse() };
+  };
+  let navTrack = null, navBack = false;
+  function startNav(t, restore, back) {
     if (nav) return;
     unlockSound();
-    const o = { map, t, kmOf: kmAlong(t), length: field(t, "length"), youAt, restore, beep, onMenu: openMenu,
-      onExit: () => { nav = null; wrap.style.height = ""; showTrack(t); backBar(); } };
+    navTrack = t; navBack = !!back;
+    const nt = back ? reversedTrack(t) : t;
+    const o = { map, t: nt, kmOf: kmAlong(nt), length: field(t, "length"), youAt, restore, beep, onMenu: openMenu, onNavBtn: navChoice,
+      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; showTrack(t); backBar(); } };
     if (navigator.getBattery) navigator.getBattery().then(b => { o.battery = b; }).catch(() => {});
     if (phone.matches) { window.scrollTo({ top: 0 }); wrap.style.height = "100svh"; }
     if (surfaceLayer) map.removeLayer(surfaceLayer);
@@ -529,7 +576,7 @@
     const v = navState(), t = v && tracks.find(x => x.id === v.track);
     if (!t) { backBar(); return; }
     if (!current || current.id !== t.id) { pendingResume = v; go(t.id); return; }
-    startNav(t, v);
+    startNav(t, v, v.back);
   }
   let pendingResume = null;
 
@@ -541,7 +588,33 @@
   function backBar() {
     const v = navState(), t = v && v.paused && !nav && tracks.find(x => x.id === v.track);
     bar.hidden = !t; document.body.classList.toggle("hasbackbar", !!t);
-    if (t) bar.innerHTML = `▶ Back to Navigate <small>${esc(t.id)} · ${esc(t.name)}</small>`;
+    if (t) bar.innerHTML = `▶ Back to Navigate <small>${v.back ? "↩ riding back · " : ""}${esc(t.id)} · ${esc(t.name)}</small>`;
+  }
+
+  // ■ NAV (Chu 11/26): a tap no longer stops at once (a tap by mistake ended the ride); it asks:
+  // ■ Stop Navigate · ↩ Ride back the way I came (or ▶ Ride forward again) · ✕ Cancel (Chu: Stop first).
+  function navChoice() {
+    if (!nav || !navTrack) return;
+    mbox.innerHTML = `<button class="rs-x" type="button" aria-label="Close">✕</button><h2>Navigate</h2>
+      <button class="rs-b s mchoice navend" data-n="stop" type="button"><i>■</i><span>Stop Navigate<small>back to the track page</small></span></button>
+      <button class="rs-b s mchoice navturn" data-n="turn" type="button"><i>${navBack ? "▶" : "↩"}</i><span>${navBack ? "Ride forward again" : "Ride back the way I came"}<small>${navBack ? "the track the normal way, from here" : "the same track turned around, from here to the start"}</small></span></button>
+      <button class="rs-b s mchoice" data-n="cancel" type="button"><i>✕</i><span>Cancel<small>keep going</small></span></button>`;
+    menu.hidden = false;
+    mbox.querySelector(".rs-x").onclick = closeMenu;
+    mbox.querySelector("[data-n=cancel]").onclick = closeMenu;
+    mbox.querySelector("[data-n=stop]").onclick = () => { closeMenu(); if (nav) nav.end(); };
+    mbox.querySelector("[data-n=turn]").onclick = () => {
+      closeMenu();
+      const t = navTrack, back = !navBack, ll = here();
+      let restore = null;
+      if (ll) {
+        const nt = back ? reversedTrack(t) : t, n = nearestOnLine(nt.line, [ll.lat, ll.lng]);
+        if (n.dist <= 200) restore = { track: t.id, i: n.i, km: kmAlong(nt)(n), joined: true, warnAt: 0 };
+      }
+      nav.stop(); nav = null;
+      startNav(t, restore, back);
+      cnxToast(back ? "↩ Riding back to the start" : "▶ Riding forward again", 3000);
+    };
   }
 
   // ☰ Menu in Navigate (Chu 11/21, in his order). Navigate keeps running behind every row.
@@ -681,7 +754,7 @@
       const casings = L.featureGroup(t.surface.pieces.map(p =>
         L.polyline(p.line, { color: "#000", weight: 8, opacity: 0.75, interactive: false })));
       const pieces = L.featureGroup(t.surface.pieces.map(p =>
-        L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, dashArray: p.cls === "unknown" ? "6 6" : null })));
+        L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, dashArray: p.cls === "unknown" ? "6 6" : null, cls: p.cls })));
       const laterite = L.featureGroup((t.surface.laterite || []).map(line =>  // laterite: dashes over the surface colour
         L.polyline(line, { color: LATERITE, weight: 5, opacity: 1, interactive: false, dashArray: "4 8", lineCap: "butt" })));
       surfaceLayer = L.featureGroup([casings, pieces, laterite]).addTo(map);
@@ -709,8 +782,8 @@
       </div>
       <div class="actions">
         ${CNX_BETA ? `<button class="btn navgo" id="navGo" type="button">▶ Navigate</button><button class="btn ridego" id="rideGo" type="button">👥 Ride together</button>` : ""}
-        <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
-        <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
+        <a class="btn primary dirgo" href="${gmaps}" target="_blank" rel="noopener">${GMAPS_PIN}Directions to start</a>
+        <a class="btn" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <button class="btn" id="qrBtn" type="button">Share</button>
       </div>
       ${site.shareNotice ? `<p class="share small">${esc(site.shareNotice)}</p>` : ""}
@@ -1022,7 +1095,7 @@
     if (t) showTrack(t);
     // an unknown or empty section (old #adventure links) falls back to the main page
     else showOverview(tracks.some(t => t.category === id) ? id : main.id);
-    if (t && pendingResume && pendingResume.track === t.id) { const v = pendingResume; pendingResume = null; setTimeout(() => startNav(t, v), 50); }
+    if (t && pendingResume && pendingResume.track === t.id) { const v = pendingResume; pendingResume = null; setTimeout(() => startNav(t, v, v.back), 50); }
     backBar();
   }
   window.addEventListener("hashchange", route);

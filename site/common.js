@@ -154,7 +154,7 @@ function addLocate(map, whereText, routeBearing) {
   // iPhone asks once ("Allow motion & orientation") when location is turned on; it must be asked straight from the tap.
   // Riding (faster than walking): the line follows the way GPS says you're going, so the bike's metal can't freeze it.
   // Stopped / on foot: the compass. iPhone's compass can stop sending (Chu 11/21, ~10× a ride): after 3 s of silence
-  // the site reconnects it by itself; still silent → the line fades (never a wrong line) and 🧭 pulses: one tap wakes it.
+  // the site reconnects it by itself; still silent or unsure → the line fades (never a wrong line; Chu 11/26 kept it) and 🧭 pulses: one tap wakes it.
   let phoneDir = null, beam = null, beamRaf = 0, gpsDir = null, gpsAt = 0, turnAt = 0, gotTurn = false, stuck = false, restartAt = 0, unsure = false, wakeTag = null, prevFix = null;
   const dirNow = () => (gpsDir != null && Date.now() - gpsAt < 6000 && !map.cnxWalking) ? { d: gpsDir, gps: true } : { d: phoneDir, gps: false };
   const beamDraw = () => {
@@ -295,8 +295,8 @@ function addLocate(map, whereText, routeBearing) {
 
 // 🔒 Rain lock, bottom left: one tap and the screen ignores every touch (rain drops make phones tap and scroll
 // by themselves). The map keeps following the rider and the screen stays awake. To unlock: drag the "Drag to unlock" tab
-// from the left edge into the middle of the screen (Chu 11/21: a 2 s hold could happen by itself in a pocket; a slide can't).
-// Let go before the circle = it springs back. 👖 Pocket screen (ride.js) is the same lock on black.
+// from the left edge into the middle circle and HOLD it there 1 s (the circle fills green) — Chu 11/26: a drag that
+// just brushes the middle shouldn't unlock. Leave the circle or let go early = still locked. 👖 Pocket screen (ride.js) is the same lock on black.
 // The phone's Back button while locked stays on the page and points at the slide (Android "Back" used to leave the
 // site with no signal and lose the ride).
 function addRainLock(map) {
@@ -335,22 +335,39 @@ function addRainLock(map) {
   cover.className = "raincover"; cover.hidden = true;
   cover.innerHTML = `<div class="rl-slide"><div class="rl-ring"></div><div class="rl-arr">› › ›</div>
     <div class="rl-knob" role="slider" aria-label="Drag to unlock">Drag to unlock</div></div>
-    <div class="rl-rings" hidden><i></i><i></i><i></i><b></b></div>`;
+    <div class="rl-rings" hidden><i></i><i></i><i></i><b></b><u></u><em>Hold here 1 second</em></div>
+    <p class="rl-pocketmsg">Don't turn off your phone</p>`;  // 👖 Pocket screen only (Chu 11/26), red on black
   ["touchstart", "touchmove", "touchend", "pointerdown", "pointerup", "mousedown", "mouseup", "click", "dblclick", "wheel", "contextmenu", "gesturestart"]
     .forEach(ev => cover.addEventListener(ev, swallow, { passive: false }));
   document.body.appendChild(cover);
   knob = cover.querySelector(".rl-knob"); hint = knob;  // Chu 11/26 (his video): a slim "Drag to unlock" tab on the left edge; drag right, rings open around the finger
   const ring = cover.querySelector(".rl-ring");
   // the drag (Chu 11/26): finger down on the tab → circles appear in the middle of the screen, shrinking big → small
-  // on a loop; drag the finger into the middle (green) and let go = unlocked. Anywhere else = nothing.
+  // on a loop; drag the finger into the middle and keep it there 1 s while the circle fills green = unlocked
+  // (Chu 11/26). The tab moves with the finger; let go, or slide out of the circle before the 1 s, and it bounces back
+  // to the edge. "Hold here 1 second" shows above the circle while dragging. Same lock on the Ride together 👖 Pocket screen.
   const rings = cover.querySelector(".rl-rings");
-  let x0 = null, pid = null, fx = 0, fy = 0;
+  let x0 = null, y0 = null, pid = null, fx = 0, fy = 0;
   const HIT = 50;  // px from the middle that counts as "in"
   const mid = () => [innerWidth / 2, innerHeight / 2];
   const inRing = () => { const [cx, cy] = mid(); return Math.hypot(fx - cx, fy - cy) <= HIT; };
-  const track = e => { fx = e.clientX; fy = e.clientY; };  // no colour change before letting go (Chu 11/26)
+  const HOLD = 1000;  // ms inside the circle to unlock
+  let holdT = null;
+  const stopHold = () => { clearTimeout(holdT); holdT = null; rings.classList.remove("in"); };
+  const done = () => { x0 = null; pid = null; stopHold(); rings.hidden = true; knob.classList.remove("in", "held"); };
+  const home = bounce => {  // the tab back to the left edge: a little bounce when the unlock didn't happen
+    knob.style.transition = bounce ? "transform .5s cubic-bezier(.34,1.56,.64,1)" : "none"; knob.style.transform = "";
+  };
+  const bounceBack = () => { done(); home(true); flash(); };
+  const track = e => {
+    fx = e.clientX; fy = e.clientY;
+    knob.style.transform = `translate(${fx - x0}px, ${fy - y0}px)`;
+    if (inRing()) {
+      if (!holdT) { rings.classList.add("in"); holdT = setTimeout(() => { done(); home(false); try { navigator.vibrate && navigator.vibrate(40); } catch (er) {} setLocked(false); }, HOLD); }
+    } else if (holdT) bounceBack();  // slid out of the circle before the 1 s
+  };
   knob.addEventListener("pointerdown", e => {
-    e.preventDefault(); e.stopPropagation(); x0 = e.clientX; pid = e.pointerId;
+    e.preventDefault(); e.stopPropagation(); x0 = e.clientX; y0 = e.clientY; pid = e.pointerId; knob.style.transition = "none";
     try { knob.setPointerCapture(pid); } catch (er) {}
     const [cx, cy] = mid(); rings.style.left = cx + "px"; rings.style.top = cy + "px";
     rings.hidden = false; knob.classList.add("held"); track(e);
@@ -359,9 +376,7 @@ function addRainLock(map) {
   const drop = e => {
     if (x0 == null || (e && e.pointerId !== pid)) return;
     if (e && e.clientX != null) { fx = e.clientX; fy = e.clientY; }
-    const ok = inRing(); x0 = null; pid = null;
-    rings.hidden = true; rings.classList.remove("in"); knob.classList.remove("in", "held");
-    if (ok) setLocked(false); else flash();
+    bounceBack();  // let go before the 1 s hold = still locked, the tab bounces back
   };
   knob.addEventListener("pointerup", drop); knob.addEventListener("pointercancel", drop);
   const ctl = L.control({ position: "bottomleft" });
@@ -459,6 +474,33 @@ function addOffline(map, o) {
     if (fails >= 6) toSaved("Map not loading: showing your saved map");
   }));
   Object.values(o.bases).forEach(b => b.on("tileload", () => { fails = 0; }));
+  // Very weak signal (1 bar, Chu 11/26 ride): map pieces don't fail, they just never arrive, so nothing above fires.
+  // A piece still loading after 8 s with nothing arriving for 8 s → the saved map. Back on the online map when a test
+  // piece loads again (checked every 60 s).
+  const STALL = 8000, pending = new Map(); let lastLoad = Date.now(), probeT = null;
+  Object.values(o.bases).forEach(b => {
+    b.on("tileloadstart", e => pending.set(e.tile, Date.now()));
+    b.on("tileload", e => { pending.delete(e.tile); lastLoad = Date.now(); });
+    b.on("tileerror tileunload", e => pending.delete(e.tile));
+  });
+  setInterval(() => {
+    if (map.hasLayer(group) || document.visibilityState !== "visible") return;
+    const now = Date.now();
+    let old = false; pending.forEach((t0, el) => { if (!el.isConnected) pending.delete(el); else if (now - t0 > STALL) old = true; });
+    if (old && now - lastLoad > STALL) { pending.clear(); toSaved("Weak signal: showing your saved map"); }
+  }, 2000);
+  const probe = () => {  // on the saved map because of weak signal: is the online map back?
+    clearTimeout(probeT);
+    probeT = setTimeout(async () => {
+      if (!auto || !map.hasLayer(group)) return;
+      const b = before || Object.values(o.bases)[0], c = map.getCenter(), z = Math.min(map.getZoom() | 0, 17);
+      const x = Math.floor((c.lng + 180) / 360 * 2 ** z), y = Math.floor((1 - Math.log(Math.tan(c.lat * Math.PI / 180) + 1 / Math.cos(c.lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** z);
+      const url = b._url ? L.Util.template(b._url, L.extend({}, b.options, { s: (b.options.subdomains || "a")[0], x, y, z, r: "" })) : null;
+      const ok = url && await new Promise(r => { const im = new Image(), t = setTimeout(() => r(false), 5000); im.onload = () => { clearTimeout(t); r(true); }; im.onerror = () => { clearTimeout(t); r(false); }; im.src = url + (url.includes("?") ? "&" : "?") + "cnxprobe=" + Date.now(); });
+      if (ok && navigator.onLine !== false) { toOnline(); lastLoad = Date.now(); } else probe();
+    }, 60000);
+  };
+  map.on("layeradd", e => { if (e.layer === group && auto) probe(); });
   if (navigator.onLine === false) setTimeout(() => toSaved("No signal: showing your saved map"), 0);
 
   // ---- the button ----
@@ -571,12 +613,42 @@ function addOffline(map, o) {
   ctl.addTo(map);
 }
 
+// 🔍 No page zoom while riding (Chu 11/26: on iPhone and Android the whole page zoomed in mid-ride, boxes huge, and only
+// a reload fixed it). While Navigate or Walk is on: the page can't be pinch-zoomed (Android: viewport; iPhone ignores
+// that, so its pinch gesture is stopped), double taps don't zoom, and if the page still ends up zoomed it springs
+// back by itself. The map's own pinch zoom is untouched. Track pages and the guides stay zoomable.
+(() => {
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (!vp) return;
+  const normal = vp.getAttribute("content"), locked = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
+  const riding = () => document.body.classList.contains("navmode") || document.body.classList.contains("walking");
+  const block = e => { if (riding()) e.preventDefault(); };
+  ["gesturestart", "gesturechange"].forEach(ev => document.addEventListener(ev, block, { passive: false }));
+  let unzoomT = null;
+  const unzoom = () => {  // iPhone: putting maximum-scale=1 back in the page resets the zoom
+    vp.setAttribute("content", locked + ", viewport-fit=cover");
+    clearTimeout(unzoomT); unzoomT = setTimeout(() => vp.setAttribute("content", riding() ? locked : normal), 300);
+  };
+  const apply = () => {
+    const on = riding();
+    vp.setAttribute("content", on ? locked : normal);
+    document.documentElement.classList.toggle("nozoom", on);
+    if (on && window.visualViewport && visualViewport.scale > 1.02) unzoom();
+  };
+  if (window.visualViewport) visualViewport.addEventListener("resize", () => { if (riding() && visualViewport.scale > 1.02) setTimeout(() => { if (riding() && visualViewport.scale > 1.02) unzoom(); }, 600); });
+  const start = () => { new MutationObserver(apply).observe(document.body, { attributes: true, attributeFilter: ["class"] }); apply(); };
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+})();
+
 // ⏺ Record, bottom left above the saved-map button: tap = start recording the ride (turns location on),
 // tap again (red ⏹) = stop, then a box asks for a name and Save… lets the phone pick where the GPX file goes
 // (computer and newer Android Chrome: a real save screen; iPhone: the share sheet, "Save to Files").
 // The ride is kept in the phone while recording, so a reload or a closed tab doesn't lose it: the box comes back.
 // Websites only get GPS while the page is on screen, so the screen is kept awake (location ON does that).
 const REC_KEY = "cnx-rec-v1";
+// iPhone / iPad (iPadOS reports itself as a Mac with touch): a website can't put a file in Files by itself, it goes
+// through the share list, where "Save to Files" sits below the apps (Chu 11/26 ride: it took him a while to find).
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 function addRecord(map) {
   if (!("geolocation" in navigator)) return;
   let rec = null, on = false, casing = null, line = null, btn = null, sign = null, tick = null, sheet = null;
@@ -652,7 +724,9 @@ function addRecord(map) {
       ${unfinished ? `<p class="recnote">Your ride wasn't saved yet</p>` : ""}
       <div class="recstats"><span><b>${km.toFixed(1)}</b> km</span><span><b>${dur((last ? last[3] : Date.now()) - rec.start)}</b></span>${climb != null ? `<span><b>⛰ ${climb}</b> m</span>` : ""}</div>
       <label>Name<span class="recname"><input type="text" maxlength="80" autocomplete="off" spellcheck="false"><i>.gpx</i></span></label>
-      <button type="button" class="btn primary recsave">💾 Save…</button>
+      ${IOS ? `<button type="button" class="btn primary recsave">📁 Save to Files…</button>
+      <p class="rechint">Next: a list opens. Scroll down and tap <b>📁 Save to Files</b>, then pick a folder and <b>Save</b>.</p>` :
+      `<button type="button" class="btn primary recsave">💾 Save…</button>`}
       <button type="button" class="btn reckeep">Keep recording</button>
       <button type="button" class="recdel">Delete ride</button>
       <p class="recmsg small" role="status"></p></div>`;
@@ -942,7 +1016,10 @@ function addWalk(map) {
   const ctl = L.control({ position: "bottomleft" });
   ctl.onAdd = () => {
     const box = L.DomUtil.create("div", "leaflet-bar walkbtn");
-    box.innerHTML = `<a href="#" role="button" title="Walk: exploring on foot. Pins your bike" aria-label="Walk: exploring on foot. Pins your bike">🚶</a>`;
+    box.innerHTML = `<a href="#" role="button" title="Walk: exploring on foot. Pins your bike" aria-label="Walk: exploring on foot. Pins your bike"><span class="wemoji">🚶</span>` +
+      // Paper: an ink walker drawing instead of the colour emoji (Chu 11/26)
+      `<svg class="wink" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="13.6" cy="3.9" r="2.3" fill="currentColor"/>` +
+      `<path d="M12.6 7.6 10.2 13.2l3 3.1V21.5M10.2 13.2 7.8 20.6M12.6 7.6l3.3 3.1 3 .9M12.2 8.4 8.6 10.4 7.2 13.4" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></a>`;
     L.DomEvent.disableClickPropagation(box);
     btn = box.querySelector("a");
     btn.addEventListener("click", e => {

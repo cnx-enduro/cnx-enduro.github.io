@@ -12,9 +12,18 @@
 // Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
 (() => { try { const q = new URLSearchParams(location.search);
   if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
-  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper");
+  // Night look (Chu 11/26): follows the phone's dark mode, map screens only. Test switch ?night=1 on · ?night=0 off · ?night=auto
+  if (q.has("night")) localStorage.setItem("cnx-night", q.get("night") || "1");
+  const nt = localStorage.getItem("cnx-night") || "auto", h = document.documentElement;
+  const dm = matchMedia("(prefers-color-scheme: dark)");
+  if (nt === "1" || nt === "b" || (nt === "auto" && dm.matches)) h.classList.add("night");
+  // Live (Chu 11/26): the phone flips dark at sunset (Automatic) → Night switches on the spot, no reload; app.js repaints the lines
+  if (nt === "auto" && dm.addEventListener) dm.addEventListener("change", e => { h.classList.toggle("night", e.matches); dispatchEvent(new Event("cnxnight")); });
+  } catch (e) {} })();
 </script>
-<link rel="stylesheet" href="style.css?v=9376302d">
+<link rel="stylesheet" href="style.css?v=6fe6c8ca">
+<link rel="stylesheet" href="night.css?v=43998e29">
 </head>
 <body>
 <header class="top">
@@ -90,10 +99,10 @@
 
 <script src="vendor/leaflet.min.js"></script>
 <script src="vendor/leaflet-rotate.js"></script>
-<script src="common.js?v=240f7e2f"></script>
-<script src="nav.js?v=dde59ebd"></script>
+<script src="common.js?v=7cec5dfc"></script>
+<script src="nav.js?v=6c3ca0a2"></script>
 <script src="firebase-config.js?v=6fb37bcf"></script>
 <script src="ride.js?v=831f43ee"></script>
-<script src="app.js?v=7d10799f"></script>
+<script src="app.js?v=f70a23f3"></script>
 </body>
 </html>

@@ -51,3 +51,18 @@ html.paper .papertag2 { display: inline-block; margin: 14px 0 0 10px; font: 700 
 html.paper .rtile img, html.paper .card img { z-index: 0 !important; position: absolute !important; }
 html.paper .rtile::after, html.paper .card::after { z-index: 0 !important; }
 html.paper .rtile > *:not(img), html.paper .card > *:not(img) { z-index: 1 !important; }
+
+/* "← All tracks" = a clear yellow button in the Paper style (serif, ink edge, square-ish corners like Navigate), every page,
+   Paper and Night alike (Chu 11/26) */
+html .back, html.paper .back { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 9px 18px;
+  background: #ffc92e; color: #16140f !important; border: 2px solid #16140f; border-radius: 10px; line-height: 1.2;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; font-size: 17px; font-weight: 700;
+  text-transform: none !important; letter-spacing: .01em !important; text-decoration: none; cursor: pointer; margin: 0 0 14px;
+  box-shadow: 0 2px 6px rgba(40,30,15,.18); }
+html .back:hover, html .back:active { background: #f2b600; color: #16140f !important; }
+/* Paper type rule (Chu 11/26 font check): serif for every bold title, label, name and number; plain sans only for the
+   smaller description lines. Own looks kept: L0–L4 level badges (signs), gold track numbers, tiny button words (NAV, WALK…). */
+html.paper :is(h1, h2, h3, h4, h5, h6, b, strong, summary, label, button, th, dt, legend, .group, .strike, .cmcap, .ot, .fun, .draft,
+  .cnxtoast, .findbike, .by, .end, .hl, .redline b, .ldwrap > .rule b, .post .by, .post .end, .fut, .og, .thanks, .rl, .how, .key > b,
+  .na small, .mrow span, .qrtrack, .nhead, .cmkey span, .rules p) {
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; }

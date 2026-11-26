@@ -516,6 +516,8 @@ def main():
         changes.append({**{k: v for k, v in c.items() if k != "by"}, "what": what or "Site text", "track": ids[0] if len(ids) == 1 else None})
     changes.sort(key=lambda c: c.get("when", c["date"]), reverse=True)
 
+    # Night look CSS is made from the Paper CSS (tools/night.py), so the two never drift apart
+    subprocess.run([sys.executable, os.path.join(ROOT, "tools", "night.py")], check=True)
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
@@ -545,7 +547,7 @@ def main():
         path = os.path.join(OUT, page)
         with open(path, encoding="utf-8") as f:
             html = f.read()
-        for asset in ("style.css", "common.js", "nav.js", "ride.js", "firebase-config.js", "app.js", "editors.js"):
+        for asset in ("style.css", "night.css", "common.js", "nav.js", "ride.js", "firebase-config.js", "app.js", "editors.js"):
             with open(os.path.join(SRC, asset), "rb") as f:
                 v = hashlib.sha1(f.read()).hexdigest()[:8]
             html = html.replace(f'"{asset}"', f'"{asset}?v={v}"')

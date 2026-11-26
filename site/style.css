@@ -772,6 +772,7 @@ html.paper .btn { background: #fbf8f1; color: #16140f; border-color: #cfc4ad; }
 /* map: soft paper tones instead of the dimmed dark map */
 html.paper .leaflet-tile-pane { filter: grayscale(.7) sepia(.22) contrast(1.06) brightness(1.03) !important; }
 html.paper .leaflet-container { background: #efe8da; }
+html.paper #map { background: #efe8da; }  /* map gaps (weak signal) show paper, not the old near-black (Chu 11/26 ride) */
 /* level colours on paper: L1 stays green (Chu 11/26), L2 in a deeper blue */
 html.paper path[stroke="#1f5fbf"] { stroke: #1446c8; }
 html.paper [style*="#1f5fbf"] { background-color: #1446c8 !important; }
@@ -895,12 +896,12 @@ html.paper .na small { color: #5e574a; }
 html.paper .na.laterite { border: 2px solid #d32f2f; }
 html.paper .na.turn { border: 2px solid #16140f; } html.paper .na.turn .turnic { color: #16140f; } html.paper .na.turn small { color: #16140f; }
 html.paper .na.turn.now { background: #16140f; color: #fbf8f1; } html.paper .na.turn.now .turnic, html.paper .na.turn.now small { color: #fbf8f1; }
-/* Rain lock (Chu 11/26, from his video): slim "Drag to unlock" tab on the left edge, reading upwards; drag right and
+/* Rain lock (Chu 11/26, from his video): slim "Drag to unlock" tab on the left edge, reading top to bottom (turned 180° 11/26 pm); drag right and
    rings open around the finger, green when far enough. No band, no knob, no circle target. */
 body .raincover .rl-slide { left: 0; right: auto; width: 60px; top: 50%; height: 190px; margin-top: -95px; }
 body .raincover .rl-ring, body .raincover .rl-arr { display: none; }
 body .raincover .rl-knob, html.paper body .raincover .rl-knob { left: 0; top: 0; width: 44px; height: 190px; padding: 0; border-radius: 0 12px 12px 0;
-  writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; text-shadow: none;
+  writing-mode: vertical-rl; transform: none; display: flex; align-items: center; justify-content: center; text-shadow: none;
   font: 900 16px/1 system-ui, -apple-system, sans-serif; letter-spacing: .3px; white-space: nowrap;
   background: #fff; color: #c62828; border: 2px solid #c62828; border-left: 0; box-shadow: 0 2px 8px rgba(0,0,0,.45); transition: none; cursor: grab; }
 html.paper body .raincover .rl-knob { background: #fbf8f1; color: #16140f; border-color: #16140f; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 17px; box-shadow: 0 2px 8px rgba(40,30,15,.35); }
@@ -942,3 +943,123 @@ html.paper .phonebeam { background:
 @keyframes rlgrow { 0% { transform: translate(-50%, -50%) scale(.22); opacity: 0; } 15% { opacity: .9; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
 .rl-rings b { width: 50px; height: 50px; border-width: 4px; outline: 2px solid var(--c); outline-offset: 4px; background: none !important; }
 .rl-rings.in i { animation-play-state: running; }
+/* hold 1 s inside the middle circle: it fills green from the centre, then unlocks (Chu 11/26) */
+.rl-rings u { position: absolute; left: 0; top: 0; width: 50px; height: 50px; border-radius: 50%; background: #1e9e4a;
+  transform: translate(-50%, -50%) scale(0); opacity: .9; }
+.rl-rings.in u { animation: rlfill 1s linear forwards; }
+@keyframes rlfill { to { transform: translate(-50%, -50%) scale(1); } }
+
+/* "← All tracks" = a clear yellow button in the Paper style (serif, ink edge, square-ish corners like Navigate), every page,
+   Paper and Night alike (Chu 11/26) */
+html .back, html.paper .back { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 9px 18px;
+  background: #ffc92e; color: #16140f !important; border: 2px solid #16140f; border-radius: 10px; line-height: 1.2;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; font-size: 17px; font-weight: 700;
+  text-transform: none !important; letter-spacing: .01em !important; text-decoration: none; cursor: pointer; margin: 0 0 14px;
+  box-shadow: 0 2px 6px rgba(40,30,15,.18); }
+html .back:hover, html .back:active { background: #f2b600; color: #16140f !important; }
+/* ↩ Ride back (Chu 11/26): "Going back" row on top of the ahead list; the NAV choice sheet */
+.na.goback > i { background: #fff; color: #111; font-size: 20px; }
+html.paper .na.goback { border: 2px solid #16140f; }
+html.paper .na.goback > i { background: #16140f; color: #fbf8f1; }
+html.paper .navmenusheet .mchoice { font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 18px; font-weight: 700; min-height: 60px; margin-bottom: 10px; width: 100%; border: 2px solid #16140f !important; border-radius: 10px; }
+html.paper .navmenusheet .mchoice.navturn { background: #ffc92e !important; }
+html.paper .navmenusheet .mchoice.navend i { color: #c62828; }
+html.paper .navmenusheet .mchoice small { font-size: 14px; font-weight: 500; }
+html.paper .navmenusheet .rs-box h2 { font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 21px; }
+/* Off track / to the track (Chu 11/26 ride): one box under ☰ on the right (it used to cover the menu), Paper style */
+.navoff, .navoff.right, .navoff.left { top: 116px; right: 10px; left: auto; align-items: flex-end; }
+.no-go { color: #fff; } .no-go > span { display: flex; flex-direction: column; line-height: 1.05; }
+.no-go b { font-size: 24px; font-weight: 800; } .no-go small { font-size: 12px; font-weight: 700; }
+html.paper .no-go { background: #fbf8f1; color: #16140f; border: 2px solid #16140f; border-radius: 12px; padding: 6px 14px 6px 8px;
+  box-shadow: 0 2px 8px rgba(40,30,15,.3); font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+html.paper .no-go b { font-size: 26px; font-weight: 700; } html.paper .no-go small { font-size: 14px; font-weight: 600; color: #5e574a; }
+html.paper .no-lbl { background: #c62828; color: #fff; border: 2px solid #16140f; border-radius: 8px; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 15px; font-weight: 700; letter-spacing: .3px; }
+html.paper .navmapmsg { background: #fbf8f1; color: #16140f; border: 2px solid #16140f; border-radius: 10px; box-shadow: 0 2px 8px rgba(40,30,15,.3); font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 15px; font-weight: 700; }
+html.paper .navmapmsg.bad { background: #fbf3dc; border-color: #b45309; color: #5a3d00; }
+/* iPhone: where "Save to Files" is, under the save button (Chu 11/26) */
+.rechint { margin: -2px 0 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.06); font-size: 14px; line-height: 1.35; }
+html.paper .rechint { background: #fbf3dc; border: 1px solid #d8b864; color: #16140f; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 15px; }
+/* no double-tap page zoom on the riding screens (Chu 11/26); the map keeps its own gestures */
+html.nozoom body, html.nozoom .navui *, html.nozoom .leaflet-control-container *, html.nozoom .ridechip, html.nozoom .rs-box { touch-action: manipulation; }
+html.paper .navdark, html.paper .navtoast { font-family: "Iowan Old Style", "Palatino", Georgia, serif; }  /* Paper font on the riding messages too (Chu 11/26) */
+/* the tab travels with the finger (Chu 11/26), fully visible; "Hold here 1 second" above the circle while dragging */
+body .raincover .rl-knob.held { opacity: 1; }
+.rl-rings em { position: absolute; left: 0; top: -178px; transform: translateX(-50%); white-space: nowrap; font-style: normal;
+  padding: 7px 14px; border-radius: 10px; background: rgba(12,14,18,.92); color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 2px 8px rgba(0,0,0,.45); }
+html.paper .rl-rings em { background: #fbf8f1; color: #16140f; border: 2px solid #16140f; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-weight: 700; box-shadow: 0 2px 8px rgba(40,30,15,.3); }
+.rl-rings.in em { background: #1e9e4a; color: #fff; border-color: #1e9e4a; }
+/* Directions to start: first and a little stronger than Download GPX (ink edge 2px, bold), with the Google Maps pin (Chu 11/26) */
+.btn.dirgo .gpin { flex: none; margin-right: 2px; }
+html.paper .btn.dirgo { border: 2px solid #16140f; font-weight: 700; box-shadow: 0 2px 6px rgba(40,30,15,.18); }
+/* Walk: "Don't turn the screen off" in red (Chu 11/26) */
+.walkwarn { background: #c62828; color: #fff; }
+html.paper .walkwarn { background: #c62828; color: #fff; border: 2px solid #16140f; font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+html.paper .walkwarn small { color: #fff; opacity: .95; }
+/* 👖 Pocket screen: "Don't turn off your phone" in red at the top of the black screen (Chu 11/26) */
+.rl-pocketmsg { display: none; }
+body.pocket .rl-pocketmsg { display: block; position: absolute; left: 16px; right: 16px; top: 18%; margin: 0; text-align: center; pointer-events: none;
+  color: #ff3b30; font: 700 26px/1.2 "Iowan Old Style", "Palatino", Georgia, serif; }
+/* Map buttons in the Paper style (Chu 11/26): square-ish like NAV / ☰ / layers — cream, 2px ink edge, 12px corners.
+   Their meaning colours stay: red record dot, amber lock when locked, green offline saved, blue location / route-up. */
+html.paper .leaflet-bar.walkbtn, html.paper .leaflet-bar.recbtn, html.paper .leaflet-bar.offsave, html.paper .leaflet-bar.rainlock,
+html.paper .leaflet-bar.locate, html.paper .leaflet-bottom.leaflet-right .compass.leaflet-control {
+  border-radius: 12px !important; box-shadow: 0 2px 8px rgba(40,30,15,.3) !important; }
+html.paper .leaflet-bar.walkbtn a, html.paper .leaflet-bar.recbtn a, html.paper .leaflet-bar.offsave a, html.paper .leaflet-bar.rainlock a,
+html.paper .leaflet-bar.locate a { border-radius: 12px !important; border: 2px solid #16140f !important; box-sizing: border-box; }
+html.paper .leaflet-bar.recbtn a:not(.on), html.paper .leaflet-bar.locate a:not(.on) { background: #fbf8f1; }
+html.paper .leaflet-bar.offsave a:not(.saved):not(.update):not(.busy) { background: #fbf8f1; color: #16140f; }
+html.paper .leaflet-bottom.leaflet-right .compass.leaflet-control { border: 2px solid #16140f !important; }
+html.paper .leaflet-bar.compass a { border-radius: 10px !important; }
+html.paper .leaflet-bar.compass a:not(.route) { background: #fbf8f1; }
+/* Map pins square-ish too in Paper (Chu 11/26): stops ★, water ≈, track numbers, the pulsing stop pin in Navigate.
+   Same colours, 2px ink edge, small rounded corners. */
+html.paper .poi { border-radius: 6px !important; border: 2px solid #16140f; box-sizing: border-box; }
+html.paper .tstart span { border-radius: 7px; border-color: #16140f; color: #fff !important; }  /* number white (Chu 11/26) */
+html.paper .navpin { border-radius: 7px; border-color: #16140f; }
+/* location ON / OFF label in the Paper style (Chu 11/26): square-ish, ink edge, serif; ON = blue, OFF = cream */
+html.paper .locate .locsign { border-radius: 6px; border: 2px solid #16140f; background: #fbf8f1; color: #16140f; padding: 1px 7px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-weight: 700; letter-spacing: .04em; box-shadow: 0 1px 4px rgba(40,30,15,.25); }
+html.paper .locate .locsign.on { background: #1446c8; color: #fff; border-color: #16140f; }
+/* "No-ride zone" label in the Paper style (Chu 11/26): cream card, red edge, red serif title, ink park name */
+html.paper .leaflet-tooltip.zonetip { background: #fbf8f1; color: #c62828; border: 2px solid #c62828; border-radius: 10px; padding: 6px 12px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 16px; font-weight: 700; box-shadow: 0 2px 8px rgba(40,30,15,.3); }
+html.paper .leaflet-tooltip.zonetip span { color: #16140f; font-size: 13px; font-weight: 600; }
+html.paper .leaflet-tooltip-top.zonetip::before { border-top-color: #c62828; }
+/* Paper map buttons get a small word under the icon, like NAV (Chu 11/26): WALK · REC (STOP while recording) · MAP · LOCK.
+   Added with CSS only (::before, moved under the icon), so the buttons' own code and states are unchanged. */
+.leaflet-bar.walkbtn .wink { display: none; }
+html.paper .leaflet-bar.walkbtn .wemoji { display: none; } html.paper .leaflet-bar.walkbtn .wink { display: block; }
+html.paper .leaflet-bar.walkbtn a, html.paper .leaflet-bar.recbtn a, html.paper .leaflet-bar.offsave a, html.paper .leaflet-bar.rainlock a {
+  flex-direction: column; gap: 2px; color: #16140f; }
+html.paper .leaflet-bar.walkbtn a::before, html.paper .leaflet-bar.recbtn a::before, html.paper .leaflet-bar.offsave a::before, html.paper .leaflet-bar.rainlock a::before {
+  order: 2; display: block; font: 900 9px/1 system-ui, -apple-system, sans-serif; letter-spacing: .6px; color: currentColor; }
+html.paper .leaflet-bar.walkbtn a::before { content: "WALK"; }
+html.paper .leaflet-bar.recbtn a::before { content: "REC"; }
+html.paper .leaflet-bar.recbtn a.on::before { content: "STOP"; color: #fff; }
+html.paper .leaflet-bar.offsave a::before { content: "OFFLINE"; font-size: 8px; letter-spacing: .2px; }  /* Chu 11/26: says what it does */
+html.paper .leaflet-bar.rainlock a::before { content: "LOCK"; }
+html.paper .leaflet-bar.walkbtn .wink { width: 20px; height: 20px; }
+html.paper .leaflet-bar.rainlock a svg, html.paper .leaflet-bar.offsave a svg { width: 20px; height: 20px; }
+html.paper .leaflet-bar.recbtn a i { width: 16px; height: 16px; }
+html.paper .leaflet-bar.recbtn a.on i { width: 13px; height: 13px; }
+/* "Read before you ride" rows (and the other note boxes that use them) in the Paper font (Chu 11/26) */
+html.paper .brows .nrow b, html.paper .brows .nhead { font-family: "Iowan Old Style", "Palatino", Georgia, serif; }  /* titles serif, the line under stays sans (Paper rule) */
+html.paper .brows .nrow b { font-size: 16px; font-weight: 700; }
+html.paper .brows .nhead { letter-spacing: .1em; }
+/* Paper type rule (Chu 11/26 font check): serif for every bold title, label, name and number; plain sans only for the
+   smaller description lines. Own looks kept: L0–L4 level badges (signs), gold track numbers, tiny button words (NAV, WALK…). */
+html.paper :is(h1, h2, h3, h4, h5, h6, b, strong, summary, label, button, th, dt, legend, .group, .strike, .cmcap, .ot, .fun, .draft,
+  .cnxtoast, .findbike, .by, .end, .hl, .redline b, .ldwrap > .rule b, .post .by, .post .end, .fut, .og, .thanks, .rl, .how, .key > b,
+  .na small, .mrow span, .qrtrack, .nhead, .cmkey span, .rules p) {
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; }
+/* Left map buttons, most used on top (Chu 11/26): REC · LOCK · WALK · OFFLINE (the scale bar stays at the bottom) */
+.leaflet-bottom.leaflet-left { display: flex; flex-direction: column; align-items: flex-start; }
+.leaflet-bottom.leaflet-left > .recbtn { order: 1; } .leaflet-bottom.leaflet-left > .rainlock { order: 2; }
+.leaflet-bottom.leaflet-left > .walkbtn { order: 3; } .leaflet-bottom.leaflet-left > .offsave { order: 4; }
+.leaflet-bottom.leaflet-left > .leaflet-control-scale { order: 9; }
+/* recording time chip in the Paper style (Chu 11/26): square-ish, ink edge, serif digits, still red = recording */
+html.paper .recsign { background: #c62828; color: #fff; border: 2px solid #16140f; border-radius: 7px; padding: 1px 8px;
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif !important; font-weight: 700; box-shadow: 0 2px 6px rgba(40,30,15,.3); }
+html.paper .recsign::before { border-radius: 2px; }
+/* Navigate notes stay between the left and right button columns, never over a button (Chu 11/26) */
+.navui .navdark, .navui .navtoast { left: 66px; right: 66px; transform: none; width: auto; max-width: none; margin: 0 auto; text-align: center; box-sizing: border-box; }

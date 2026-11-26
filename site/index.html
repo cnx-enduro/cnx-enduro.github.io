@@ -12,9 +12,18 @@
 // Paper look = the site's look for everyone (Chu 11/26). Hidden switch: ?beta=0 = the old dark look on this phone, ?beta = Paper again.
 (() => { try { const q = new URLSearchParams(location.search);
   if (q.has("beta")) localStorage.setItem("cnx-look", q.get("beta") === "0" ? "dark" : "paper");
-  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper"); } catch (e) {} })();
+  if (localStorage.getItem("cnx-look") !== "dark") document.documentElement.classList.add("paper");
+  // Night look (Chu 11/26): follows the phone's dark mode, map screens only. Test switch ?night=1 on · ?night=0 off · ?night=auto
+  if (q.has("night")) localStorage.setItem("cnx-night", q.get("night") || "1");
+  const nt = localStorage.getItem("cnx-night") || "auto", h = document.documentElement;
+  const dm = matchMedia("(prefers-color-scheme: dark)");
+  if (nt === "1" || nt === "b" || (nt === "auto" && dm.matches)) h.classList.add("night");
+  // Live (Chu 11/26): the phone flips dark at sunset (Automatic) → Night switches on the spot, no reload; app.js repaints the lines
+  if (nt === "auto" && dm.addEventListener) dm.addEventListener("change", e => { h.classList.toggle("night", e.matches); dispatchEvent(new Event("cnxnight")); });
+  } catch (e) {} })();
 </script>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="night.css">
 </head>
 <body>
 <header class="top">
