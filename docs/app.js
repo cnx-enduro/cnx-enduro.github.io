@@ -275,8 +275,9 @@
   tracks.forEach((t, i) => {
     const look = trackLook(t, i);
     t.color = look.color;
-    const casing = L.polyline(t.line, { ...look.edge, opacity: look.edgeOpacity, interactive: false });
-    const line = L.polyline(t.line, { color: t.color, weight: 4, opacity: 0.95 });
+    const drawn = roundPts(t.line);  // 〰 rounded bends on every track (Chu 11/28)
+    const casing = L.polyline(drawn, { ...look.edge, opacity: look.edgeOpacity, interactive: false, lineJoin: "round" });
+    const line = L.polyline(drawn, { color: t.color, weight: 4, opacity: 0.95, lineJoin: "round" });
     const start = L.marker(t.start, { icon: L.divIcon({ className: "tstart", iconSize: [24, 24], iconAnchor: [12, 12],
       html: `<span style="background:${t.color}">${Number(t.id)}</span>` }) });
     line.bindTooltip(`${t.id} · ${esc(t.name)}`, { sticky: true });
@@ -289,6 +290,23 @@
   });
   // 🌙 Night on/off live (phone switches at sunset / sunrise): repaint lines, number pins and surface colours in place,
   // nothing reloads and Navigate keeps running (Chu 11/26: seamless). The rest of the look is CSS.
+  // 🌙 Night only while Navigate runs (Chu 11/27): on when Navigate starts on a phone in dark mode, off when it stops/pauses
+  // 🌙 Night = Navigate running on a phone AND it's dark where you are: from 30 min before sunset (the mountains get dark
+  // early) to 30 min after sunrise (Chu 11/28). Checked each minute while navigating, so it switches mid-ride by itself.
+  const isDark = () => {
+    const ll = youAt || (navTrack && navTrack.start); if (!ll) return false;
+    const now = new Date(), lat = ll.lat ?? ll[0], lon = ll.lng ?? ll[1], s = sunTimes(now, lat, lon);
+    return now >= s.set - 30 * 60000 || now < s.rise.getTime() + 30 * 60000;
+  };
+  let nightT = 0;
+  const nightNav = () => {
+    const h = document.documentElement, set = localStorage.getItem("cnx-night") || "auto";
+    clearInterval(nightT); if (nav) nightT = setInterval(nightNav, 60000);
+    if (set === "1") return;  // test switch: Night everywhere
+    const want = !!(nav && set !== "0" && matchMedia("(pointer: coarse)").matches && isDark());
+    if (want === h.classList.contains("night")) return;
+    h.classList.toggle("night", want); dispatchEvent(new Event("cnxnight"));
+  };
   addEventListener("cnxnight", () => {
     tracks.forEach((t, i) => {
       const look = trackLook(t, i), l = layers[t.id];
@@ -536,7 +554,7 @@
   let nav = null;
   const navState = () => { try { const v = JSON.parse(localStorage.getItem("cnx-nav") || "null"); return v && Date.now() - v.at < 12 * 3600e3 ? v : null; } catch (e) { return null; } };
   const markPaused = () => { const v = navState(); if (v) try { localStorage.setItem("cnx-nav", JSON.stringify({ ...v, paused: true })); } catch (e) {} };
-  const pauseNav = () => { if (nav) { nav.pause(); nav = null; markPaused(); } wrap.style.height = ""; backBar(); };
+  const pauseNav = () => { if (nav) { nav.pause(); nav = null; markPaused(); } wrap.style.height = ""; nightNav(); backBar(); cnxAwake.off("nav"); };
   let beepCtx = null;
   const unlockSound = () => { try {
     beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)(); beepCtx.resume();
@@ -550,26 +568,47 @@
   map.cnxBeep = beep; map.cnxUnlockSound = unlockSound;
   // 🗣 Voice navigation (Chu 11/27): short phrases in the Irish voice he picked (edge-tts en-IE-EmilyNeural, site/audio/voice/),
   // saved with the offline map. Same sound path as the beeps, a short tone first; if a clip can't play, Navigate beeps instead.
-  const VOICE = ["in200_L", "in200_R", "then_L", "then_R", "now_L", "now_R", "off", "back", "dark", "lat200", "water200", "finish", "sos", "lost", "st_lunch", "st_wait", "st_forest", "behind", "navon", "rideback"];
+  const VOICE = CNX_VOICE_KEYS;
   const voiceBuf = {};
   // a quiet (suspended) sound engine decodes fine before any tap, so the clips are ready when ▶ Navigate is tapped
   const loadVoice = () => { if (!beepCtx) try { beepCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
     VOICE.forEach(k => { if (!voiceBuf[k]) voiceBuf[k] = fetch(`audio/voice/${k}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
     .then(b => b && new Promise((ok, bad) => beepCtx.decodeAudioData(b, ok, bad))).catch(() => null); }); };
+  // One phrase after another, never on top of each other (Chu 11/28: two voices at once after re-starting Navigate).
+  // The sound engine can be asleep (screen was off, another app took the sound): wake it first; if it stays asleep the
+  // phrase is dropped, never stored up to play together later. A phrase that waited over 8 s in line is old news: dropped.
   let sayQ = Promise.resolve(true);
-  const sayVoice = (...keys) => (sayQ = sayQ.then(async () => {  // one phrase after another, never on top of each other
+  const wakeSound = async () => {
+    if (!beepCtx) return false;
+    if (beepCtx.state !== "running") try { await Promise.race([beepCtx.resume(), new Promise(r => setTimeout(r, 800))]); } catch (e) {}
+    return beepCtx.state === "running";
+  };
+  const sayVoice = (...keys) => { const asked = Date.now(); return (sayQ = sayQ.then(async () => {
     try {
-      if (!beepCtx) return false;
+      if (!beepCtx || Date.now() - asked > 8000) return false;
       const bufs = await Promise.all(keys.map(k => voiceBuf[k] || null));
-      if (!bufs.length || bufs.some(b => !b)) return false;
+      if (!bufs.length || bufs.some(b => !b) || !(await wakeSound())) return false;
       beep(1, 880, 0.12);
-      let t = beepCtx.currentTime + 0.25;
-      for (const b of bufs) { const s = beepCtx.createBufferSource(); s.buffer = b; s.connect(beepCtx.destination); s.start(t); t += b.duration + 0.05; }
+      let t = beepCtx.currentTime + 0.25, last = null;
+      for (const b of bufs) { last = beepCtx.createBufferSource(); last.buffer = b; last.connect(beepCtx.destination); last.start(t); t += b.duration + 0.05; }
       if (window.__cnxVoiceLog) window.__cnxVoiceLog.push(keys.join("+"));  // the device tests read this
-      await new Promise(r => setTimeout(r, Math.max(0, t - beepCtx.currentTime) * 1000));
+      const len = (t - beepCtx.currentTime) * 1000;
+      await new Promise(r => { last.onended = r; setTimeout(r, len + 1500); });  // really finished (or the engine stalled)
       return true;
     } catch (e) { return false; }
-  }));
+  })); };
+  // 🕐 Tap the arrival box in Navigate = the voice says the time now and the arrival time (Chu 11/28: a hidden voice
+  // check, no extra button): "It's fifteen twenty two · You arrive around seventeen oh three". No arrival yet → time only.
+  const two = n => String(n).padStart(2, "0");
+  const sayArrival = when => {
+    unlockSound(); loadVoice();
+    const n = new Date(), keys = ["clk_" + two(n.getHours()), "m" + two(n.getMinutes())];
+    if (when) { const d = new Date(when); keys.push("arr_" + two(d.getHours()), "m" + two(d.getMinutes())); }
+    return sayVoice(...keys);
+  };
+  // Only one tab navigates (Chu 11/28 had 13 tabs open): starting Navigate in one tab stops it in the others, so two voices can't talk.
+  const navBus = "BroadcastChannel" in window ? new BroadcastChannel("cnx-nav") : null;
+  if (navBus) navBus.onmessage = e => { if (e.data === "navstart" && nav) pauseNav(); };
   // ↩ Ride back the way I came (Chu 11/26: a trail closed mid-ride, U-turn home the same way). The same track turned
   // around: line reversed, stops / laterite / height chart counted from the other end, turns flipped left ↔ right, so
   // the arrows, turn alerts, arrival time (= back at the start) and stops ahead all work backwards with nothing new.
@@ -588,8 +627,12 @@
     navTrack = t; navBack = !!back;
     const nt = back ? reversedTrack(t) : t;
     loadVoice(); navSound(true);
-    const o = { map, t: nt, kmOf: kmAlong(nt), length: field(t, "length"), youAt, restore, beep, say: sayVoice, onMenu: openMenu, onNavBtn: navChoice,
-      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; showTrack(t); backBar(); navSound(false);
+    if (navBus) navBus.postMessage("navstart");
+    cnxAwake.on("nav");  // 🔆 straight from the tap (the backup video may only start from a tap)
+    setTimeout(() => { if (nav && cnxAwake.state() === "none")  // neither way works on this phone: the one sure fix is the phone's own setting
+      cnxToast("🔆 This phone may turn the screen off<small>For the ride: Settings → Display → Auto-Lock → Never</small>", 8000); }, 4000);
+    const o = { map, t: nt, kmOf: kmAlong(nt), length: field(t, "length"), youAt, restore, beep, say: sayVoice, sayArrival, onMenu: openMenu, onNavBtn: navChoice,
+      onExit: () => { nav = null; navTrack = null; navBack = false; wrap.style.height = ""; nightNav(); showTrack(t); backBar(); navSound(false); cnxAwake.off("nav");
         if (map.cnxRecord) map.cnxRecord.endAuto(); } };  // ■ Stop Navigate also stops the recording → save box
     if (navigator.getBattery) navigator.getBattery().then(b => { o.battery = b; }).catch(() => {});
     if (phone.matches) { window.scrollTo({ top: 0 }); wrap.style.height = "100svh"; }
@@ -598,6 +641,7 @@
     if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }
     map.setView(youAt || t.start, 16, { animate: false });
     nav = startNavigate(o);  // straight from the tap: the iPhone compass question needs it
+    nightNav();  // 🌙
     sayVoice(back ? "rideback" : "navon");  // 🗣 so the rider knows the voice reaches the headphones (Chu 11/27)
     if (map.cnxRecord && map.cnxRecord.startAuto() === "waiting") cnxToast("Your last ride isn't saved yet: tap ⏺ to save it", 4500);  // Navigate records by itself
     setTimeout(() => map.invalidateSize(), 260);
@@ -675,7 +719,9 @@
   menu.querySelector(".rs-dim").onclick = closeMenu;
   const here = () => (map.cnxLocate && map.cnxLocate.where && map.cnxLocate.where()) || youAt;
   const camIn = document.createElement("input");
-  camIn.type = "file"; camIn.accept = "image/*"; camIn.setAttribute("capture", "environment"); camIn.hidden = true;
+  // no "capture": the phone then offers both Take Photo and Photo Library (Chu 11/28: he couldn't pick from the library);
+  // kept on the page but invisible, not display:none, which an iPhone may refuse to open
+  camIn.type = "file"; camIn.accept = "image/*"; camIn.className = "vh-file"; camIn.setAttribute("aria-hidden", "true"); camIn.tabIndex = -1;
   document.body.appendChild(camIn);
   const gpxIn = document.createElement("input");
   gpxIn.type = "file"; gpxIn.accept = ".gpx,application/gpx+xml"; gpxIn.hidden = true;
@@ -691,7 +737,8 @@
     mbox.innerHTML = `<button class="rs-x" type="button" aria-label="Close">✕</button><h2>☰ Menu</h2>
       <button class="mrow" data-m="page" type="button"><i>⬅</i><span>Back to track page<small>Navigate keeps running</small></span></button>
       <button class="mrow" data-m="map" type="button"><i>🗂</i><span>Map type<small>${esc(mapTypeNow())}</small></span></button>
-      <button class="mrow" data-m="cam" type="button"><i>📷</i><span>Camera</span></button>
+      ${nav ? `<button class="mrow" data-m="rep" type="button"><i>📝</i><span>Report a change<small>sign, closed trail, paved… Navigate keeps running</small></span></button>` : ""}
+      <button class="mrow" data-m="cam" type="button"><i>📷</i><span>Photo<small>take one or pick from your photos</small></span></button>
       <button class="mrow" data-m="gpx" type="button"><i>📤</i><span>Share GPX</span></button>
       <button class="mrow" data-m="loc" type="button"><i>📍</i><span>Send my location</span></button>
       <div class="mrow"><i>💬</i><span>Apps</span><span class="mapps"><a href="whatsapp://send" style="background:#25d366">WA</a><a href="fb-messenger://" style="background:#0084ff">M</a><a href="line://" style="background:#06c755">LINE</a></span></div>
@@ -702,6 +749,7 @@
     mbox.querySelector("[data-m=page]").onclick = () => { closeMenu(); const tt = current; pauseNav(); if (tt) showTrack(tt); backBar(); };
     mbox.querySelector("[data-m=map]").onclick = () => mapTypes();
     mbox.querySelector("[data-m=cam]").onclick = () => { closeMenu(); camIn.value = ""; camIn.click(); };
+    const rep = mbox.querySelector("[data-m=rep]"); if (rep) rep.onclick = () => navReport();
     mbox.querySelector("[data-m=loc]").onclick = async () => {
       closeMenu(); const ll = here();
       if (!ll) return cnxToast("Waiting for GPS…", 3000);
@@ -729,15 +777,88 @@
   // 📷 Camera: the photo goes straight into this track's report, the spot marked where you're standing.
   camIn.onchange = () => {
     const f = camIn.files && camIn.files[0], t = current; if (!f || !t) return;
+    if (nav) return navReport(f);  // while riding: the report sheet over Navigate, photo already in it
     pauseNav(); showTrack(t);
     setTimeout(() => {
       const box = $("sendbox"); if (!box) return;
       box.open = true;
       const ph = $("sendForm").querySelector("input[name=photo]");
-      try { const dt = new DataTransfer(); dt.items.add(f); ph.files = dt.files; } catch (e) {}
+      try { const dt = new DataTransfer(); dt.items.add(f); ph.files = dt.files; ph.dispatchEvent(new Event("change")); } catch (e) {}
       setTimeout(() => { if ($("spotGps")) $("spotGps").click(); box.scrollIntoView({ behavior: "smooth", block: "start" }); }, 350);
     }, 300);
   };
+
+  // 📝 Report while riding (Chu 11/28): from ☰ or 📷 during Navigate, a sheet over the map; Navigate keeps running and the
+  // map shrinks to the top third so the form has room (and the keyboard doesn't cover it all). The spot = where you are.
+  // Name remembered from last time. Sends like the track page form: kept in the phone first, sent when there's signal.
+  const REP_KINDS = [["🚫", 'New "no off-road" sign'], ["🛣", "Now paved"], ["⛔", "Trail blocked or closed"], ["↪", "Better line or reroute"], ["✓", "Track is fine, just confirming"], ["✎", "Other"]];
+  let repSheet = null;
+  function navReport(photo) {
+    closeMenu();
+    const t = navTrack || current; if (!t) return;
+    if (repSheet) repSheet.remove();
+    let name = ""; try { name = localStorage.getItem("cnx-repname") || ""; } catch (e) {}
+    const s = repSheet = document.createElement("div"); s.className = "navrep"; s.setAttribute("role", "dialog"); s.setAttribute("aria-label", "Report a change");
+    s.innerHTML = `<div class="nr-head"><b>📝 Report a change</b><span class="nr-where">📍 Finding you…</span><button type="button" class="nr-x" aria-label="Close">✕</button></div>
+      <div class="nr-kinds">${REP_KINDS.map(([i, k], n) => `<button type="button" class="nr-kind" data-k="${n}"><i>${i}</i>${esc(k)}</button>`).join("")}</div>
+      <textarea class="nr-note" rows="2" maxlength="4000" placeholder="What you saw (optional)"></textarea>
+      <div class="nr-photo"><label class="nr-pbtn"><input type="file" accept="image/*" class="vh-file"><span>📷 Add a photo</span></label><img alt="" hidden><button type="button" class="nr-pdel" hidden>Remove</button></div>
+      <input class="nr-name" maxlength="80" autocomplete="name" placeholder="Your name" value="${esc(name)}">
+      <button type="button" class="nr-send">Send</button><p class="nr-msg" role="status"></p>`;
+    document.body.appendChild(s); document.body.classList.add("reporting");
+    wrap.style.height = "34svh"; setTimeout(() => map.invalidateSize(), 50);
+    const q = c => s.querySelector(c), img = q(".nr-photo img"), pin = q(".nr-photo input"), del = q(".nr-pdel"), msg = q(".nr-msg");
+    let kind = null, pic = photo || null, spot = null;
+    const where = () => {
+      const ll = here(); if (!ll) return;
+      const n = nearestOnLine(t.line, [ll.lat, ll.lng]), km = kmAlong(t)(n);
+      spot = { lat: +ll.lat.toFixed(6), lon: +ll.lng.toFixed(6), km: +km.toFixed(1), off: Math.round(n.dist) };
+      q(".nr-where").textContent = `📍 km ${spot.km}${spot.off > 50 ? ` · ${spot.off} m off the track` : ""} · where you are`;
+    };
+    where(); const whereT = setInterval(where, 5000);
+    const showPic = () => {
+      img.hidden = del.hidden = !pic; q(".nr-pbtn span").textContent = pic ? "📷 Change photo" : "📷 Add a photo";
+      if (img.src) URL.revokeObjectURL(img.src); img.src = pic ? URL.createObjectURL(pic) : "";
+    };
+    showPic();
+    pin.onchange = () => { if (pin.files && pin.files[0]) { pic = pin.files[0]; showPic(); } };
+    del.onclick = () => { pic = null; pin.value = ""; showPic(); };
+    s.querySelectorAll(".nr-kind").forEach(b => b.onclick = () => { kind = REP_KINDS[+b.dataset.k][1]; s.querySelectorAll(".nr-kind").forEach(x => x.classList.toggle("on", x === b)); });
+    const close = () => {
+      clearInterval(whereT); if (img.src) URL.revokeObjectURL(img.src); s.remove(); repSheet = null;
+      document.body.classList.remove("reporting"); wrap.style.height = nav && phone.matches ? "100svh" : ""; setTimeout(() => map.invalidateSize(), 50);
+    };
+    q(".nr-x").onclick = close;
+    q(".nr-send").onclick = async () => {
+      const nm = q(".nr-name").value.trim(), note = q(".nr-note").value.trim();
+      msg.className = "nr-msg warn";
+      if (!kind) return (msg.textContent = "Tap what changed first.");
+      if (!nm) { q(".nr-name").focus(); return (msg.textContent = "Please add your name."); }
+      if (!spot) return (msg.textContent = "Waiting for GPS. Try again in a moment.");
+      try { localStorage.setItem("cnx-repname", nm); } catch (e) {}
+      q(".nr-send").disabled = true; msg.className = "nr-msg"; msg.textContent = "Sending…";
+      let payload;
+      try {
+        payload = { rid: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), at: new Date().toISOString(),
+          track: `${t.id} ${t.name}`, trackId: t.id, name: nm, contact: "", kind, note, website: "", spot, gpx: null,
+          photo: pic ? await shrinkPhoto(pic) : null, from: "navigate" };
+      } catch (e) { q(".nr-send").disabled = false; msg.className = "nr-msg warn"; return (msg.textContent = "Couldn't read that photo. Try another one."); }
+      const r = await queueReport(payload);
+      if (r === "fail") { q(".nr-send").disabled = false; msg.className = "nr-msg warn"; return (msg.textContent = "Couldn't send. Try again where there's signal."); }
+      close(); cnxToast(r === "sent" ? "✓ Report sent. Thank you!" : "📤 Saved on your phone<small>It sends by itself when there's signal.</small>", 4000);
+    };
+  }
+  // keep it in the phone, then send; "sent" | "saved" (sends later by itself) | "fail"
+  async function queueReport(payload) {
+    const kept = await outbox.put(payload).then(() => true).catch(() => false);
+    if (navigator.onLine === false && kept) { outboxBadge(); return "saved"; }
+    const sending = postReport(payload).then(async () => { await outbox.del(payload.rid).catch(() => {}); return "sent"; }, () => "fail");
+    const first = await Promise.race([sending, new Promise(r => setTimeout(r, 3000, "slow"))]);
+    if (first === "sent") { outboxBadge(); return "sent"; }
+    if (!kept) return (first === "slow" ? await sending : first);
+    outboxBadge(); sending.then(r => { if (r === "sent") { cnxToast("✓ Report sent", 3000); outboxBadge(); } });
+    return "saved";
+  }
 
   // Android Back (Chu 11/21: one tap and the whole ride was gone): while Navigate or 🚶 Walk runs, a spare step in
   // the history takes the first Back and the page stays; leaving the site asks "Leave site?" (Android Chrome);
@@ -803,11 +924,11 @@
     if (t.surface) {
       layers[t.id].line.setStyle({ opacity: 0 });
       const casings = L.featureGroup(t.surface.pieces.map(p =>
-        L.polyline(p.line, { color: "#000", weight: 8, opacity: 0.75, interactive: false })));
+        L.polyline(roundPts(p.line), { color: "#000", weight: 8, opacity: 0.75, interactive: false, lineJoin: "round" })));
       const pieces = L.featureGroup(t.surface.pieces.map(p =>
-        L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, dashArray: p.cls === "unknown" ? "6 6" : null, cls: p.cls })));
+        L.polyline(roundPts(p.line), { color: surfaceColor[p.cls], weight: 5, opacity: 1, lineJoin: "round", dashArray: p.cls === "unknown" ? "6 6" : null, cls: p.cls })));
       const laterite = L.featureGroup((t.surface.laterite || []).map(line =>  // laterite: dashes over the surface colour
-        L.polyline(line, { color: LATERITE, weight: 5, opacity: 1, interactive: false, dashArray: "4 8", lineCap: "butt" })));
+        L.polyline(roundPts(line), { color: LATERITE, weight: 5, opacity: 1, interactive: false, dashArray: "4 8", lineCap: "butt", lineJoin: "round" })));
       surfaceLayer = L.featureGroup([casings, pieces, laterite]).addTo(map);
       // a nested group doesn't keep its drawing order, so stack them explicitly: outline, colour, laterite, start
       pieces.bringToFront();
@@ -877,7 +998,7 @@
           <label>Your name<input name="name" required maxlength="80" autocomplete="name"></label>
           <label>Contact, so we can ask questions <span class="muted">(optional: email or LINE)</span><input name="contact" maxlength="120"></label>
           <label>Your GPX recording <span class="muted">(optional if you marked the spot)</span><input type="file" name="gpx" accept=".gpx,application/gpx+xml"></label>
-          <label>Photo <span class="muted">(optional, e.g. the sign)</span><input type="file" name="photo" accept="image/*"></label>
+          <div class="nr-photo sf-photo"><label class="nr-pbtn"><input type="file" name="photo" accept="image/*" class="vh-file"><span>📷 Add a photo <small>(optional, e.g. the sign)</small></span></label><img alt="" hidden></div>
           <input name="website" tabindex="-1" autocomplete="off" class="trap" aria-hidden="true">
           <button class="btn primary" type="submit">Send to us</button>
           <p id="sendStatus" class="small" role="status"></p>
@@ -938,6 +1059,10 @@
   // the nearest point on the track, so the report says "km 12.4" rather than loose coordinates.
   function setupSendForm(t) {
     const form = $("sendForm");
+    const ph = form.querySelector(".sf-photo input"), phImg = form.querySelector(".sf-photo img");  // 📷 show the picked photo
+    const phShow = () => { const f = ph.files && ph.files[0]; if (phImg.src) URL.revokeObjectURL(phImg.src);
+      phImg.hidden = !f; phImg.src = f ? URL.createObjectURL(f) : ""; form.querySelector(".sf-photo .nr-pbtn span").firstChild.textContent = f ? "📷 Change photo " : "📷 Add a photo "; };
+    ph.onchange = phShow; form.addEventListener("reset", () => setTimeout(phShow, 0));
     let spot = null, spotMap = null, pin = null;
     const kmOf = kmAlong(t);
 
@@ -956,8 +1081,8 @@
       if (spotMap) { spotMap.invalidateSize(); return; }
       spotMap = baseMap("spotMap", { layersControl: false, locate: false });
       addNoRideZones(spotMap);
-      L.polyline(t.line, { color: "#000", weight: 7, opacity: 0.5 }).addTo(spotMap);
-      L.polyline(t.line, { color: t.color, weight: 4 }).addTo(spotMap);
+      L.polyline(roundPts(t.line), { color: "#000", weight: 7, opacity: 0.5, lineJoin: "round" }).addTo(spotMap);
+      L.polyline(roundPts(t.line), { color: t.color, weight: 4, lineJoin: "round" }).addTo(spotMap);
       spotMap.fitBounds(L.latLngBounds(t.line), { padding: [16, 16] });
       spotMap.on("click", e => setSpot(e.latlng));
     });
@@ -1023,6 +1148,9 @@
   }
   const savedNote = () => cnxToast("📤 Saved on your phone<small>No signal. It sends by itself when there's signal.</small>", 4000);
   async function postReport(payload) {
+    // automatic device tests (?cnxtest): always marked test, so the server sends them to the setup inbox, never to the
+    // reviewer (Chu 11/28: a test run's reports reached the real inbox when the offline worker bypassed the test's fake server)
+    if (/[?&]cnxtest\b/.test(location.search)) payload = { ...payload, test: true };
     // text/plain keeps this a "simple" request, so the browser skips the CORS preflight Apps Script can't answer
     const r = await fetch(site.submitUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
     // a sign-in or error page from Google comes back as HTML

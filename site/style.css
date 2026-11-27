@@ -1094,3 +1094,43 @@ html.paper .locate .locmsg { background: #fbf8f1; color: #16140f; border: 2px so
 .navoff.left { left: 10px; right: auto; align-items: flex-start; top: 62px; }
 .navoff.right { right: 10px; left: auto; align-items: flex-end; top: 62px; }
 .navui:has(.navoff.left:not([hidden])) .navahead { top: 168px; }
+
+/* Paper (Chu 11/28): the leader's ⏸ Wait sign in Paper type with an ink edge (it was the old bold sans);
+   📵 a rider whose phone stopped sending = a quiet grey note, no orange (an Android froze at km 15.9 on the 27 Nov ride) */
+html.paper .ridewait { font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-weight: 700; font-size: 16px; line-height: 1.25;
+  border: 2px solid #16140f; border-radius: 12px; background: #f2b84b; color: #16140f; box-shadow: 0 2px 10px rgba(60,45,20,.25); }
+.ridewait.quiet { background: #3a3a3a; color: #eee; font-weight: 600; font-size: 14px; }
+html.paper .ridewait.quiet { background: #fbf8f1; color: #5e574a; border-color: #cfc4ad; font-weight: 600; font-size: 14px; }
+/* the arrival box's small words ("km to go") were still the system sans */
+html.paper .navbig, html.paper .navmini { font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+html.paper .navmini { cursor: pointer; }
+
+/* 📝 Report while riding (Chu 11/28): a Paper sheet over Navigate, the map shrinks to the top third */
+.vh-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.navrep { position: fixed; z-index: 1300; left: 0; right: 0; bottom: 0; top: 34svh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  display: flex; flex-direction: column; gap: 10px; padding: 12px max(14px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+  background: #fbf8f1; color: #16140f; border-top: 2px solid #16140f; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 18px rgba(60,45,20,.25);
+  font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+.navrep .nr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.navrep .nr-head b { font-size: 19px; }
+.navrep .nr-where { font-size: 14px; color: #5e574a; flex: 1; min-width: 0; }
+.navrep .nr-x { margin-left: auto; width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid #cfc4ad; background: #fff; color: #16140f; font-size: 18px; }
+.navrep .nr-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.navrep .nr-kind { display: flex; align-items: center; gap: 8px; text-align: left; min-height: 48px; padding: 8px 10px; border-radius: 10px;
+  border: 1.5px solid #cfc4ad; background: #fff; color: #16140f; font: 600 15px/1.2 "Iowan Old Style", "Palatino", Georgia, serif; }
+.navrep .nr-kind i { font-style: normal; font-size: 18px; }
+.navrep .nr-kind.on { border: 2px solid #16140f; background: #f2b84b; }
+.navrep textarea, .navrep .nr-name { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #cfc4ad;
+  background: #fff; color: #16140f; font: 16px/1.3 "Iowan Old Style", "Palatino", Georgia, serif; }
+.nr-photo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nr-pbtn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; border-radius: 10px; border: 2px solid #16140f;
+  background: #fff; color: #16140f; font: 600 16px "Iowan Old Style", "Palatino", Georgia, serif; cursor: pointer; position: relative; }
+.nr-pbtn small { font-weight: 400; color: #5e574a; margin-left: 4px; }
+.nr-photo img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1.5px solid #cfc4ad; }
+.nr-pdel { border: 0; background: none; color: #a33; font: 15px "Iowan Old Style", "Palatino", Georgia, serif; text-decoration: underline; }
+.navrep .nr-send { min-height: 52px; border-radius: 12px; border: 2px solid #16140f; background: #16140f; color: #fbf8f1;
+  font: 700 18px "Iowan Old Style", "Palatino", Georgia, serif; }
+.navrep .nr-send:disabled { opacity: .55; }
+.navrep .nr-msg { margin: 0; font-size: 15px; min-height: 1.2em; }
+.navrep .nr-msg.warn { color: #b3261e; }
+body.reporting .navahead, body.reporting .navoff, body.reporting .ridewait { display: none !important; }

@@ -17,8 +17,9 @@
 const NAV = { OFF_M: 15, OFF_S: 20, AHEAD_KM: 2, SPEED_WINDOW_MIN: 15, SPEED_MIN_MOVING_MIN: 10, SMALL_AFTER_MS: 8000,
   TURN_SHOW_M: 500, TURN_BEEP_M: 200, TURN_NOW_M: 30, TURN_PAST_M: 25 };
 
-// Sunset (sun 0.833° below the horizon) for a day and place, worked out on the phone (no signal needed).
-function sunsetAt(day, lat, lon) {
+// Sunset / sunrise (sun 0.833° below the horizon) for a day and place, worked out on the phone (no signal needed).
+function sunsetAt(day, lat, lon) { return sunTimes(day, lat, lon).set; }
+function sunTimes(day, lat, lon) {
   const R = Math.PI / 180, noon = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12);
   const n = Math.ceil(noon.getTime() / 864e5 + 2440587.5 - 2451545 + 0.0008);
   const J = n - lon / 360, M = (357.5291 + 0.98560028 * J) % 360;
@@ -27,7 +28,8 @@ function sunsetAt(day, lat, lon) {
   const transit = 2451545 + J + 0.0053 * Math.sin(M * R) - 0.0069 * Math.sin(2 * lam * R);
   const dec = Math.asin(Math.sin(lam * R) * Math.sin(23.4397 * R));
   const w = Math.acos((Math.sin(-0.833 * R) - Math.sin(lat * R) * Math.sin(dec)) / (Math.cos(lat * R) * Math.cos(dec)));
-  return new Date((transit + w / (2 * Math.PI) - 2440587.5) * 864e5);
+  const at = j => new Date((j - 2440587.5) * 864e5);
+  return { rise: at(transit - w / (2 * Math.PI)), set: at(transit + w / (2 * Math.PI)) };
 }
 
 function startNavigate(o) {
@@ -104,7 +106,8 @@ function startNavigate(o) {
   };
   // Chu 11/21: the box always starts small; tap = big, tap anywhere on it = small (also by itself after 8 s).
   // Nothing in it stops Navigate any more (its ✕ used to, and riders read ✕ as "close"): only ■ NAV stops.
-  mini.onclick = () => setBig(true);
+  let arriveAt = null;
+  mini.onclick = () => { setBig(true); if (o.sayArrival) o.sayArrival(arriveAt); };  // 🕐 tap = the voice says the arrival time (Chu 11/28)
   big.onclick = () => setBig(false);
   q(".navstop").onclick = () => (o.onNavBtn ? o.onNavBtn() : stop(true));  // asks: ride back / stop / cancel (app.js)
   q(".navmenu").onclick = () => o.onMenu && o.onMenu();
@@ -113,26 +116,34 @@ function startNavigate(o) {
   function closeSun() { if (!sunBox.hidden) { sunBox.hidden = true; setBig(true); } }
 
   // ---- route drawing: ridden grey, still to ride blue + white ▶ arrows ----
+  // Drawn with rounded bends (Chu 11/28: the straight pieces and sharp corners looked like 90° turns and confused him).
+  // Each corner is cut into a small curve, at most 15 m from the corner, so the line never strays from the track; only
+  // the drawing changes: km, turns and off-track all still use the exact line. sm = drawn line, at[k] = where point k starts in sm.
+  const { pts: sm, at } = roundLine(line);
+  const lenM = (a, b) => Math.hypot((b[0] - a[0]) * 111320, (b[1] - a[1]) * 111320 * Math.cos(a[0] * R));
   const g = L.featureGroup().addTo(map);
   const rCase = L.polyline([], { color: "#000", weight: 8, opacity: 0.45, interactive: false }).addTo(g);
   const ridden = L.polyline([], { color: "#a7adb6", weight: 5, opacity: 1, interactive: false }).addTo(g);
-  const aEdge = L.polyline(line, { color: "#fff", weight: 12, opacity: 0.9, interactive: false }).addTo(g);
-  const aLine = L.polyline(line, { color: "#1a73ff", weight: 8, opacity: 1, interactive: false }).addTo(g);
+  const aEdge = L.polyline(sm, { color: "#fff", weight: 12, opacity: 0.9, interactive: false, lineJoin: "round" }).addTo(g);
+  const aLine = L.polyline(sm, { color: "#1a73ff", weight: 8, opacity: 1, interactive: false, lineJoin: "round" }).addTo(g);
   const chev = L.featureGroup().addTo(g);
   const stray = L.polyline([], { color: "#ff2d2d", weight: 4, opacity: 1, dashArray: "1 9", lineCap: "round", interactive: false }).addTo(g);
   let pin = null;
   const mpp = () => 156543.03 * Math.cos(map.getCenter().lat * R) / Math.pow(2, map.getZoom());
   let chevAt = -1;
-  const drawChevrons = () => {  // white ▶ along the next 8 km, about every 70 px, drawn as tiny lines so they turn with the map
-    chev.clearLayers();
+  const drawChevrons = () => {  // white ▶ along the next 8 km, every 70 px, ON the straight bits (never on a bend, where it
+    chev.clearLayers();         // looked like a sharp kink, Chu 11/28); drawn as tiny lines so they turn with the map
     const k0 = nav.i ?? 0, every = 70 * mpp(), arm = 7 * mpp();
-    let d = 0, total = 0;
-    for (let k = k0 + 1; k < line.length && total < 8000; k++) {
-      const s = L.latLng(line[k - 1]).distanceTo(line[k]); d += s; total += s;
-      if (d < every) continue; d = 0;
-      const h = brg(line[k - 1], line[k]);
-      L.polyline([dest(line[k], h + 145, arm), line[k], dest(line[k], h - 145, arm)],
-        { color: "#fff", weight: 2.6, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(chev);
+    let d = every / 2, total = 0;
+    for (let k = at[Math.min(k0 + 1, line.length - 1)] + 1; k < sm.length && total < 8000; k++) {
+      const a = sm[k - 1], b = sm[k], s = lenM(a, b); total += s;
+      for (let x = every - d; x < s; x += every) {  // every 70 px, measured along the drawn line
+        const f = x / s, p = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f], h = brg(a, b);
+        if (s < arm * 3) continue;  // a tiny piece of a curve: skip
+        L.polyline([dest(p, h + 145, arm), p, dest(p, h - 145, arm)],
+          { color: "#fff", weight: 2.6, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(chev);
+      }
+      d = (d + s) % every;
     }
     chevAt = k0;
   };
@@ -188,8 +199,9 @@ function startNavigate(o) {
     if (onLine || nav.i == null || nav.n == null || km >= nav.km - 0.3) { nav.i = n.i; nav.km = km; nav.n = n; }  // nav.n null after a resume (11/27 fix)
     // route split
     const cut = [nav.n.lat, nav.n.lon];
-    rCase.setLatLngs([...line.slice(0, nav.i + 1), cut]); ridden.setLatLngs([...line.slice(0, nav.i + 1), cut]);
-    aEdge.setLatLngs([cut, ...line.slice(nav.i + 1)]); aLine.setLatLngs([cut, ...line.slice(nav.i + 1)]);
+    const sk = at[Math.min(nav.i + 1, line.length - 1)];  // the drawn (rounded) line, split at you
+    rCase.setLatLngs([...sm.slice(0, sk), cut]); ridden.setLatLngs([...sm.slice(0, sk), cut]);
+    aEdge.setLatLngs([cut, ...sm.slice(sk)]); aLine.setLatLngs([cut, ...sm.slice(sk)]);
     if (Math.abs(nav.i - chevAt) > 3) drawChevrons();
     // off track
     const goodGps = nav.acc == null || nav.acc <= NAV.OFF_M;
@@ -222,6 +234,7 @@ function startNavigate(o) {
     const dark = sunsetAt(new Date(now), ll.lat, ll.lng), spare = (dark - arrive) / 60000;
     const state = spare >= 30 ? "ok" : spare >= 0 ? "amber" : "red";
     const onTrack = nav.joined;  // before reaching the track: no arrival, no %, no sun advice (Chu 11/21, 14 km from home said "99%")
+    arriveAt = onTrack ? +arrive : null;  // 🕐 for the voice (tap the box)
     q(".nm-eta").textContent = onTrack ? `🏁 ${hhmm(arrive)}` : "🏁 --:--"; q(".nb-eta b").textContent = onTrack ? `🏁 ${hhmm(arrive)}` : "🏁 --:--";
     q(".nm-bar i").style.width = q(".nb-bar i").style.width = pct + "%";
     q(".nb-pct").textContent = pct + "%"; q(".nb-left").textContent = `${kmLeft < 10 ? kmLeft.toFixed(1) : Math.round(kmLeft)} km`;

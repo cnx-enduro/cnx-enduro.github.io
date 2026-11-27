@@ -13,18 +13,15 @@
 (() => { try { const q = new URLSearchParams(location.search);
   localStorage.removeItem("cnx-look");  // the old dark look is gone (Chu 11/27): Paper for everyone, Night on phones in dark mode
   document.documentElement.classList.add("paper");
-  // Night look (Chu 11/26): follows the phone's dark mode, map screens only. Test switch ?night=1 on · ?night=0 off · ?night=auto
+  // 🌙 Night look: only while Navigate runs, from 30 min before sunset to 30 min after sunrise where you are (Chu 11/28:
+  // the mountains get dark early; the phone's own dark mode no longer counts: it gave Night at noon). app.js switches it.
+  // Test switch: ?night=1 on everywhere · ?night=0 never · ?night=auto (normal)
   if (q.has("night")) localStorage.setItem("cnx-night", q.get("night") || "1");
-  const nt = localStorage.getItem("cnx-night") || "auto", h = document.documentElement;
-  const dm = matchMedia("(prefers-color-scheme: dark)");
-  const phone = matchMedia("(pointer: coarse)").matches;  // Night on phones/tablets only; computers always Paper (Chu 11/27)
-  if (nt === "1" || nt === "b" || (nt === "auto" && phone && dm.matches)) h.classList.add("night");
-  // Live (Chu 11/26): the phone flips dark at sunset (Automatic) → Night switches on the spot, no reload; app.js repaints the lines
-  if (nt === "auto" && phone && dm.addEventListener) dm.addEventListener("change", e => { h.classList.toggle("night", e.matches); dispatchEvent(new Event("cnxnight")); });
+  if ((localStorage.getItem("cnx-night") || "auto") === "1") document.documentElement.classList.add("night");
   } catch (e) {} })();
 </script>
-<link rel="stylesheet" href="style.css?v=df3eb463">
-<link rel="stylesheet" href="night.css?v=b32ad1c7">
+<link rel="stylesheet" href="style.css?v=43305f82">
+<link rel="stylesheet" href="night.css?v=ab1ed24b">
 </head>
 <body>
 <header class="top">
@@ -100,10 +97,10 @@
 
 <script src="vendor/leaflet.min.js"></script>
 <script src="vendor/leaflet-rotate.js"></script>
-<script src="common.js?v=2044e628"></script>
-<script src="nav.js?v=58671a7d"></script>
+<script src="common.js?v=25c7539e"></script>
+<script src="nav.js?v=fe7fc55b"></script>
 <script src="firebase-config.js?v=6fb37bcf"></script>
-<script src="ride.js?v=de6f5a10"></script>
-<script src="app.js?v=a7c2b2fe"></script>
+<script src="ride.js?v=4fdb7815"></script>
+<script src="app.js?v=d3444a7c"></script>
 </body>
 </html>

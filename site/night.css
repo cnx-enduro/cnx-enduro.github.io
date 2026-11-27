@@ -265,6 +265,12 @@ html.paper.night .leaflet-control-scale-line { background: rgba(27,25,22,.9); co
 html.paper.night body.navmode .leaflet-bar.recbtn a.on.auto::before { content: "REC"}
 html.paper.night .locate .locmsg { background: #1b1916; color: #ece4d4; border: 2px solid #ece4d4; border-radius: 8px; padding: 6px 9px;
   font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.54)}
+html.paper.night .ridewait { font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-weight: 700; font-size: 16px; line-height: 1.25;
+  border: 2px solid #ece4d4; border-radius: 12px; background: #f2b84b; color: #ece4d4; box-shadow: 0 2px 10px rgba(0,0,0,0.45)}
+html.paper.night .ridewait.quiet { background: #1b1916; color: #a99f8c; border-color: #4a4338; font-weight: 600; font-size: 14px}
+html.paper.night .navbig,
+html.paper.night .navmini { font-family: "Iowan Old Style", "Palatino", Georgia, serif}
+html.paper.night .navmini { cursor: pointer}
 
 /* ---- Night only (not from Paper) ---- */
 html.paper.night .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) grayscale(.55) sepia(.2) brightness(.92) contrast(.92) !important; }

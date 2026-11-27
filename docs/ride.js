@@ -217,8 +217,8 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
   // ---- the group list ----
   const along = r => { const t = h.current(); return t && r.lat ? h.kmAt(t, [r.lat, r.lng]) * 1000 : null; };
   const isStale = r => !r.t || Date.now() - r.t > RIDE.STALE_MS;
-  const lastRider = () => {  // the sweeper, else whoever is furthest back along the track
-    const list = Object.entries(riders).filter(([, r]) => r.lat);
+  const lastRider = fresh => {  // the sweeper, else whoever is furthest back along the track (fresh: only phones still sending)
+    const list = Object.entries(riders).filter(([, r]) => r.lat && !(fresh && isStale(r)));
     const sw = list.find(([, r]) => r.role === "sweep");
     if (sw) return sw[0];
     let best = null, bm = Infinity;
@@ -346,13 +346,19 @@ function setupRide(h) {  // h: { map, current(), startNav(), navOn(), kmAt(t, [l
   }
   function paintWait() {  // leader only: last rider too far back
     if (!g || g.leader !== me) { wait.hidden = true; return; }
-    const lr = lastRider(), a = along(riders[me] || {}), b = lr && lr !== me ? along(riders[lr]) : null;
+    // Only phones still sending count (Chu 11/28: an Android stopped sending at km 15.9 and "Wait · last rider 34 km back"
+    // stayed up all afternoon). A phone that went quiet gets a grey note instead: no orange Wait, no voice.
+    const lr = lastRider(true), a = along(riders[me] || {}), b = lr && lr !== me ? along(riders[lr]) : null;
     const gap = a != null && b != null ? a - b : 0;
     const was = waitShown;
     if (gap > RIDE.SPREAD_M) waitShown = true; else if (gap < RIDE.SPREAD_OK_M) waitShown = false;
     if (waitShown && !was && h.say) h.say("behind");  // 🗣 leader hears "A rider is falling behind." (same moment as the ⏸ Wait sign)
-    wait.hidden = !waitShown;
+    const quiet = Object.entries(riders).filter(([id, r]) => id !== me && r.lat && isStale(r) && a != null && along(r) != null && a - along(r) > RIDE.SPREAD_M)
+      .sort((x, y) => along(x[1]) - along(y[1]))[0];
+    wait.hidden = !waitShown && !quiet;
+    wait.classList.toggle("quiet", !waitShown && !!quiet);
     if (waitShown) wait.textContent = `⏸ Wait · last rider ${km(gap)} back`;
+    else if (quiet) { const t = new Date(quiet[1].t); wait.textContent = `📵 ${quiet[1].n || "A rider"}: no signal since ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`; }
   }
   function paintSos() {
     if (!g) return;

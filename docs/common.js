@@ -64,6 +64,55 @@ function baseMap(el, opts = {}) {
   return map;
 }
 
+// 🗣 Navigate's voice clips (app.js plays them; the offline save keeps them so the voice works with no signal).
+const CNX_VOICE_KEYS = ["in200_L", "in200_R", "then_L", "then_R", "now_L", "now_R", "off", "back", "dark", "lat200", "water200", "finish",
+  "sos", "lost", "st_lunch", "st_wait", "st_forest", "behind", "navon", "rideback",
+  ...Array.from({ length: 24 }, (_, h) => "arr_" + String(h).padStart(2, "0")), ...Array.from({ length: 24 }, (_, h) => "clk_" + String(h).padStart(2, "0")),
+  ...Array.from({ length: 60 }, (_, m) => "m" + String(m).padStart(2, "0"))];
+
+// 🔆 Keep the screen on (Chu 11/28 ride: after ~3 h the iPhone locked every few minutes, GPS stopped with it, turns missed).
+// Two ways at once, because phones differ: the browser's own screen lock (wakeLock), asked again by itself
+// whenever the phone lets it go (it does that quietly: low battery, heat, a pop-up), and a tiny silent video
+// on a loop, the old trick that also keeps an iPhone awake when the screen lock isn't there or is refused.
+// Anyone can ask (location ON, rain lock); it's on while at least one asks. cnxAwake.state(): "lock" | "video" | "none" | "off".
+const cnxAwake = (() => {
+  const want = new Set();
+  let lock = null, vid = null, timer = 0, refused = false;
+  const log = ev => { try { const l = JSON.parse(localStorage.getItem("cnx-awake-log") || "[]"); l.push([Date.now(), ev]); localStorage.setItem("cnx-awake-log", JSON.stringify(l.slice(-60))); } catch (e) {} };
+  const visible = () => document.visibilityState === "visible";
+  const getLock = async () => {
+    if (!want.size || lock || !visible() || !("wakeLock" in navigator)) return;
+    try {
+      lock = await navigator.wakeLock.request("screen"); refused = false;
+      lock.addEventListener("release", () => { lock = null; log("released"); if (want.size && visible()) setTimeout(getLock, 1000); });
+    } catch (e) { lock = null; if (!refused) log("refused " + e.name); refused = true; }
+  };
+  const getVideo = () => {
+    if (!want.size) return;
+    if (!vid) {
+      vid = document.createElement("video");
+      vid.setAttribute("playsinline", ""); vid.setAttribute("muted", ""); vid.muted = true; vid.loop = true; vid.preload = "auto";
+      vid.setAttribute("aria-hidden", "true"); vid.src = "audio/awake.mp4";
+      vid.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1";
+      vid.addEventListener("timeupdate", () => { if (vid.currentTime > 1.5) vid.currentTime = 0.2; });
+      document.body.appendChild(vid);
+    }
+    if (vid.paused) vid.play().catch(() => {});
+  };
+  const check = () => { if (want.size && visible()) { getLock(); getVideo(); } };
+  document.addEventListener("visibilitychange", check);
+  return {
+    // call from a tap where possible: the video may only start from a tap
+    on: who => { want.add(who); check(); clearInterval(timer); timer = setInterval(check, 20000); },
+    off: who => {
+      want.delete(who); if (want.size) return;
+      clearInterval(timer); if (lock) { lock.release().catch(() => {}); lock = null; } if (vid) vid.pause();
+    },
+    state: () => !want.size ? "off" : lock ? "lock" : vid && !vid.paused ? "video" : "none",
+    log: () => { try { return JSON.parse(localStorage.getItem("cnx-awake-log") || "[]"); } catch (e) { return []; } },
+  };
+})();
+
 // "Where am I" button, bottom right: one tap = location ON, next tap = OFF (a small ON/OFF sign shows which).
 // While ON the phone's position shows as a blue dot and the map keeps it in the middle as the rider moves.
 // Dragging the map (or opening another track) pauses that so the rider can look around; after 5 s without
@@ -76,13 +125,8 @@ function addLocate(map, whereText, routeBearing) {
   let watch = null, dot = null, ring = null, last = null, follow = false, resume = null, btn = null, msg = null, sign = null;
   // Keep the screen on while location is ON, so the phone doesn't lock mid-ride and freeze the dot.
   // The phone drops this hold whenever the page is hidden, so take it again when the rider comes back.
-  let wake = null;
-  const holdScreen = async () => {
-    if (!("wakeLock" in navigator) || watch === null || wake) return;
-    try { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } catch (e) { wake = null; }
-  };
-  const freeScreen = () => { if (wake) { wake.release().catch(() => {}); wake = null; } };
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
+  const holdScreen = () => { if (watch !== null) cnxAwake.on("locate"); };
+  const freeScreen = () => cnxAwake.off("locate");
   // A small tag beside the dot with the km on the open track (e.g. "19.8 km"), small so it doesn't hide the map.
   // On the track list there's nothing to say, so the dot stands alone.
   // 🧭 Compass (main map only): grey while location is OFF; tap = North up, tap again = Route up (the map turns
@@ -301,12 +345,8 @@ function addLocate(map, whereText, routeBearing) {
 // The phone's Back button while locked stays on the page and points at the slide (Android "Back" used to leave the
 // site with no signal and lose the ride).
 function addRainLock(map) {
-  let locked = false, wake = null, cover = null, btn = null, knob = null, hint = null, hintT = null, ourState = false;
-  const holdScreen = async () => {
-    if (!locked || wake || !("wakeLock" in navigator)) return;
-    try { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } catch (e) { wake = null; }
-  };
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") holdScreen(); });
+  let locked = false, cover = null, btn = null, knob = null, hint = null, hintT = null, ourState = false;
+  const holdScreen = () => { if (locked) cnxAwake.on("rainlock"); };
   const flash = () => { hint.classList.add("flash"); clearTimeout(hintT); hintT = setTimeout(() => hint.classList.remove("flash"), 1400); };
   const setLocked = on => {
     if (locked === on) return;
@@ -321,7 +361,7 @@ function addRainLock(map) {
       holdScreen();
       try { history.pushState({ cnxLock: 1 }, ""); ourState = true; } catch (e) {}
     } else {
-      if (wake) { wake.release().catch(() => {}); wake = null; }
+      cnxAwake.off("rainlock");
       if (ourState && history.state && history.state.cnxLock) { ourState = false; try { history.back(); } catch (e) {} }
       ourState = false;
     }
@@ -536,7 +576,7 @@ function addOffline(map, o) {
   const shellUrls = t => {
     const u = ["./", "data/tracks.json", "offline/tracks.json", "areas/doi-suthep-pui.geojson", "vendor/protomaps-leaflet.js",
       "vendor/images/layers.png", "vendor/images/layers-2x.png", `gpx/${t.file}`,
-      ...["in200_L", "in200_R", "then_L", "then_R", "now_L", "now_R", "off", "back", "dark", "lat200", "water200", "finish", "sos", "lost", "st_lunch", "st_wait", "st_forest", "behind", "navon", "rideback"].map(k => `audio/voice/${k}.mp3`)];  // 🗣 voice works with no signal
+      ...CNX_VOICE_KEYS.map(k => `audio/voice/${k}.mp3`), "audio/awake.mp4"];  // 🗣 voice works with no signal
     document.querySelectorAll("script[src], link[rel=stylesheet][href]").forEach(e => u.push(e.getAttribute("src") || e.getAttribute("href")));
     return [...new Set(u)].filter(x => !/^https?:/.test(x));
   };
@@ -654,9 +694,31 @@ const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform ==
 function addRecord(map) {
   if (!("geolocation" in navigator)) return;
   let rec = null, on = false, casing = null, line = null, btn = null, sign = null, tick = null, sheet = null;
-  const store = () => { try { if (rec) rec.on = on; localStorage.setItem(REC_KEY, JSON.stringify(rec)); } catch (e) {} };
-  const forget = () => { try { localStorage.removeItem(REC_KEY); } catch (e) {} };
-  const loadRec = () => { try { const r = JSON.parse(localStorage.getItem(REC_KEY)); return r && Array.isArray(r.pts) ? r : null; } catch (e) { return null; } };
+  // Kept in the phone in pieces of 1,000 points (Chu 11/28: after 3 h the whole ride, 330 KB, was re-written on
+  // every GPS point onto a full phone). A full piece is written once; only the newest piece is re-written, and
+  // at most every 10 s while riding (and at once when the page is hidden or closed), so a crash loses ≤ 10 s.
+  const PIECE = 1000;
+  let pieces = 0, savedAt = 0;
+  const store = () => {
+    savedAt = Date.now();
+    try {
+      if (!rec) return forget();
+      rec.on = on;
+      for (const n = Math.floor(rec.pts.length / PIECE); pieces < n; pieces++)
+        localStorage.setItem(REC_KEY + ":" + pieces, JSON.stringify(rec.pts.slice(pieces * PIECE, (pieces + 1) * PIECE)));
+      localStorage.setItem(REC_KEY, JSON.stringify({ ...rec, pts: rec.pts.slice(pieces * PIECE), pieces }));
+    } catch (e) {}
+  };
+  const storeSoon = () => { if (Date.now() - savedAt >= 10000) store(); };
+  const forget = () => { try { localStorage.removeItem(REC_KEY); for (let i = 0; localStorage.getItem(REC_KEY + ":" + i) != null; i++) localStorage.removeItem(REC_KEY + ":" + i); } catch (e) {} pieces = 0; };
+  const loadRec = () => { try {
+    const r = JSON.parse(localStorage.getItem(REC_KEY)); if (!r || !Array.isArray(r.pts)) return null;
+    const head = []; for (let i = 0; i < (r.pieces || 0); i++) head.push(...(JSON.parse(localStorage.getItem(REC_KEY + ":" + i)) || []));
+    pieces = r.pieces || 0; r.pts = head.concat(r.pts); delete r.pieces; return r;
+  } catch (e) { return null; } };
+  const flush = () => { if (rec && on) store(); };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+  addEventListener("pagehide", flush);
   const meters = pts => { let d = 0; for (let i = 1; i < pts.length; i++) d += L.latLng(pts[i - 1][0], pts[i - 1][1]).distanceTo([pts[i][0], pts[i][1]]); return d; };
   const climbOf = pts => {  // GPS height jumps a lot: count a climb only once it's 5 m above the last low point
     const e = pts.map(p => p[2]).filter(v => v != null);
@@ -694,7 +756,7 @@ function addRecord(map) {
     const p = [+c.latitude.toFixed(6), +c.longitude.toFixed(6), c.altitude != null ? Math.round(c.altitude * 10) / 10 : null, fixTime(e.pos)];
     const prev = rec.pts[rec.pts.length - 1];
     if (prev && L.latLng(prev[0], prev[1]).distanceTo([p[0], p[1]]) < 4 && p[3] - prev[3] < 15000) return;
-    rec.pts.push(p); store(); draw();
+    rec.pts.push(p); storeSoon(); draw();
   });
   const gpx = (r, name) => {
     const x = s => String(s).replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]));
@@ -763,7 +825,7 @@ function addRecord(map) {
       if (on && rec && rec.auto && document.body.classList.contains("navmode")) { cnxToast("Recording with Navigate · stops when you stop NAV", 3500); return; }
       if (on) { on = false; store(); show(); openSheet(false); return; }
       if (rec && rec.pts.length) return openSheet(true);  // an unsaved ride is waiting
-      on = true; rec = { start: Date.now(), pts: [] }; store();
+      forget(); on = true; rec = { start: Date.now(), pts: [] }; store();
       map.cnxLocate && map.cnxLocate.on();
       show();
     });
@@ -785,7 +847,7 @@ function addRecord(map) {
     startAuto: () => {
       if (on) { if (rec) { rec.auto = true; store(); } show(); return "on"; }
       if (rec && rec.pts.length) return "waiting";  // an earlier ride isn't saved yet: never overwrite it
-      on = true; rec = { start: Date.now(), pts: [], auto: true }; store();
+      forget(); on = true; rec = { start: Date.now(), pts: [], auto: true }; store();
       map.cnxLocate && map.cnxLocate.on(); show(); return "started";
     },
     endAuto: () => {
@@ -867,6 +929,26 @@ function parseGpxText(text) {
 }
 
 // Nearest point on a [[lat, lon], ...] line to `pt`: {lat, lon, dist (m), i (segment start), f (0-1 along it)}.
+// 〰 Rounded bends for drawing a track (Chu 11/28: straight pieces with sharp corners read as 90° turns). Each corner is
+// cut into a soft curve, at most `r` metres from the corner, so the drawn line stays on the track. Drawing only: km,
+// turns, off-track and the GPX files all use the exact line. Returns { pts, at } (at[k] = where point k starts in pts).
+function roundLine(line, r = 15) {
+  const R = Math.PI / 180, pts = [], at = [];
+  const len = (a, b) => Math.hypot((b[0] - a[0]) * 111320, (b[1] - a[1]) * 111320 * Math.cos(a[0] * R));
+  for (let k = 0; k < line.length; k++) {
+    at[k] = pts.length;
+    const B = line[k], A = line[k - 1], C = line[k + 1];
+    if (!A || !C) { pts.push(B); continue; }
+    const ab = len(A, B), bc = len(B, C), rr = Math.min(r, ab * 0.4, bc * 0.4);
+    if (rr < 1) { pts.push(B); continue; }
+    const P = [B[0] + (A[0] - B[0]) * rr / ab, B[1] + (A[1] - B[1]) * rr / ab], Q = [B[0] + (C[0] - B[0]) * rr / bc, B[1] + (C[1] - B[1]) * rr / bc];
+    for (let s = 0; s <= 4; s++) { const u = s / 4, a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u;
+      pts.push([a * P[0] + b * B[0] + c * Q[0], a * P[1] + b * B[1] + c * Q[1]]); }
+  }
+  return { pts, at };
+}
+const roundPts = line => roundLine(line).pts;
+
 function nearestOnLine(line, pt) {
   const kx = 111320 * Math.cos(pt[0] * Math.PI / 180), ky = 110540;
   const px = pt[1] * kx, py = pt[0] * ky;
